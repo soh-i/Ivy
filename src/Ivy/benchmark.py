@@ -18,7 +18,6 @@ class DarnedReader(object):
         args: species
         return: set of Darned list, chr:pos
         '''
-        
         darned_list = []
         if self.__sp == 'Human' or self.__sp == 'human':
             with open(self.__darned[self.__sp], 'r') as f:
@@ -29,6 +28,8 @@ class DarnedReader(object):
                         pos = data[1]
                         darned_list.append(chr+':'+pos)
             return darned_list
+        else:
+            raise (RuntimeError, 'Given species name[%s] is not valid' % (self.__sp))
 
             
 class VCFReader(object):
@@ -40,7 +41,6 @@ class VCFReader(object):
         args: None
         returns: set of VCF record list
         '''
-
         vcf_recs = []
         vcf_reader = vcf.Reader(open(self.vcf, 'r'))
         for rec in vcf_reader:
@@ -71,6 +71,11 @@ class Benchmark(object):
     def f_measure(self):
         precision = self.precision()
         recall    = self.recall()
-        return (2*recall*precision)/(recall+precision)
-
-
+        f = 0
+        try:
+            f = (2*recall*precision)/(recall+precision)
+        except ZeroDivisionError:
+            pass
+            
+        finally:
+            return f
