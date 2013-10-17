@@ -1,21 +1,52 @@
 from __future__ import division
 import vcf
 
-class FileReader(object):
-    def __init__(self, file):
-        self.vcf = file
-
-    def genrate_vcf_set(self):
+class DarnedReader(object):
+    def __init__(self, sp=''):
         '''
-        returns set of given VCF
+        args: sp='' 
         '''
-        pass
+        self.__sp = sp
+        self.__darned = {
+            'human':'/home/soh.i/benchmark/data/human/DARNED_hg19.csv',
+            'fly':'',
+            'mice':''
+        }
 
     def generate_darned_set(self):
         '''
-        returns set of Darned db
+        args: species
+        return: set of Darned list, chr:pos
         '''
-        pass
+        
+        darned_list = []
+        if self.__sp == 'Human' or self.__sp == 'human':
+            with open(self.__darned[self.__sp], 'r') as f:
+                for line in f:
+                    if not line.startswith('chrom'):
+                        data = line.split(",")
+                        chr = data[0]
+                        pos = data[1]
+                        darned_list.append(chr+':'+pos)
+            return darned_list
+
+        
+class VCFReader(object):
+    def __init__(self, file):
+        self.vcf = file
+
+    def generate_vcf_set(self):
+        '''
+        args: None
+        returns: set of VCF record list
+        '''
+        
+        vcf_reader = vcf.Reader(open(self.vcf, 'r'))
+        vcf_recs = []
+        for rec in vcf_reader:
+            print rec
+        return vcf_recs
+
 
 class Benchmark(object):
     def __init__(self, answer=None, predict=None):
@@ -41,4 +72,14 @@ class Benchmark(object):
         precision = self.precision()
         recall    = self.recall()
         return (2*recall*precision)/(recall+precision)
-        
+
+
+if __name__ == '__main__':
+    darned_reader = DarnedReader(sp='human')
+    ans = darned_reader.generate_darned_set()
+    
+    #vcf_rader = VCFReader('')
+    #pred = vcf_reader.generate_vcf_set()
+    
+    
+    
