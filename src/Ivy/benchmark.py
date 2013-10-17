@@ -30,7 +30,7 @@ class DarnedReader(object):
                         darned_list.append(chr+':'+pos)
             return darned_list
 
-        
+            
 class VCFReader(object):
     def __init__(self, file):
         self.vcf = file
@@ -40,14 +40,14 @@ class VCFReader(object):
         args: None
         returns: set of VCF record list
         '''
-        
-        vcf_reader = vcf.Reader(open(self.vcf, 'r'))
+
         vcf_recs = []
+        vcf_reader = vcf.Reader(open(self.vcf, 'r'))
         for rec in vcf_reader:
-            print rec
+            vcf_recs.append(rec.CHROM + ':' + str(rec.POS))
         return vcf_recs
 
-
+        
 class Benchmark(object):
     def __init__(self, answer=None, predict=None):
         self.answer = set(answer)
@@ -74,12 +74,3 @@ class Benchmark(object):
         return (2*recall*precision)/(recall+precision)
 
 
-if __name__ == '__main__':
-    darned_reader = DarnedReader(sp='human')
-    ans = darned_reader.generate_darned_set()
-    
-    #vcf_rader = VCFReader('')
-    #pred = vcf_reader.generate_vcf_set()
-    
-    
-    
