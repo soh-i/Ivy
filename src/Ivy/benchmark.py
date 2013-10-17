@@ -55,25 +55,33 @@ class Benchmark(object):
         self.intersect = self.answer.intersection(self.predict)
 
     def precision(self):
-        if not len(self.predict) == 0 or not len(self.answer) == 0:
+        precision = 0
+        try:
             precision = len(self.intersect)/len(self.predict)
+            
+        except ZeroDivisionError:
+            pass
+            
+        finally:
             return precision
-        else:
-            raise ValueError('Error: set object has 0 element')
             
     def recall(self):
-        if not len(self.predict) == 0 or not len(self.answer) == 0:
+        recall = 0
+        try:
             recall = len(self.intersect)/len(self.answer)
+        except ZeroDivisionError:
+            pass
+
+        finally:
             return recall
-        else:
-            raise ValueError('Error: set object has 0 element')
             
     def f_measure(self):
         precision = self.precision()
-        recall    = self.recall()
+        recall = self.recall()
         f = 0
         try:
             f = (2*recall*precision)/(recall+precision)
+            
         except ZeroDivisionError:
             pass
             
