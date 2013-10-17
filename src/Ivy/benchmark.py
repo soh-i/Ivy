@@ -111,3 +111,6 @@ class Benchmark(object):
             
         finally:
             return f
+
+    def ag_enrichment(self):
+        pass
