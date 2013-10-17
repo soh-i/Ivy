@@ -10,7 +10,7 @@ class DarnedReader(object):
         '''
         self.__sp = sp
         self.__darned = {
-            'human':'/home/soh.i/benchmark/data/human/DARNED_hg19.csv',
+            'human':'../data/DARNED_hg19.csv',
             'fly':'',
             'mice':''
         }
