@@ -1,5 +1,7 @@
 from __future__ import division
 import vcf
+import os.path
+
 
 class DarnedReader(object):
     def __init__(self, sp=''):
@@ -19,6 +21,7 @@ class DarnedReader(object):
         return: set of Darned list, chr:pos
         '''
         darned_list = []
+        self.count = 0
         if self.__sp == 'Human' or self.__sp == 'human':
             with open(self.__darned[self.__sp], 'r') as f:
                 for line in f:
@@ -27,11 +30,24 @@ class DarnedReader(object):
                         chr = data[0]
                         pos = data[1]
                         darned_list.append(chr+':'+pos)
+                        self.count += 1
             return darned_list
         else:
             raise (RuntimeError, 'Given species name[%s] is not valid' % (self.__sp))
 
-            
+    def sp(self):
+        return self.__sp
+
+    def path(self):
+        return os.path.abspath(self.__darned[self.__sp])
+
+    def db_name(self):
+        return os.path.basename(self.path())
+                 
+    def count(self):
+        return self.count
+        
+
 class VCFReader(object):
     def __init__(self, file):
         self.vcf = file
@@ -42,10 +58,18 @@ class VCFReader(object):
         returns: set of VCF record list
         '''
         vcf_recs = []
+        self.count = 0
         vcf_reader = vcf.Reader(open(self.vcf, 'r'))
         for rec in vcf_reader:
             vcf_recs.append(rec.CHROM + ':' + str(rec.POS))
+            self.count += 0
         return vcf_recs
+
+    def count(self):
+        return self.count
+
+    def vcf_name(self):
+        return os.path.basename(self.vcf)
 
         
 class Benchmark(object):
