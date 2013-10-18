@@ -1,7 +1,7 @@
 from __future__ import division
 import vcf
 import os.path
-
+import ConfigParser
 
 class DarnedReader(object):
     def __init__(self, sp=''):
@@ -105,7 +105,6 @@ class Benchmark(object):
         f = 0
         try:
             f = (2*recall*precision)/(recall+precision)
-            
         except ZeroDivisionError:
             pass
             
