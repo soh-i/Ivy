@@ -1,6 +1,4 @@
-import ConfigParser
-import os
-import sys
+import os.path
 
 def find_app_root():
     root = os.path.dirname(__file__)
