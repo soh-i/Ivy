@@ -3,6 +3,7 @@ import vcf
 import os.path
 import utils
 import ConfigParser
+from collections import Counter
 
 class DarnedReader(object):
     def __init__(self, sp=''):
@@ -73,9 +74,12 @@ class VCFReader(object):
         i = 0; j = 0;
         vcf_recs = []
         vcf_reader = vcf.Reader(open(self.vcf, 'r'))
-        for rec in vcf_reader:
-            vcf_recs.append(rec.CHROM + ':' + str(rec.POS))
 
+        self.cnt = Counter()
+        for rec in vcf_reader:
+            self.cnt[rec.REF] += 1
+            vcf_recs.append(rec.CHROM + ':' + str(rec.POS))
+            
             if 'A' in rec.REF and 'G' in rec.ALT:
                 i += 1
                 self.mutation_type.update({'A-to-G':i})
@@ -92,9 +96,18 @@ class VCFReader(object):
     def vcf_name(self):
         return os.path.basename(self.vcf)
 
+    def C(self):
+        return self.cnt
     def mutation_type(self):
-        return self.mutation_type
+        #return self.mutation_type
+        pass
+        
+    def ag_count(self):
+        return self.mutation_type['A-to-G']
 
+    def other_substr_count(self):
+        return self.mutation_type['Other']
+        
         
 class Benchmark(object):
     def __init__(self, answer=None, predict=None):
