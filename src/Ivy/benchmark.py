@@ -1,20 +1,30 @@
 from __future__ import division
 import vcf
 import os.path
+import utils
 import ConfigParser
 
 class DarnedReader(object):
     def __init__(self, sp=''):
         '''
-        args: sp='' 
+        args: sp=human_hg19
         '''
         self.__sp = sp
-        self.__darned = {
-            'human':'../data/DARNED_hg19.csv',
-            'fly':'',
-            'mice':''
-        }
 
+        conf_path = utils.find_app_root()
+        conf = ConfigParser.RawConfigParser()
+        conf.read(conf_path + '/data.ini')
+
+        if conf.has_section('DARNED'):
+            sp = conf.get('DARNED', self.__sp)
+            print sp
+            self.__darned = {self.__sp : conf_path + sp}
+        else:
+            raise conf.NoSectionError
+            
+    def __str__(self):
+        return 'Darned file [%s]' % (self.__darned[self.__sp])
+        
     def generate_darned_set(self):
         '''
         args: species
@@ -22,14 +32,14 @@ class DarnedReader(object):
         '''
         darned_list = []
         self.count = 0
-        if self.__sp == 'Human' or self.__sp == 'human':
+        if self.__sp:
             with open(self.__darned[self.__sp], 'r') as f:
                 for line in f:
                     if not line.startswith('chrom'):
                         data = line.split(",")
                         chr = data[0]
                         pos = data[1]
-                        darned_list.append(chr+':'+pos)
+                        darned_list.append(chr + ':' + pos)
                         self.count += 1
             return darned_list
         else:
@@ -49,8 +59,8 @@ class DarnedReader(object):
         
 
 class VCFReader(object):
-    def __init__(self, file):
-        self.vcf = file
+    def __init__(self, filename):
+        self.vcf = filename
 
     def generate_vcf_set(self):
         '''
@@ -82,10 +92,8 @@ class Benchmark(object):
         precision = 0
         try:
             precision = len(self.intersect)/len(self.predict)
-            
         except ZeroDivisionError:
             pass
-            
         finally:
             return precision
             
@@ -95,19 +103,18 @@ class Benchmark(object):
             recall = len(self.intersect)/len(self.answer)
         except ZeroDivisionError:
             pass
-
         finally:
             return recall
             
     def f_measure(self):
         precision = self.precision()
         recall = self.recall()
+        
         f = 0
         try:
             f = (2*recall*precision)/(recall+precision)
         except ZeroDivisionError:
             pass
-            
         finally:
             return f
 
