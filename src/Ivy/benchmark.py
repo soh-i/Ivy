@@ -67,11 +67,22 @@ class VCFReader(object):
         args: None
         returns: set of VCF record list
         '''
-        vcf_recs = []
+        self.mutation_type = {}
         self.count = 0
+        
+        i = 0; j = 0;
+        vcf_recs = []
         vcf_reader = vcf.Reader(open(self.vcf, 'r'))
         for rec in vcf_reader:
             vcf_recs.append(rec.CHROM + ':' + str(rec.POS))
+
+            if 'A' in rec.REF and 'G' in rec.ALT:
+                i += 1
+                self.mutation_type.update({'A-to-G':i})
+            else:
+                j += 1
+                self.mutation_type.update({'Others':j})
+                
             self.count += 0
         return vcf_recs
 
@@ -80,6 +91,9 @@ class VCFReader(object):
 
     def vcf_name(self):
         return os.path.basename(self.vcf)
+
+    def mutation_type(self):
+        return self.mutation_type
 
         
 class Benchmark(object):
