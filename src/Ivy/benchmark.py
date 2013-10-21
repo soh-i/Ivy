@@ -17,27 +17,26 @@ class DarnedReader(object):
         __init__(self, sp=) -> instance object of the DarnedReader
         '''
         self.__sp = sp
-
         conf_path = utils.find_app_root()
         conf = ConfigParser.RawConfigParser()
         conf.read(conf_path + '/data.ini')
 
         if conf.has_section('DARNED'):
             sp = conf.get('DARNED', self.__sp)
-            print sp
             self.__darned = {self.__sp : conf_path + sp}
+            self.db = self.__generate_darned_set()
         else:
-            raise conf.NoSectionError
+            raise (ConfigParser.NoSectionError, 'Invalid species name [%s] is given' % (self.__sp))
             
     def __str__(self):
         return 'Darned file [%s]' % (self.__darned[self.__sp])
         
-    def generate_darned_set(self):
+    def __generate_darned_set(self):
         '''
         generate_darned_set(self) -> list, returns the accumulated DARNED db
         '''
         darned_list = []
-        self.count = 0
+        self.cnt = 0
         if self.__sp:
             with open(self.__darned[self.__sp], 'r') as f:
                 for line in f:
@@ -46,7 +45,7 @@ class DarnedReader(object):
                         chr = data[0]
                         pos = data[1]
                         darned_list.append(chr + ':' + pos)
-                        self.count += 1
+                        self.cnt += 1
             return darned_list
         else:
             raise (RuntimeError, 'Given species name[%s] is not valid' % (self.__sp))
@@ -73,7 +72,7 @@ class DarnedReader(object):
         '''
         count(self) -> int, number of the Darned entories
         '''
-        return self.count
+        return self.cnt
         
 
 class VCFReader(object):
