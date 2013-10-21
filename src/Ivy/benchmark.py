@@ -85,49 +85,41 @@ class VCFReader(object):
 
     def generate_vcf_set(self):
         '''
-        args: None
-        returns: set of VCF record list
+        generate_vcf_set(self) -> list, returns the accumulated vcf
         '''
-        self.mutation_type = {}
-        self.count = 0
-        
-        i = 0; j = 0;
         vcf_recs = []
         vcf_reader = vcf.Reader(open(self.vcf, 'r'))
-
-        self.cnt = Counter()
+        self.count = 0
+        self.substitutions = Counter()
+        
         for rec in vcf_reader:
-            self.cnt[rec.REF] += 1
+            types = str(rec.REF) + '-to-' + 'or'.join([str(i) for i in rec.ALT])
+            self.substitutions[types] += 1
             vcf_recs.append(rec.CHROM + ':' + str(rec.POS))
-            
-            if 'A' in rec.REF and 'G' in rec.ALT:
-                i += 1
-                self.mutation_type.update({'A-to-G':i})
-            else:
-                j += 1
-                self.mutation_type.update({'Others':j})
-                
             self.count += 0
         return vcf_recs
 
     def count(self):
+        '''
+        count(self) -> int, entoties of the parsed vcf records
+        '''
         return self.count
 
     def vcf_name(self):
         return os.path.basename(self.vcf)
 
-    def C(self):
-        return self.cnt
-    def mutation_type(self):
-        #return self.mutation_type
-        pass
+    def editing_types(self):
+        return self.substitutions
         
     def ag_count(self):
-        return self.mutation_type['A-to-G']
-
-    def other_substr_count(self):
-        return self.mutation_type['Other']
+        return self.substitutions.get('A-to-G')
         
+    def other_mutations_count(self):
+        i = 0
+        for k in self.substitutions:
+            if not k == 'A-to-G':
+                i += self.substitutions[k]
+        return i
         
 class Benchmark(object):
     def __init__(self, answer=None, predict=None):
