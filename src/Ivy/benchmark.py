@@ -23,7 +23,6 @@ class DarnedReader(object):
 
         if conf.has_section('DARNED'):
             sp = conf.get('DARNED', self.__sp)
-            print sp
             self.__darned = {self.__sp : conf_path + sp}
             self.db = self.__generate_darned_set()
         else:
