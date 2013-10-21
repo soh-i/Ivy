@@ -12,5 +12,7 @@ if __name__ == '__main__':
     #print "Recall:\t%f" % (bench.recall())
     #print "F-measure:\t%f" % (bench.f_measure())
 
-    print v.C()
+    print v.editing_types()
+    print v.ag_count()
+    print v.other_mutations_count()
 
