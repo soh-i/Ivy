@@ -2,26 +2,27 @@ from Ivy.benchmark import *
 import unittest
 
 class VCFReaderTest(unittest.TestCase):
+    
     def setUp(self):
-        self.vcf_reader = VCFReader('../../../data/test_data.vcf')
-        self.vcf.generate_vcf_set()
-
+        self.db = VCFReader('../../../data/test_data.vcf')
+        
     def test_count(self):
-        pass
+        count = self.db.cnt()
+        self.assertEqual(count, 13298)
 
-    def test_vcf_name(self):
-        pass
-
-    def test_editing_types(self):
-        pass
+    def test_name(self):
+        name = self.db.vcf_name()
+        self.assertEqual(name, 'test_data.vcf')
 
     def test_ag_count(self):
-        pass
+        ag = self.db.ag_count()
+        self.assertEqual(ag, 1609)
 
-    def test_other_mutations_count(self):
-        pass
-
-    def suite():
+    def test_other_mutation_count(self):
+        c = self.db.other_mutations_count()
+        self.assertEqual(c, 11689)
+        
+    def suite(self):
         suite = unittest.TestSuite()
         suite.addTest(unittest.makeSuite(VCFReaderTest))
         return suite
