@@ -1,6 +1,7 @@
 from __future__ import division
 import vcf
 import os.path
+import re
 import ConfigParser
 from collections import Counter
 try:
@@ -92,10 +93,11 @@ class VCFReader(object):
         for rec in vcf_reader:
             types = str(rec.REF) + '-to-' + 'or'.join([str(i) for i in rec.ALT])
             self.substitutions[types] += 1
-            vcf_recs.append(rec.CHROM + ':' + str(rec.POS))
+            mod_chr = re.sub(r'^chr', '', rec.CHROM, 1)
+            vcf_recs.append(mod_chr + ':' + str(rec.POS))
             self.count += 1
         return vcf_recs
-
+        
     def cnt(self):
         '''
         count(self) -> int, entoties of the parsed vcf records
