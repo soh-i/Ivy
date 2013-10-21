@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from Ivy.benchmark import DarnedReader, VCFReader, Benchmark
 import argparse
 
