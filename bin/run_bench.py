@@ -1,18 +1,22 @@
 from Ivy.benchmark import *
+from optparse import OptionParser
 
 if __name__ == '__main__':
-    darned_reader = DarnedReader(sp='human_hg19')
-    print darned_reader
-    v = VCFReader('../data/test_data.vcf')
-    pred = v.generate_vcf_set()
-    ans = darned_reader.generate_darned_set()
-    bench = Benchmark(answer=ans, predict=pred)
-    
-    #print "Precision:\t%f" % (bench.precision())
-    #print "Recall:\t%f" % (bench.recall())
-    #print "F-measure:\t%f" % (bench.f_measure())
-
-    print v.editing_types()
-    print v.ag_count()
-    print v.other_mutations_count()
+    version = '0.0.1'
+    usage = '%prog -v test.vcf'
+    parser = OptionParser(usage=usage, version=version)
+    parser.add_option(
+        '-v',
+        action='store', type='string', dest='vcf_file', help='Set vcf filename'
+    )
+    options, args = parser.parse_args()
+    if options.vcf_file:
+        v = VCFReader(options.vcf_file)
+        print v.vcf_name()
+        print v.cnt()
+        print v.editing_types()
+        print v.ag_count()
+        print v.other_mutations_count()
+    else:
+        parser.error("VCF file must be given")
 
