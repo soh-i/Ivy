@@ -19,7 +19,10 @@ class Alignment(object):
                                        start=self.coords['start'],
                                        end=self.coords['end']):
             chrom = self.samfile.getrname(col.tid)
-            pos = col.pos + 1 if self.one_based else col.pos
+            if self.one_based:
+                pos = col.pos + 1
+            else:
+                pos = col.pos
 
             prop_read = []
             for r in col.pileups:
@@ -30,52 +33,53 @@ class Alignment(object):
                     prop_read.append(r)
                 
             ref = self.fafile.fetch(self.chrom, col.pos, col.pos+1)
+            #mismatches = [read for read in prop_read
+            #if read.alignment.seq[read.qpos] != ref]
+            
             mismatches = [read for read in prop_read
                           if read.alignment.seq[read.qpos] != ref]
-            matches = [read for read in prop_read
-                       if read.alignment.seq[read.qpos] == ref]
-        
-            A = [read for read in prop_read
-                 if read.alignment.seq[read.qpos] == 'A']
-            a = [read for read in prop_read
-                 if read.alignment.seq[read.qpos] == 'n']
-            
-            C = [read for read in prop_read
-                 if read.alignment.seq[read.qpos] == 'C']
-            c = [read for read in prop_read
-                 if read.alignment.seq[read.qpos] == 'c']
-            
-            T = [read for read in prop_read
-                 if read.alignment.seq[read.qpos] == 'T']
-            t = [read for read in prop_read
-                 if read.alignment.seq[read.qpos] == 't']
-            
-            G = [read for read in prop_read
-                 if read.alignment.seq[read.qpos] == 'G']
-            g = [read for read in prop_read
-                 if read.alignment.seq[read.qpos] == 'g']
-            
-            N = [read for read in prop_read
-                 if read.alignment.seq[read.qpos] == 'N' \
-                 or read.alignment.seq[read.qpos] == 'n']
 
-            yield {'chrom':chrom,
-                   'pos':pos,
-                   'ref':ref,
-                   'coverage':len(prop_read),
-                   'matches':len(matches),
-                   'mismatches':len(mismatches),
-                   'Af':len(A),
-                   'Ar':len(a),
-                   'Cf':len(C),
-                   'Cr':len(c),
-                   'Tf':len(T),
-                   'Tr':len(t),
-                   'Gf':len(G),
-                   'Gr':len(g),
-                   'N': len(N)
-               }
-
+            if len(mismatches) > 1:
+                A = [read for read in prop_read
+                     if read.alignment.seq[read.qpos] == 'A']
+                a = [read for read in prop_read
+                     if read.alignment.seq[read.qpos] == 'a']
+                
+                C = [read for read in prop_read
+                     if read.alignment.seq[read.qpos] == 'C']
+                c = [read for read in prop_read
+                     if read.alignment.seq[read.qpos] == 'c']
+                
+                T = [read for read in prop_read
+                     if read.alignment.seq[read.qpos] == 'T']
+                t = [read for read in prop_read
+                     if read.alignment.seq[read.qpos] == 't']
+                
+                G = [read for read in prop_read
+                     if read.alignment.seq[read.qpos] == 'G']
+                g = [read for read in prop_read
+                     if read.alignment.seq[read.qpos] == 'g']
+                
+                N = [read for read in prop_read
+                     if read.alignment.seq[read.qpos] == 'N' \
+                     or read.alignment.seq[read.qpos] == 'n']
+            
+                yield {'chrom':chrom,
+                       'pos':pos,
+                       'ref':ref,
+                       'coverage':len(prop_read),
+                       'mismatches':len(mismatches),
+                       'Af':len(A),
+                       'Ar':len(a),
+                       'Cf':len(C),
+                       'Cr':len(c),
+                       'Tf':len(T),
+                       'Tr':len(t),
+                       'Gf':len(G),
+                       'Gr':len(g),
+                       'N': len(N)
+                   }
+                
     def __resolve_coords(self):
         self.coords = {'start':None, 'end':None}
         if self.one_based:
