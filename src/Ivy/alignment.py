@@ -29,7 +29,7 @@ class Alignment(object):
                    and not r.is_del:
                     prop_read.append(r)
                 
-            ref = self.fafile.fetch(self.chrom, col.pos, col.pos+1).upper()
+            ref = self.fafile.fetch(self.chrom, col.pos, col.pos+1)
             mismatches = [read for read in prop_read
                           if read.alignment.seq[read.qpos] != ref]
             matches = [read for read in prop_read
@@ -37,25 +37,42 @@ class Alignment(object):
         
             A = [read for read in prop_read
                  if read.alignment.seq[read.qpos] == 'A']
+            a = [read for read in prop_read
+                 if read.alignment.seq[read.qpos] == 'n']
+            
             C = [read for read in prop_read
                  if read.alignment.seq[read.qpos] == 'C']
+            c = [read for read in prop_read
+                 if read.alignment.seq[read.qpos] == 'c']
+            
             T = [read for read in prop_read
                  if read.alignment.seq[read.qpos] == 'T']
+            t = [read for read in prop_read
+                 if read.alignment.seq[read.qpos] == 't']
+            
             G = [read for read in prop_read
                  if read.alignment.seq[read.qpos] == 'G']
-            N = [read for read in prop_read
-                 if read.alignment.seq[read.qpos] == 'N']
+            g = [read for read in prop_read
+                 if read.alignment.seq[read.qpos] == 'g']
             
-            yield {'chrom': chrom,
-                   'pos': pos,
-                   'ref': ref,
-                   'coverage': len(prop_read),
-                   'matches': len(matches),
-                   'mismatches': len(mismatches),
-                   'A': len(A),
-                   'C': len(C),
-                   'T': len(T),
-                   'G': len(G),
+            N = [read for read in prop_read
+                 if read.alignment.seq[read.qpos] == 'N' \
+                 or read.alignment.seq[read.qpos] == 'n']
+
+            yield {'chrom':chrom,
+                   'pos':pos,
+                   'ref':ref,
+                   'coverage':len(prop_read),
+                   'matches':len(matches),
+                   'mismatches':len(mismatches),
+                   'Af':len(A),
+                   'Ar':len(a),
+                   'Cf':len(C),
+                   'Cr':len(c),
+                   'Tf':len(T),
+                   'Tr':len(t),
+                   'Gf':len(G),
+                   'Gr':len(g),
                    'N': len(N)
                }
 
