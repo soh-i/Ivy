@@ -1,14 +1,23 @@
 from __future__ import division
 import vcf
 import os.path
-import utils
 import ConfigParser
 from collections import Counter
 
+try:
+    import utils
+except:
+    raise ImportError
+
+
 class DarnedReader(object):
+    '''
+    DardReader class
+    '''
+    
     def __init__(self, sp=''):
         '''
-        args: sp=human_hg19
+        __init__(self, sp=) -> instance object of the DarnedReader
         '''
         self.__sp = sp
 
@@ -28,8 +37,7 @@ class DarnedReader(object):
         
     def generate_darned_set(self):
         '''
-        args: species
-        return: set of Darned list, chr:pos
+        generate_darned_set(self) -> list, returns the accumulated DARNED db
         '''
         darned_list = []
         self.count = 0
@@ -47,15 +55,27 @@ class DarnedReader(object):
             raise (RuntimeError, 'Given species name[%s] is not valid' % (self.__sp))
 
     def sp(self):
+        '''
+        sp(self) -> str, given species name
+        '''
         return self.__sp
 
     def path(self):
+        '''
+        path(self) -> str, absolute path to Darned database file
+        '''
         return os.path.abspath(self.__darned[self.__sp])
 
     def db_name(self):
+        '''
+        db_name(self) -> str, Darned db name
+        '''
         return os.path.basename(self.path())
                  
     def count(self):
+        '''
+        count(self) -> int, number of the Darned entories
+        '''
         return self.count
         
 
