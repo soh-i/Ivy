@@ -3,18 +3,15 @@ import vcf
 import os.path
 import ConfigParser
 from collections import Counter
-
 try:
     import utils
 except:
     raise ImportError
 
-
 class DarnedReader(object):
     '''
     DardReader class
     '''
-    
     def __init__(self, sp=''):
         '''
         __init__(self, sp=) -> instance object of the DarnedReader
@@ -82,8 +79,9 @@ class DarnedReader(object):
 class VCFReader(object):
     def __init__(self, filename):
         self.vcf = filename
+        self.db = self.__generate_vcf_set()
 
-    def generate_vcf_set(self):
+    def __generate_vcf_set(self):
         '''
         generate_vcf_set(self) -> list, returns the accumulated vcf
         '''
@@ -96,10 +94,10 @@ class VCFReader(object):
             types = str(rec.REF) + '-to-' + 'or'.join([str(i) for i in rec.ALT])
             self.substitutions[types] += 1
             vcf_recs.append(rec.CHROM + ':' + str(rec.POS))
-            self.count += 0
+            self.count += 1
         return vcf_recs
 
-    def count(self):
+    def cnt(self):
         '''
         count(self) -> int, entoties of the parsed vcf records
         '''
@@ -159,3 +157,5 @@ class Benchmark(object):
 
     def ag_enrichment(self):
         pass
+
+
