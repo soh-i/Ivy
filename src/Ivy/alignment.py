@@ -38,7 +38,7 @@ class AlignmentStream(object):
         self.end = end
         self.one_based = one_based
         
-    def to_pileup(self):
+    def pileup_stream(self):
         coords = self.__resolve_coords()
     
         for col in self.samfile.pileup(reference=self.chrom,
@@ -118,9 +118,13 @@ class AlignmentStream(object):
 
 class AlignmentStreamMerger(object):
     def __init__(self):
-        pass
+        self.__merge_streaming()
 
-        
+    def __merge_streaming(self):
+        conf = AlignmentConfig()
+        dna_stream = AlignmentStream(conf)
+        rna_stream = AlignmentStream(conf)
+
 class AlignmentFilter(object):
     def __init__(self):
         self.edit_ratio = edit_ratio
