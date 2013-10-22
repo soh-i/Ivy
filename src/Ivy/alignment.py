@@ -1,6 +1,32 @@
 import pysam
 
-class Alignment(object):
+class AlignmentConfig(object):
+    def __init__(self):
+        self.conf = self.__set_default()
+        
+    def __set_default(self):
+        initialize = {
+            is_duplicate : False,
+            is_unmapped : False,
+            is_deletion : False,
+            is_proper_pair : True,
+            is_qcfail : False,
+            is_secondary : True,
+            mapq : 25,
+            mate_is_reverse : True,
+            mate_is_unmapped : False,
+            base_qual : 25,
+        }
+
+        
+    def add_conf(self):
+        pass
+
+    def read(self):
+        pass
+
+        
+class AlignmentStream(object):
     def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=None):
         bm = pysam.Samfile(samfile, 'rb')
         ft = pysam.Fastafile(fafile)
@@ -90,7 +116,12 @@ class Alignment(object):
         return self.coords
 
 
-class AlignmentFiler(object):
+class AlignmentStreamMerger(object):
+    def __init__(self):
+        pass
+
+        
+class AlignmentFilter(object):
     def __init__(self):
         self.edit_ratio = edit_ratio
         self.min_mismatch = min_mismatch
@@ -105,6 +136,3 @@ class AlignmentFiler(object):
             if self.coverage > record['coverage'] \
                and self.min_mismatch < record['mismatches']:
                 pass
-
-        
-
