@@ -17,14 +17,27 @@ class AlignmentConfig(object):
             mate_is_unmapped : False,
             base_qual : 25,
         }
+        return initialize
+        
+    def set_filter(self, param, value):
+        self.initialize.update({param:value})
+        return self.initialize
+
+    def get_filter_value(self, param):
+        return self.initialize[param]
+        
+    def has_filter(self, filt):
+        for k in self.initialize:
+            if filt == self.initialize[k]:
+                return True
+            else:
+                return False
 
         
-    def add_conf(self):
-        pass
-
-    def read(self):
-        pass
-
+    def print_all_params(self):
+        for k in self.initialize:
+            print "[%s]:%s" % (self.initialize[k], k)
+            
         
 class AlignmentStream(object):
     def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=None):
@@ -124,6 +137,9 @@ class AlignmentStreamMerger(object):
         conf = AlignmentConfig()
         dna_stream = AlignmentStream(conf)
         rna_stream = AlignmentStream(conf)
+
+
+
 
 class AlignmentFilter(object):
     def __init__(self):
