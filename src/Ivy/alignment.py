@@ -5,7 +5,7 @@ class AlignmentConfig(object):
         self.conf = self.__set_default()
         
     def __set_default(self):
-        initialize = {
+        __initialize = {
             is_duplicate : False,
             is_unmapped : False,
             is_deletion : False,
@@ -17,26 +17,25 @@ class AlignmentConfig(object):
             mate_is_unmapped : False,
             base_qual : 25,
         }
-        return initialize
+        return __initialize
         
     def set_filter(self, param, value):
-        self.initialize.update({param:value})
-        return self.initialize
+        self.cof.update({param:value})
+        return self.conf
 
     def get_filter_value(self, param):
-        return self.initialize[param]
+        return self.conf[param]
         
     def has_filter(self, filt):
-        for k in self.initialize:
-            if filt == self.initialize[k]:
+        for k in self.conf:
+            if filt == self.conf[k]:
                 return True
             else:
                 return False
-
         
     def print_all_params(self):
-        for k in self.initialize:
-            print "[%s]:%s" % (self.initialize[k], k)
+        for k in self.conf:
+            print "[%s]:%s" % (self.conf[k], k)
             
         
 class AlignmentStream(object):
@@ -137,7 +136,6 @@ class AlignmentStreamMerger(object):
         conf = AlignmentConfig()
         dna_stream = AlignmentStream(conf)
         rna_stream = AlignmentStream(conf)
-
 
 
 
