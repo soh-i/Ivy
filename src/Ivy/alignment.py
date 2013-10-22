@@ -34,7 +34,7 @@ class AlignmentConfig(object):
         
     def print_all_params(self):
         for k in self.conf:
-            print  "[%s]:%s" % (k, self.conf[k])
+            print "[%s]:%s" % (k, self.conf[k])
             
         
 class AlignmentStream(object):
@@ -45,16 +45,13 @@ class AlignmentStream(object):
         self.samfile = bm
         self.fafile = ft
         self.chrom = chrom
-        self.start = start
-        self.end = end
         self.one_based = one_based
+        (self.start, self.end) = self.__resolve_coords(start, end)
         
     def pileup_stream(self):
-        coords = self.__resolve_coords()
-    
         for col in self.samfile.pileup(reference=self.chrom,
-                                       start=self.coords['start'],
-                                       end=self.coords['end']):
+                                       start=self.start,
+                                       end=self.end):
             chrom = self.samfile.getrname(col.tid)
             if self.one_based:
                 pos = col.pos + 1
@@ -117,25 +114,27 @@ class AlignmentStream(object):
                        'N': len(N)
                    }
                 
-    def __resolve_coords(self):
-        self.coords = {'start':None, 'end':None}
+    def __resolve_coords(self, start, end):
         if self.one_based:
-            if self.start is not None:
-                self.coords.update({'start':self.start-1})
+            if start is not None:
+                start = start -1
+            else:
+                None
             if end is not None:
-                self.coords.update({'end':self.end-1})
-        return self.coords
+                end = end -1
+            else:
+                None
+        return start, end
 
 
 class AlignmentStreamMerger(object):
-    def __init__(self):
-        self.__merge_streaming()
+    def __init__(self, rna, dna):
+        self.rna = rna
+        self.dna = dna
 
-    def __merge_streaming(self):
-        conf = AlignmentConfig()
+    def merge_streaming(self):
         dna_stream = AlignmentStream(conf)
         rna_stream = AlignmentStream(conf)
-
 
 
 class AlignmentFilter(object):
