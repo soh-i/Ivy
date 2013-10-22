@@ -6,23 +6,22 @@ class AlignmentConfig(object):
         
     def __set_default(self):
         __initialize = {
-            is_duplicate : False,
-            is_unmapped : False,
-            is_deletion : False,
-            is_proper_pair : True,
-            is_qcfail : False,
-            is_secondary : True,
-            mapq : 25,
-            mate_is_reverse : True,
-            mate_is_unmapped : False,
-            base_qual : 25,
+            'is_duplicate' : False,
+            'is_unmapped' : False,
+            'is_deletion' : False,
+            'is_proper_pair' : True,
+            'is_qcfail' : False,
+            'is_secondary' : True,
+            'mapq' : 25,
+            'mate_is_reverse' : True,
+            'mate_is_unmapped' : False,
+            'base_qual' : 25,
         }
         return __initialize
         
     def set_filter(self, param, value):
-        self.cof.update({param:value})
-        return self.conf
-
+        self.conf.update({param:value})
+        
     def get_filter_value(self, param):
         return self.conf[param]
         
@@ -35,7 +34,7 @@ class AlignmentConfig(object):
         
     def print_all_params(self):
         for k in self.conf:
-            print "[%s]:%s" % (self.conf[k], k)
+            print  "[%s]:%s" % (k, self.conf[k])
             
         
 class AlignmentStream(object):
