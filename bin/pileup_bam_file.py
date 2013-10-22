@@ -12,7 +12,7 @@ if __name__ == '__main__':
     end = 0
     alignment = Alignment(bam_file, fa_file, chrom=chr_name, start=start, end=end)
     
-    for i in alignment.to_pileup():
+    for i in alignment.pileup_stream():
         print i['chrom'], i['pos'], i['ref'],
         print i['coverage'],
         print i['mismatches'],
