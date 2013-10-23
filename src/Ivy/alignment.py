@@ -1,3 +1,4 @@
+from __future__ import division
 import pysam
 
 class AlignmentConfig(object):
@@ -105,9 +106,15 @@ class AlignmentStream(object):
                 reverse_allel_c = (mc_a + mc_t + mc_c + mc_g)
                 depth = len(prop_read) - len(mismatches)
                 mismatch_c = forward_allel_c + reverse_allel_c
-                allele_freq = mismatch_c / depth
-                #ag_freq = (mc_G + mc_g) / (mc_G + mc_g + mc_A + mc_a)
                 
+                allele_freq = 0
+                ag_freq = 0
+                try:
+                    allele_freq = mismatch_c / depth
+                    ag_freq = (mc_G + mc_g) / (mc_G + mc_g + mc_A + mc_a)
+                except ZeroDivisionError:
+                    pass
+                    
                 mapq = r.alignment.mapq
                 ave_baq = self.average_baq(r.alignment.seq)
                 print ave_baq
@@ -117,7 +124,7 @@ class AlignmentStream(object):
                        'ref':ref,
                        'coverage':len(prop_read),
                        'mismatches':mismatch_c,
-                       'matches': depth,\
+                       'matches': depth,
                        'mapq': mapq,
                        'Af':mc_A,
                        'Ar':mc_a,
