@@ -105,16 +105,20 @@ class AlignmentStream(object):
                 reverse_allel_c = (mc_a + mc_t + mc_c + mc_g)
                 depth = len(prop_read) - len(mismatches)
                 mismatch_c = forward_allel_c + reverse_allel_c
-                allele_freq = len(mismatch) / depth
-                ag_freq = (mc_G + mc_g) / (mc_G + mc_g + mc_A + mc_a)
+                allele_freq = mismatch_c / depth
+                #ag_freq = (mc_G + mc_g) / (mc_G + mc_g + mc_A + mc_a)
                 
+                mapq = r.alignment.mapq
+                ave_baq = self.average_baq(r.alignment.seq)
+                print ave_baq
                 # returns per a base
                 yield {'chrom':chrom,
                        'pos':pos,
                        'ref':ref,
                        'coverage':len(prop_read),
                        'mismatches':mismatch_c,
-                       'matches': depth,
+                       'matches': depth,\
+                       'mapq': mapq,
                        'Af':mc_A,
                        'Ar':mc_a,
                        'Cf':mc_C,
@@ -137,6 +141,9 @@ class AlignmentStream(object):
             else:
                 None
         return start, end
+
+    def average_baq(self, string):
+        return [ord(s)-33 for s in string]
 
 
 class AlignmentStreamMerger(object):
