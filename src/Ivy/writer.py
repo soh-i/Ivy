@@ -13,18 +13,25 @@ class VCFWriter(object):
         self.params = p.conf
 
     def make_header(self):
-        pass
+        return self.__info_header()
         
-    def info(self):
+    def __info_header(self):
         prefix = '##INFO='
-        info = ''
+        info_h = ''
         for k in self.params:
-            info += ','.join([prefix + '<ID=' + k,
+            info_h += ','.join([prefix + '<ID=' + k,
                               'Number=' + '1',
                               'Type='+'Interger',
-                              'Description=' + '"' + k + 'filtering params' + '">\n' ])
+                              'Description=' + '"' + k + 'filtering params' + '">\n'])
         return info
 
+    def info(self):
+        info = ''
+        for k in self.params:
+              info += ';'.join([k + "=" + str(self.params[k]), ''])
+        return info
+        
+            
     def format(self):
         for i in range(10):
             yield i
@@ -38,5 +45,6 @@ class VCFWriter(object):
     
 if __name__ == '__main__':
     writer = VCFWriter()
-    print writer.info(),
+    print writer.info()
+    
 
