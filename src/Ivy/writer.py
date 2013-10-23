@@ -1,18 +1,22 @@
 import collections
 from alignment import AlignmentConfig
 
+class VCFWriterException(Exception):
+    pass
+
 class VCFWriter(object):
-    def __init__(self, stream):
-        self.stream = stream
+    def __init__(self):
         self.__spec = {'fileformat': 'VCFv4.1',
                        'source': 'Ivy_v0.0.1',
                        'reference': 'test.fasta',
                        'species': 'Homo Sapiens',
                        'samples': 'sample.bam',
-                       
                    }
-    
+        
     def merge_filtering_param(self):
+        '''
+        merge_filtering_param() -> dict, returns merged filtering and spec dict
+        '''
         p = AlignmentConfig()
         self.__spec.update({k: p.conf[k] for k in p.conf})
         return self.__spec
@@ -24,7 +28,7 @@ class VCFWriter(object):
         '''
         s = ''
         for k in self.__spec:
-            s += "##" +  "=".join([k, self.__spec[k]]) + "\n"
+            s += "##"+  "=".join([k, self.__spec[k]])+ "\n"
         return s
         
     def params_section(self):
@@ -35,7 +39,7 @@ class VCFWriter(object):
         p = AlignmentConfig()
         params = ''
         for k in p.conf:
-            params += "##PARAMS=" + ",".join(['<ID='+ k, 'Value='+str(p.conf[k])]) + '>\n'
+            params += "##PARAMS="+ ",".join(['<ID='+ k, 'Value='+ str(p.conf[k])])+ '>\n'
         return params
 
     def info_section(self, id, number, value, desc):
@@ -46,9 +50,9 @@ class VCFWriter(object):
         prefix = '##INFO='
         info_h = ''
         info_h += ','.join([prefix+ '<ID='+ id.upper(),
-                            'Number=' + num,
+                            'Number='+ num,
                             'Type='+ value,
-                            'Description='+ '"' + desc + '">\n'])
+                            'Description='+ '"'+ desc+ '">\n'])
         return info_h
     
     def filter(self):
@@ -57,13 +61,3 @@ class VCFWriter(object):
     def header(self):
         return "{0}\t{1}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\n".format("#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT")
 
-    def vcf_stream(self):
-        pass
-
-        
-if __name__ == '__main__':
-    writer = VCFWriter("test")
-    print writer.spec_section(),
-    print writer.params_section(),
-    print writer.header(),
-    
