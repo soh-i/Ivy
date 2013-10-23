@@ -1,50 +1,68 @@
 import collections
-
 from alignment import AlignmentConfig
 
 class VCFWriter(object):
     def __init__(self):
-        #self.stream = stream
-        self.version = '4.1'
-        self.__spec = ('http://www.1000genomes.org/wiki/Analysis/'
-                       'Variant%20Call%20Format/vcf-variant-call-format-version-41')
+        
+        self.spec = {'fileformat': 'VCFv4.1',
+                     'source': 'Ivy_v0.0.1',
+                     'reference': 'test.fasta'
+                   }
+    
+    def add_to_spec(self):
+        p = AlignmentConfig()
+        self.spec.update({k: p.conf[k] for k in p.conf})
+        return self.spec
+
+    def spec_section(self):
+        '''
+        spec_section() -> str, return VCF header of basic informations
+        e.g. ##fileformat=VCFv4.1
+        '''
+        s = ''
+        for k in self.spec:
+            s += "##" +  "=".join([k, self.spec[k]]) + "\n"
+        return s
+
+        
+    def params_section(self):
+        '''
+        params_section()->str, returns VCF header of PARAM section
+        e.g. ##PARAMS=<ID=is_qcfail,value=False>
+        '''
         
         p = AlignmentConfig()
-        self.params = p.conf
+        params = ''
+        for k in p.conf:
+            params += "##PARAMS=" + ",".join(['<ID='+ k, 'Value='+str(p.conf[k])]) + '>\n'
+        return params
 
-    def make_header(self):
-        return self.__info_header()
-        
-    def __info_header(self):
+    def info_section(self, id, number, value, desc):
+        '''
+        info_section(id, number, value, desc)->str, return INFO header
+        e.g. ##INFO
+        '''
         prefix = '##INFO='
         info_h = ''
-        for k in self.params:
-            info_h += ','.join([prefix + '<ID=' + k,
-                              'Number=' + '1',
-                              'Type='+'Interger',
-                              'Description=' + '"' + k + 'filtering params' + '">\n'])
-        return info
-
-    def info(self):
-        info = ''
-        for k in self.params:
-              info += ';'.join([k + "=" + str(self.params[k]), ''])
-        return info
-        
-            
+        info_h += ','.join([prefix+ '<ID='+ id,
+                            'Number=' + num,
+                            'Type='+ value,
+                            'Description='+ '"' + desc + '">\n'])
+        return info_h
+    
     def format(self):
         for i in range(10):
             yield i
 
     def filter(self):
-        pass
+        return str('PASS')
 
-    def spec(self):
-        return self.__spec
         
-    
 if __name__ == '__main__':
     writer = VCFWriter()
-    print writer.info()
+    print writer.spec_section(),
+
+    
+    
     
 
