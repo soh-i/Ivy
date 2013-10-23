@@ -1,4 +1,5 @@
 from __future__ import division
+from collections import Counter
 import pysam
 
 class AlignmentConfig(object):
@@ -102,9 +103,18 @@ class AlignmentStream(object):
                 mc_C = len(C)
                 mc_c = len(c)
                 mc_N = len(N)
+
+
+                Ac = mc_A + mc_a
+                Tc = mc_T + mc_t
+                Gc = mc_G + mc_g
+                Cc = mc_C + mc_c
+                base = {'A': Ac, 'T': Tc, 'G': Gc, 'C': Cc}
+                print self.define_allele(base, ref=ref)
+                
                 forward_allel_c = (mc_A + mc_T + mc_C + mc_G)
                 reverse_allel_c = (mc_a + mc_t + mc_c + mc_g)
-                depth = len(prop_read) - len(mismatches)
+                depth = len(prop_read)
                 mismatch_c = forward_allel_c + reverse_allel_c
                 
                 allele_freq = 0
@@ -116,8 +126,8 @@ class AlignmentStream(object):
                     pass
                     
                 mapq = r.alignment.mapq
-                ave_baq = self.average_baq(r.alignment.seq)
-                print ave_baq
+                ave_baq = '{0:.2f}'.format(sum(self.average_baq(r.alignment.seq))/depth)
+                
                 # returns per a base
                 yield {'chrom':chrom,
                        'pos':pos,
@@ -126,6 +136,9 @@ class AlignmentStream(object):
                        'mismatches':mismatch_c,
                        'matches': depth,
                        'mapq': mapq,
+                       'ave_baq': ave_baq,
+                       'forward_allel_count': forward_allel_c,
+                       'reverse_allel_count': reverse_allel_c,
                        'Af':mc_A,
                        'Ar':mc_a,
                        'Cf':mc_C,
@@ -136,7 +149,7 @@ class AlignmentStream(object):
                        'Gr':mc_g,
                        'N': mc_N,
                    }
-                
+    
     def __resolve_coords(self, start, end):
         if self.one_based:
             if start is not None:
@@ -152,7 +165,15 @@ class AlignmentStream(object):
     def average_baq(self, string):
         return [ord(s)-33 for s in string]
 
-
+    def define_allele(self, base, ref=None):
+        c = Counter(base)
+        comm = c.most_common()
+        allele = []
+        for base in comm:
+            if base[0] != ref:
+                allele.append(base[0])
+        return allele
+        
 class AlignmentStreamMerger(object):
     def __init__(self, rna, dna):
         self.rna = rna
