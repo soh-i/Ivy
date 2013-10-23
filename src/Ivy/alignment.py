@@ -57,7 +57,7 @@ class AlignmentStream(object):
                 pos = col.pos + 1
             else:
                 pos = col.pos
-
+                
             prop_read = []
             for r in col.pileups:
                 if r.alignment.is_proper_pair \
@@ -65,53 +65,65 @@ class AlignmentStream(object):
                    and not r.alignment.is_unmapped \
                    and not r.is_del:
                     prop_read.append(r)
-                
+                    
             ref = self.fafile.fetch(self.chrom, col.pos, col.pos+1)
-            #mismatches = [read for read in prop_read
-            #if read.alignment.seq[read.qpos] != ref]
             
             mismatches = [read for read in prop_read
                           if read.alignment.seq[read.qpos] != ref]
-
             if len(mismatches) > 1:
+                # Mismatch base
                 A = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'A']
                 a = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'a']
-                
                 C = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'C']
                 c = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'c']
-                
                 T = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'T']
                 t = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 't']
-                
                 G = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'G']
                 g = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'g']
-                
                 N = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'N' \
                      or read.alignment.seq[read.qpos] == 'n']
-            
+
+                mc_A = len(A)
+                mc_a = len(a)
+                mc_T = len(T)
+                mc_t = len(t)
+                mc_G = len(G)
+                mc_g = len(g)
+                mc_C = len(C)
+                mc_c = len(c)
+                mc_N = len(N)
+                forward_allel_c = (mc_A + mc_T + mc_C + mc_G)
+                reverse_allel_c = (mc_a + mc_t + mc_c + mc_g)
+                depth = len(prop_read) - len(mismatches)
+                mismatch_c = forward_allel_c + reverse_allel_c
+                allele_freq = len(mismatch) / depth
+                ag_freq = (mc_G + mc_g) / (mc_G + mc_g + mc_A + mc_a)
+                
+                # returns per a base
                 yield {'chrom':chrom,
                        'pos':pos,
                        'ref':ref,
                        'coverage':len(prop_read),
-                       'mismatches':len(mismatches),
-                       'Af':len(A),
-                       'Ar':len(a),
-                       'Cf':len(C),
-                       'Cr':len(c),
-                       'Tf':len(T),
-                       'Tr':len(t),
-                       'Gf':len(G),
-                       'Gr':len(g),
-                       'N': len(N)
+                       'mismatches':mismatch_c,
+                       'matches': depth,
+                       'Af':mc_A,
+                       'Ar':mc_a,
+                       'Cf':mc_C,
+                       'Cr':mc_c,
+                       'Tf':mc_T,
+                       'Tr':mc_t,
+                       'Gf':mc_G,
+                       'Gr':mc_g,
+                       'N': mc_N,
                    }
                 
     def __resolve_coords(self, start, end):
