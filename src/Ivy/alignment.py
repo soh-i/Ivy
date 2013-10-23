@@ -67,7 +67,7 @@ class AlignmentStream(object):
                    and not r.alignment.is_unmapped \
                    and not r.is_del:
                     prop_read.append(r)
-                    
+            
             ref = self.fafile.fetch(self.chrom, col.pos, col.pos+1)
             
             mismatches = [read for read in prop_read
@@ -115,7 +115,7 @@ class AlignmentStream(object):
                 reverse_allel_c = (mc_a + mc_t + mc_c + mc_g)
                 depth = len(prop_read)
 
-                mismatch_c = sum([i[1] for i in alleles])
+                mismatch_c = sum([base[1] for base in alleles])
                 mismatch_freq = '{0:.2f}'.format(mismatch_c/depth)
                 
                 allele_freq = 0
@@ -175,6 +175,7 @@ class AlignmentStream(object):
             if base[0] != ref:
                 allele.append(base)
         return allele
+
         
 class AlignmentStreamMerger(object):
     def __init__(self, rna, dna):
