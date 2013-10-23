@@ -103,19 +103,20 @@ class AlignmentStream(object):
                 mc_C = len(C)
                 mc_c = len(c)
                 mc_N = len(N)
-
-
+                
                 Ac = mc_A + mc_a
                 Tc = mc_T + mc_t
                 Gc = mc_G + mc_g
                 Cc = mc_C + mc_c
                 base = {'A': Ac, 'T': Tc, 'G': Gc, 'C': Cc}
-                print self.define_allele(base, ref=ref)
+                alleles = self.define_allele(base, ref=ref)
                 
                 forward_allel_c = (mc_A + mc_T + mc_C + mc_G)
                 reverse_allel_c = (mc_a + mc_t + mc_c + mc_g)
                 depth = len(prop_read)
-                mismatch_c = forward_allel_c + reverse_allel_c
+
+                mismatch_c = sum([i[1] for i in alleles])
+                mismatch_freq = '{0:.2f}'.format(mismatch_c/depth)
                 
                 allele_freq = 0
                 ag_freq = 0
@@ -124,7 +125,7 @@ class AlignmentStream(object):
                     ag_freq = (mc_G + mc_g) / (mc_G + mc_g + mc_A + mc_a)
                 except ZeroDivisionError:
                     pass
-                    
+                
                 mapq = r.alignment.mapq
                 ave_baq = '{0:.2f}'.format(sum(self.average_baq(r.alignment.seq))/depth)
                 
@@ -134,6 +135,7 @@ class AlignmentStream(object):
                        'ref':ref,
                        'coverage':len(prop_read),
                        'mismatches':mismatch_c,
+                       'mismatch_freq': mismatch_freq,
                        'matches': depth,
                        'mapq': mapq,
                        'ave_baq': ave_baq,
@@ -171,7 +173,7 @@ class AlignmentStream(object):
         allele = []
         for base in comm:
             if base[0] != ref:
-                allele.append(base[0])
+                allele.append(base)
         return allele
         
 class AlignmentStreamMerger(object):
