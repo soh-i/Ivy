@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from Ivy.alignment import *
+from Ivy.writer import VCFWriteHeader
 
 if __name__ == '__main__':
     bam_file = '../test_data/dna.bam'
@@ -8,21 +9,24 @@ if __name__ == '__main__':
     fa_file = '../test_data/reference.fa'
     #fa_file = '/home/soh.i/archives/nucRNA/data/Drosophila_melanogaster/UCSC/dm3/Sequence/WholeGenomeFasta/genome.fa'
     chr_name = 'chr21'
-    start = 0
-    end = 0
-    alignment = Alignment(bam_file, fa_file, chrom=chr_name, start=start, end=end)
+    start = 47721045
+    end = 47721088
     
-    for i in alignment.pileup_stream():
-        print i['chrom'], i['pos'], i['ref'],
-        print i['coverage'],
-        print i['mismatches'],
-        print i['Af'],
-        print i['Ar'],
-        print i['Tf'],
-        print i['Tr'],
-        print i['Gf'],
-        print i['Gr'],
-        print i['Cf'],
-        print i['Gr'],
-        print i['N']
-        
+    rna_alignment = AlignmentStream(bam_file, fa_file, chrom=chr_name, start=start, end=end)
+    #dna_alignment = AlignmentStream(bam_file, fa_file, chrom=chr_name, start=start, end=end)
+
+    v = VCFWriteHeader()
+    v.make_vcf_header()
+   
+    for rna in rna_alignment.pileup_stream():
+        print rna
+
+"""        
+        for dna in dna_alignment.pileup_stream():
+            if rna['chrom'] == dna['chrom'] and dna['pos'] == rna['pos']:
+                print dna['pos']
+
+                break;
+                
+            
+"""
