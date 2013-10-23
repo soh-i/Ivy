@@ -2,7 +2,6 @@ import collections
 
 from alignment import AlignmentConfig
 
-
 class VCFWriter(object):
     def __init__(self):
         #self.stream = stream
@@ -13,23 +12,22 @@ class VCFWriter(object):
         p = AlignmentConfig()
         self.params = p.conf
 
+    def make_header(self):
+        pass
+        
     def info(self):
         prefix = '##INFO='
+        info = ''
         for k in self.params:
-            yield ','.join([prefix + '<ID=' + k,
-                            'Number=' + '1',
-                            'Type='+'Interger',
-                            'Description=' + '"' + k + 'filtering params' + '">' ])
+            info += ','.join([prefix + '<ID=' + k,
+                              'Number=' + '1',
+                              'Type='+'Interger',
+                              'Description=' + '"' + k + 'filtering params' + '">\n' ])
+        return info
 
     def format(self):
-        pass
-
-    def header(self):
-        self.fileformat = 'VCFv4.1'
-
-        self.reference;
-        self.contig;
-
+        for i in range(10):
+            yield i
 
     def filter(self):
         pass
@@ -40,6 +38,5 @@ class VCFWriter(object):
     
 if __name__ == '__main__':
     writer = VCFWriter()
-    for i in writer.info():
-        print i
+    print writer.info(),
 
