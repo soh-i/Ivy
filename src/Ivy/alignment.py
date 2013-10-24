@@ -56,7 +56,6 @@ class AlignmentStream(object):
         else: self.chrom = chrom
         
     def pileup_stream(self):
-        
         for col in self.samfile.pileup(reference=self.chrom,
                                            start=self.start,
                                            end=self.end):
