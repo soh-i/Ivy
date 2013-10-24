@@ -6,7 +6,7 @@ import sys
 import pprint
 
 if __name__ == '__main__':
-    SMALL = True
+    SMALL = not True
     bam_file = fa_file = chr_name = start = end = 0
     
     if SMALL:
