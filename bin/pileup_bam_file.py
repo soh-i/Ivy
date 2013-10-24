@@ -6,7 +6,7 @@ import sys
 import pprint
 
 if __name__ == '__main__':
-    SMALL = not True
+    SMALL = False
     bam_file = fa_file = chr_name = start = end = 0
     
     if SMALL:
@@ -19,17 +19,13 @@ if __name__ == '__main__':
     else:
         bam_file = '/home/soh.i/db/melanogaster/Nascent-Seq/ZT18_R1/accepted_hits.bam'
         fa_file = '/home/soh.i/archives/nucRNA/data/Drosophila_melanogaster/UCSC/dm3/Sequence/WholeGenomeFasta/genome.fa'
-        chr_name = '2L'
+        chr_name = 'chr2L'
         start = 1
         end = 1000
 
     ft = pysam.Fastafile(fa_file)
     ref = ft.fetch(reference=chr_name, start=start, end=end)
-    
-    if ref:
-        print True
-    else:
-        print False
+    print ref
     
     rna_alignment = AlignmentStream(bam_file, fa_file, chrom=chr_name, start=start, end=end)
     #dna_alignment = AlignmentStream(bam_file, fa_file, chrom=chr_name, start=start, end=end)
