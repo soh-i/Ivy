@@ -49,8 +49,9 @@ class AlignmentStream(object):
         self.chrom = chrom
         self.one_based = one_based
         (self.start, self.end) = self.__resolve_coords(start, end)
-        
+
     def pileup_stream(self):
+        
         for col in self.samfile.pileup(reference=self.chrom,
                                        start=self.start,
                                        end=self.end):
@@ -63,16 +64,20 @@ class AlignmentStream(object):
             prop_read = []
             for r in col.pileups:
                 if r.alignment.is_proper_pair \
-                   and not r.alignment.is_duplicate \
-                   and not r.alignment.is_unmapped \
-                   and not r.is_del:
-                    prop_read.append(r)
+                    and not r.alignment.is_duplicate \
+                    and not r.alignment.is_unmapped \
+                    and not r.is_del:
+                   prop_read.append(r)
             
-            ref = self.fafile.fetch(self.chrom, col.pos, col.pos+1)
+            ref = self.fafile.fetch(reference=self.chrom, start=col.pos, end=col.pos+1)
+            if not ref:
+                raise ValueError('No sequence content within [chr:%s, start:%s, end:%s]' % \
+                                 (self.chrom, self.start, self.end))
             
             mismatches = [read for read in prop_read
                           if read.alignment.seq[read.qpos] != ref]
             if len(mismatches) > 1:
+                
                 # Mismatch base
                 A = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'A']
@@ -130,15 +135,20 @@ class AlignmentStream(object):
                 ave_baq = '{0:.2f}'.format(sum(self.average_baq(r.alignment.seq))/depth)
                 
                 # returns per a base
-                yield {'chrom':chrom,
-                       'pos':pos,
-                       'ref':ref,
-                       'coverage':len(prop_read),
-                       'mismatches':mismatch_c,
+                yield {'CHROM': chrom,
+                       'POS': pos,
+                       'REF': ref,
+                       'ALT': ",".join([(b[0]) for b in alleles]),
+                       'ID': 'ID',
+                       'FORMAT': '.',
+                       'INFO': '.',
+                       'FILTER': '.',
+                       'coverage': len(prop_read),
+                       'mismatches': mismatch_c,
                        'mismatch_freq': mismatch_freq,
                        'matches': depth,
                        'mapq': mapq,
-                       'ave_baq': ave_baq,
+                       'QUAL': ave_baq,
                        'forward_allel_count': forward_allel_c,
                        'reverse_allel_count': reverse_allel_c,
                        'Af':mc_A,
