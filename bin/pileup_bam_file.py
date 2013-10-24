@@ -6,15 +6,15 @@ import sys
 import pprint
 
 if __name__ == '__main__':
-    SMALL = not True
+    SMALL = True
     bam_file = fa_file = chr_name = start = end = 0
     
     if SMALL:
         bam_file = 'test_data/dna.bam'
         fa_file = 'test_data/reference.fa'
         chr_name = 'chr21'
-        start = 1
-        end = 100
+        start = 47721045
+        end = 47721048
         
     else:
         bam_file = '/home/soh.i/db/melanogaster/Nascent-Seq/ZT18_R1/accepted_hits.bam'
@@ -25,17 +25,14 @@ if __name__ == '__main__':
 
     ft = pysam.Fastafile(fa_file)
     ref = ft.fetch(reference=chr_name, start=start, end=end)
+    print ref
     
-    if ref:
-        print True
-    else:
-        print False
-    
+
     rna_alignment = AlignmentStream(bam_file, fa_file, chrom=chr_name, start=start, end=end)
     #dna_alignment = AlignmentStream(bam_file, fa_file, chrom=chr_name, start=start, end=end)
 
     v = VCFWriteHeader()
-    v.make_vcf_header()
+    #v.make_vcf_header()
     pp = pprint.PrettyPrinter(indent=6)
     
     for rna in rna_alignment.pileup_stream():
