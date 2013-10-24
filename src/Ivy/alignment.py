@@ -48,24 +48,21 @@ class AlignmentStream(object):
         
         self.samfile = bm
         self.fafile = ft
-        self.chrom = chrom
         self.one_based = one_based
         (self.start, self.end) = self.__resolve_coords(start, end)
 
+        if not chrom.startswith('chr'):
+            self.chrom = 'chr' + chrom
+        else: self.chrom = chrom
+        
     def pileup_stream(self):
-        mod_chr = ''
-        if self.chrom.startswith('chr'):
-            mod_chr = re.sub(r'^chr', '', self.chrom, 1)
-        else:
-            mod_chr = self.chrom
-            
-        for col in self.samfile.pileup(reference=mod_chr,
+        
+        for col in self.samfile.pileup(reference=self.chrom,
                                            start=self.start,
                                            end=self.end):
             if self.one_based:
                 pos = col.pos + 1
-            else:
-                pos = col.pos
+            else: pos = col.pos
                 
             prop_read = []
             for r in col.pileups:
@@ -73,22 +70,15 @@ class AlignmentStream(object):
                     and not r.alignment.is_duplicate \
                     and not r.alignment.is_unmapped \
                     and not r.is_del:
-                   prop_read.append(r)
-
+                    prop_read.append(r)
+            
             bam_chrom = self.samfile.getrname(col.tid)
-            ref = ''
-            if not bam_chrom.startswith('chr'):
-                ref = self.fafile.fetch(reference=self.chrom, start=col.pos, end=col.pos+1)
-            else:
-                mod_chr = 'chr' + self.chrom
-                ref = self.fafile.fetch(reference=mod_chr, start=col.pos, end=col.pos+1)
-                
-            if not ref:
-                raise ValueError('No sequence content within [chr:%s, start:%s, end:%s]' % \
-                                 (self.chrom, self.start, self.end))
+            ref = self.fafile.fetch(reference=bam_chrom, start=col.pos, end=col.pos+1)
 
-            print mod_chr, self.chrom
-                
+            if not ref:
+                raise ValueError('No seq. content within [chr:%s, start:%s, end:%s]' % \
+                                 (self.chrom, self.start, self.end))
+                        
             mismatches = [read for read in prop_read
                           if read.alignment.seq[read.qpos] != ref]
             if len(mismatches) > 1:
@@ -150,7 +140,7 @@ class AlignmentStream(object):
                 ave_baq = '{0:.2f}'.format(sum(self.average_baq(r.alignment.seq))/depth)
                 
                 # returns per a base
-                yield {'CHROM': chrom,
+                yield {'CHROM': self.chrom,
                        'POS': pos,
                        'REF': ref,
                        'ALT': ",".join([(b[0]) for b in alleles]),
