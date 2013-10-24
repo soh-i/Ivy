@@ -1,5 +1,7 @@
 from __future__ import division
 from collections import Counter
+import string
+import re
 import pysam
 
 class AlignmentConfig(object):
@@ -51,11 +53,15 @@ class AlignmentStream(object):
         (self.start, self.end) = self.__resolve_coords(start, end)
 
     def pileup_stream(self):
-        
-        for col in self.samfile.pileup(reference=self.chrom,
-                                       start=self.start,
-                                       end=self.end):
-            chrom = self.samfile.getrname(col.tid)
+        mod_chr = ''
+        if self.chrom.startswith('chr'):
+            mod_chr = re.sub(r'^chr', '', self.chrom, 1)
+        else:
+            mod_chr = self.chrom
+            
+        for col in self.samfile.pileup(reference=mod_chr,
+                                           start=self.start,
+                                           end=self.end):
             if self.one_based:
                 pos = col.pos + 1
             else:
@@ -68,12 +74,21 @@ class AlignmentStream(object):
                     and not r.alignment.is_unmapped \
                     and not r.is_del:
                    prop_read.append(r)
-            
-            ref = self.fafile.fetch(reference=self.chrom, start=col.pos, end=col.pos+1)
+
+            bam_chrom = self.samfile.getrname(col.tid)
+            ref = ''
+            if not bam_chrom.startswith('chr'):
+                ref = self.fafile.fetch(reference=self.chrom, start=col.pos, end=col.pos+1)
+            else:
+                mod_chr = 'chr' + self.chrom
+                ref = self.fafile.fetch(reference=mod_chr, start=col.pos, end=col.pos+1)
+                
             if not ref:
                 raise ValueError('No sequence content within [chr:%s, start:%s, end:%s]' % \
                                  (self.chrom, self.start, self.end))
-            
+
+            print mod_chr, self.chrom
+                
             mismatches = [read for read in prop_read
                           if read.alignment.seq[read.qpos] != ref]
             if len(mismatches) > 1:
