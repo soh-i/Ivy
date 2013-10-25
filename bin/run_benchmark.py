@@ -38,6 +38,7 @@ if __name__ == '__main__':
         ans = DarnedReader(sp=args.species)
         vcf = VCFReader(args.vcf_file)
         bench = Benchmark(answer=ans.db, predict=vcf.db)
+        
         print "Species:%s\tDB:%s\tVCF:%s\tPrecision:%f\tRecall:%f\tF-measure:%f\tAGs:%d\tOthers:%d\tAnsCount:%d\n" % (
             ans.sp(), ans.db_name(), vcf.vcf_name(),
             bench.precision(), bench.recall(), bench.f_measure(),
