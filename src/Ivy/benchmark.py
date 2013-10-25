@@ -13,11 +13,16 @@ class DarnedReader(object):
     '''
     DardReader class
     '''
-    def __init__(self, sp=''):
+    def __init__(self, sp='', source=None):
         '''
-        __init__(self, sp=) -> instance object of the DarnedReader
+        __init__(self, sp=, source=) -> instance
         '''
         self.__sp = sp
+        if source is not None:
+            self.source = [k for k in source]
+        else:
+            self.source = None
+
         conf_path = utils.find_app_root()
         conf = ConfigParser.RawConfigParser()
         conf.read(conf_path + '/data.ini')
@@ -31,24 +36,43 @@ class DarnedReader(object):
             
     def __str__(self):
         return 'Darned file [%s]' % (self.__darned[self.__sp])
-        
+
     def __generate_darned_set(self):
         '''
         generate_darned_set(self) -> list, returns the accumulated DARNED db
         '''
-        darned_list = []
+        
         self.cnt = 0
-        if self.__sp:
+        # Store selected records
+        if self.__sp and self.source is not None:
+            darned_list = []
             with open(self.__darned[self.__sp], 'r') as f:
                 for line in f:
                     if not line.startswith('chrom'):
                         data = line.split(",")
-                        chr = data[0]
+                        chrom = data[0]
                         pos = data[1]
-                        darned_list.append(chr + ':' + pos)
+                        darned_source = data[8]
+                        
+                        if darned_source == self.source:
+                            darned_list.append(chrom + ':' + pos + self.source)
+                            self.cnt += 1
+                return darned_list
+                
+        # Store all Darned records (default)
+        elif self.__sp and self.source is None or self.source is 'all' or self.source is 'All':
+            selected = []
+            with open(self.__darned[self.__sp], 'r') as f:
+                for line in f:
+                    if not line.startswith('chrom'):
+                        data = line.split(',')
+                        chrom = data[0]
+                        pos = data[1]
+                        selected.append(chrom + ':' + pos + 'All')
                         self.cnt += 1
-            return darned_list
-        else:
+                return selected
+                
+        elif not self.__sp:
             raise (RuntimeError, 'Given species name[%s] is not valid' % (self.__sp))
 
     def sp(self):
