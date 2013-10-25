@@ -13,6 +13,12 @@ if __name__ == '__main__':
                         action='store',
                         help='set VCF file [required]'
                     )
+    parser.add_argument('--source',
+                        required=False,
+                        dest='source',
+                        action='store',
+                        help='use specific sample/tissue/cell line name from Darned db'
+                    )
     parser.add_argument('--sp',
                         required=True,
                         dest='species',
@@ -35,7 +41,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     if args.vcf_file and args.species:
-        ans = DarnedReader(sp=args.species)
+        ans = DarnedReader(sp=args.species, source=args.source)
         vcf = VCFReader(args.vcf_file)
         bench = Benchmark(answer=ans.db, predict=vcf.db)
         
