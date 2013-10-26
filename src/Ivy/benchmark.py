@@ -9,39 +9,40 @@ try:
 except:
     raise ImportError
 
+    
 class DarnedReader(object):
     '''
-    DardReader class
+    DarnedReader generates the subset of DARNED db
+    >>> darned_db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
+    Returns list of subset of darned db
     '''
-    def __init__(self, sp='', source=None):
-        '''
-        __init__(self, sp=, source=) -> instance
-        '''
+    def __init__(self, sp='', source=None, db_path=None):
         self.__sp = sp
         if source is not None:
             self.source = [k for k in source]
         else:
             self.source = None
+        
+        if db_path is None:
+            conf_path = utils.find_app_root()
+            conf = ConfigParser.RawConfigParser()
+            conf.read(conf_path + '/data.ini')
 
-        conf_path = utils.find_app_root()
-        conf = ConfigParser.RawConfigParser()
-        conf.read(conf_path + '/data.ini')
+            if conf.has_section('DARNED'):
+                sp = conf.get('DARNED', self.__sp)
+                self.__darned = {self.__sp : conf_path + sp}
+                self.db = self.__generate_darned_set()
+            else:
+                raise (ConfigParser.NoSectionError, 'Invalid species name [%s] is given' % (self.__sp))
 
-        if conf.has_section('DARNED'):
-            sp = conf.get('DARNED', self.__sp)
-            self.__darned = {self.__sp : conf_path + sp}
+        elif db_path is not None:
+            self.__darnd = {self.__sp:db_path}
             self.db = self.__generate_darned_set()
-        else:
-            raise (ConfigParser.NoSectionError, 'Invalid species name [%s] is given' % (self.__sp))
-            
+
     def __str__(self):
         return 'Darned file [%s]' % (self.__darned[self.__sp])
-
-    def __generate_darned_set(self):
-        '''
-        generate_darned_set(self) -> list, returns the accumulated DARNED db
-        '''
         
+    def __generate_darned_set(self):
         self.cnt = 0
         # Store selected records
         if self.__sp and self.source is not None:
@@ -77,29 +78,33 @@ class DarnedReader(object):
 
     def sp(self):
         '''
-        sp(self) -> str, given species name
+        >>> darned_db.sp()
+        -> str, given species name
         '''
         return self.__sp
 
     def path(self):
         '''
-        path(self) -> str, absolute path to Darned database file
+        >>> darned_db.path()
+        -> str, absolute path to Darned database file
         '''
         return os.path.abspath(self.__darned[self.__sp])
-
+        
     def db_name(self):
         '''
-        db_name(self) -> str, Darned db name
+        >>> darned_db.db_name()
+        -> str, Darned db name
         '''
         return os.path.basename(self.path())
                  
     def count(self):
         '''
-        count(self) -> int, number of the Darned entories
+        >>> darned_db.count(self)
+        -> int, number of the Darned entories
         '''
         return self.cnt
-        
 
+        
 class VCFReader(object):
     def __init__(self, filename):
         self.vcf = filename
@@ -181,6 +186,4 @@ class Benchmark(object):
             return f
 
     def ag_enrichment(self):
-        pass
-
-
+        raise NotImplementedError
