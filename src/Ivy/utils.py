@@ -41,17 +41,20 @@ def to_csv(filename):
         return  False
     reader = csv.reader(open(filename, 'r'), delimiter="\t", quotechar="|")
     try:
+        line_n = 0
+        out = open('darned_' + filename, 'w')
+        
         for row in reader:
+            line_n += 1
             source = row[8]
             if len(source):
                 mod = source.replace(r';', ',').replace(r',', ';').replace(r'; ',';').replace(r' ','_').replace(r'_T','T')
-                print "\t".join(row[:8]),
-                print mod,
-                print "\t".join(row[9:])
-                
+                out.write(",".join(row[:8]))
+                out.write(mod + ",")
+                out.write(",".join(row[9:]) + "\n")
     except:
-        print "Error"
-            
+        raise ValueError, ('Parsing error at line No.[%d]') % (line_n)
+        
 
 if __name__ == '__main__':
     to_csv('hg19.txt')
