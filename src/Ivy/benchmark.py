@@ -15,7 +15,7 @@ class DarnedReader(object):
     def __init__(self, sp='', source=None, db_path=None):
         self.__sp = sp
         if source is not None:
-            self.source = source.values()
+            self.source = source
         else:
             self.source = None
         
@@ -42,7 +42,7 @@ class DarnedReader(object):
     def __generate_darned_set(self):
         
         # Store selected records
-        self.__cnt = 0
+        self.__size = 0
         if self.__sp and self.source is not None:
             darned_list = []
             with open(self.__darned[self.__sp], 'r') as f:
@@ -55,7 +55,7 @@ class DarnedReader(object):
                         
                         if darned_source == self.source:
                             darned_list.append(chrom+ ':'+ pos+ self.source)
-                            self.__cnt += 1
+                            self.__size += 1
                 return darned_list
                 
         # Store all Darned records (default)
@@ -69,35 +69,27 @@ class DarnedReader(object):
                         chrom = data[0]
                         pos = data[1]
                         selected.append(chrom+ ':'+ pos+ 'All')
-                        self.__cnt += 1
+                        self.__size += 1
                 return selected
                 
         elif not self.__sp:
             raise (RuntimeError, 'Given species name[%s] is not valid' % (self.__sp))
 
     def sp(self):
-        '''
-        given species name
-        '''
+        ''' given species name '''
         return self.__sp
 
     def path(self):
-        '''
-        absolute path to Darned database file
-        '''
+        ''' absolute path to Darned database file'''
         return os.path.abspath(self.__darned[self.__sp])
         
     def db_name(self):
-        '''
-        Darned db name
-        '''
+        '''Darned db name'''
         return os.path.basename(self.path())
                  
-    def count(self):
-        '''
-        number of the Darned entories
-        '''
-        return self.__cnt
+    def size(self):
+        '''number of the Darned entories'''
+        return self.__size
 
         
 class VCFReader(object):
@@ -106,9 +98,7 @@ class VCFReader(object):
         self.db = self.__generate_vcf_set()
 
     def __generate_vcf_set(self):
-        '''
-        generate_vcf_set(self) -> list, returns the accumulated vcf
-        '''
+        ''' generate_vcf_set(self) -> list, returns the accumulated vcf'''
         vcf_recs = []
         vcf_reader = vcf.Reader(open(self.vcf, 'r'))
         self.count = 0
@@ -122,10 +112,8 @@ class VCFReader(object):
             self.count += 1
         return vcf_recs
         
-    def cnt(self):
-        '''
-        number of entory of the parsed vcf records
-        '''
+    def size(self):
+        '''number of entory of the parsed vcf records'''
         return self.count
 
     def vcf_name(self):
