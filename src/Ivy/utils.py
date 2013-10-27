@@ -17,9 +17,13 @@ def __end_url_basename(p):
     i = p.rfind('/') + 1
     return p[i:]
 
+def setup_darned():
+    for sp in ['human_hg19', 'human_hg18', 'mice_mm9', 'mice_mm10', 'fly']:
+        fetch_darned(sp)
+    
 def fetch_darned(species):
     '''
-    Fetch specify row dataest from darned.ucc.ie/static/downloads/
+    Fetch specify raw dataest from darned.ucc.ie/static/downloads/ into APP_ROOT/data
     species name must be given,
     species type is defined as: human_hg18/hg19, mice_mm9/mm10, fly_dm3
     '''
@@ -30,7 +34,12 @@ def fetch_darned(species):
         'mice_mm10':'http://darned.ucc.ie/static/downloads/mm10.txt',
         'fly':'http://darned.ucc.ie/static/downloads/dm3.txt'
     }
-    filename = __url_basename(__species[species])
+    
+    try:
+        filename = __end_url_basename(__species[species])
+    except:
+        raise RuntimeError, "Given [%s] is not valid species name" % (species)
+    
     if os.path.isfile(filename):
         return False
         
@@ -49,17 +58,16 @@ def fetch_darned(species):
             print 'Error code: ', e.code
             return False
             
-        else:
-            # everything is fine
-            if not os.path.isdir(root_path+'/data'):
-                os.makedirs(root_path+'/data')
-                print "Make directories [%s]" % (root_path+'/data')
+    else:
+        root_path = find_app_root()
+        if not os.path.isdir(root_path+'/data'):
+            os.makedirs(root_path+'/data')
+            print "Make directories [%s]" % (root_path+'/data')
                 
-            print "Dowloading [%s] from [%s] ..." % (filename, url)
-            with open(filename, "w") as fout:
-                fout.write(response.read())
-                
-        return True
+        print "Dowloading [%s] from [%s] ..." % (filename, url)
+        with open(root_path+ '/data'+ filename, "w") as fout:
+            fout.write(response.read())
+    return True
 
 def darned_to_csv(filename):
     '''
@@ -102,4 +110,4 @@ def darned_to_csv(filename):
         out.close()
         
 if __name__ == '__main__':
-    pass #fetch_darned("human")
+    fetch_darned("human_hg188")
