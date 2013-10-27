@@ -36,14 +36,15 @@ def fetch_darned():
                     fout.write(response.read())
                 return True
 
-def to_csv(filename):
+def darned_to_csv(filename):
     if not os.path.isfile(filename):
-        return  False
+        return False
+        
     reader = csv.reader(open(filename, 'r'), delimiter="\t", quotechar="|")
     try:
         line_n = 0
-        out = open('darned_' + filename, 'w')
-        
+        name, ext = os.path.splitext(filename)
+        out = open('darned_' + name + '.csv' , 'w')
         for row in reader:
             line_n += 1
             source = row[8]
@@ -55,6 +56,6 @@ def to_csv(filename):
     except:
         raise ValueError, ('Parsing error at line No.[%d]') % (line_n)
         
-
-if __name__ == '__main__':
-    to_csv('hg19.txt')
+    finally:
+        out.close()
+        
