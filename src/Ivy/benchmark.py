@@ -31,6 +31,8 @@ class DarnedDataGenerator(object):
             self.filename = "".join([self.species, '.txt'])
             self.url = __species[self.species]
             self.saved_path = utils.find_app_root() + '/data/'
+            name, ext = os.path.splitext(self.filename)
+            self.out_name = self.saved_path + 'darned_' + name + '.csv'
             
     def fetch_darned(self):
         '''
@@ -74,7 +76,6 @@ class DarnedDataGenerator(object):
         >>> darned_to_csv(path_to_data)
         Generate csv file into the APP_ROOT/data
         '''
-        
         if not os.path.isfile(self.saved_path + self.filename):
             raise RuntimeError, 'filename->[%s] is not found' % (self.filename)
 
@@ -82,14 +83,13 @@ class DarnedDataGenerator(object):
             print "Create data dir"
             os.makedirs(self.saved_path)
         
-        name, ext = os.path.splitext(self.filename)
-        out_name = self.saved_path + 'darned_' + name + '.csv'
-        if os.path.isfile(out_name):
+        
+        if os.path.isfile(self.out_name):
             print "File is already exisit"
             return False
         
         reader = csv.reader(open(self.saved_path+self.filename, 'r'), delimiter="\t", quotechar="|")
-        out = open(out_name, 'w')
+        out = open(self.out_name, 'w')
         try:
             line_n = 0
             for row in reader:
@@ -113,18 +113,16 @@ class DarnedReader(object):
     Returns list of subset of darned db
     '''
     
-    def __init__(self, sp='', source=None, db_path=None):
-        self.__sp = sp
-        if source is not None:
-            self.source = source
-        else:
-            self.source = None
+    def __init__(self, sp=None, source=None):
+        self.sp = sp
+        self.source = source
+        self.darned_path = utils.find_app_root() + '/data/' + self.sp + '.csv'
+        self.db = self.__generate_darned_set()
+        
         """
         if db_path is None:
-            conf_path = utils.find_app_root()
             conf = ConfigParser.RawConfigParser()
             conf.read(conf_path+ '/data.ini')
-
             if conf.has_section('DARNED'):
                 sp = conf.get('DARNED', self.__sp)
                 self.__darned = {self.__sp: conf_path+ sp}
@@ -132,26 +130,17 @@ class DarnedReader(object):
             else:
                 raise (ConfigParser.NoSectionError,
                        'Invalid species name [%s] is given' % (self.__sp))
-        
-        elif db_path is not None:
-            self.__darnd = {self.__sp: db_path}
-            self.db = self.__generate_darned_set()
         """
-        if db_path is not None:
-            self.__darned = {self.__sp: db_path}
-        else:
-            raise RuntimeError, ('db_path is not set')
 
     def __str__(self):
-        return 'Darned file [%s]' % (self.__darned[self.__sp])
+        return 'Darned file [%s]' % (self.darned_path)
         
     def __generate_darned_set(self):
-        
         # Store selected records
         self.__size = 0
-        if self.__sp and self.source is not None:
+        if self.sp and self.source is not None:
             darned_list = []
-            with open(self.__darned[self.__sp], 'r') as f:
+            with open(self.darned_path, 'r') as f:
                 for line in f:
                     if not line.startswith('chrom'):
                         data = line.split(",")
@@ -165,10 +154,10 @@ class DarnedReader(object):
                 return darned_list
                 
         # Store all Darned records (default)
-        elif self.__sp and self.source is None \
+        elif self.sp and self.source is None \
              or self.source is 'all' or self.source is 'All':
             selected = []
-            with open(self.__darned[self.__sp], 'r') as f:
+            with open(self.darned_path, 'r') as f:
                 for line in f:
                     if not line.startswith('chrom'):
                         data = line.split(',')
@@ -178,16 +167,16 @@ class DarnedReader(object):
                         self.__size += 1
                 return selected
                 
-        elif not self.__sp:
+        elif not self.sp:
             raise (RuntimeError, 'Given species name[%s] is not valid' % (self.__sp))
 
     def sp(self):
         ''' given species name '''
-        return self.__sp
+        return self.sp
 
     def path(self):
         ''' absolute path to Darned database file'''
-        return os.path.abspath(self.__darned[self.__sp])
+        return os.path.abspath(self.darned_path)
         
     def db_name(self):
         '''Darned db name'''
@@ -282,8 +271,3 @@ class Benchmark(object):
             pass
         finally:
             return f
-
-    def ag_enrichment(self):
-        raise NotImplementedError
-
-        
