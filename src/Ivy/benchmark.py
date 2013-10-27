@@ -20,19 +20,20 @@ class DarnedDataGenerator(object):
             'mice_mm10':'http://darned.ucc.ie/static/downloads/mm10.txt',
             'fly_dm3':'http://darned.ucc.ie/static/downloads/dm3.txt',
         }
-        
+
         for k in __species:
             if k == species:
                 self.species = species
                 break;
         else: self.species = None
+        
         if self.species is None:
             raise RuntimeError, "Given [%s] is not valid species name" % (species)
-            
+
         self.filename = "".join([self.species, '.txt'])
         self.url = __species[self.species]
         self.saved_path = utils.find_app_root() + '/data/'
-            
+        
     def fetch_darned(self):
         '''
         Fetch specify raw dataest from darned.ucc.ie/static/downloads/ into APP_ROOT/data,
