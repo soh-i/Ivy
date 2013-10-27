@@ -12,6 +12,7 @@ class DarnedDataGenerator(object):
     '''
     DarnedDataGenerator provides to prepare data that are used for benchmarking test.
     '''
+    
     def __init__(self, species=None):
         __species = {
             'human_hg19':'http://darned.ucc.ie/static/downloads/hg19.txt',
@@ -37,6 +38,7 @@ class DarnedDataGenerator(object):
         species name must be given, and acceptable type is defined as:
         human_hg18/hg19, mice_mm9/mm10, fly_dm3
         '''
+        
         if os.path.isfile(self.saved_path + self.filename):
             print "%s is already exist" % (self.filename)
             return False
@@ -101,7 +103,6 @@ class DarnedDataGenerator(object):
                     out.write(",".join(row[9:]) + "\n")
         except:
             raise ValueError, ('Parsing error at line No.[%d]') % (line_n)
-        
         finally:
             out.close()
 
