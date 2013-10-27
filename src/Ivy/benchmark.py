@@ -39,6 +39,10 @@ class DarnedDataGenerator(object):
         species name must be given, and acceptable type is defined as:
         human_hg18/hg19, mice_mm9/mm10, fly_dm3
         '''
+        if os.path.isfile(self.saved_path + self.filename):
+            print "%s is already exist" % (self.filename)
+            return False
+        
         req = Request(self.url)
         try:
             response = urlopen(req)
