@@ -6,19 +6,118 @@ import ConfigParser
 from collections import Counter
 import utils
 
+class DarnedDataGenerator(object):
+    '''
+    DarnedDataGenerator provides to prepare data that are used for benchmarking test.
+    '''
+    
+    def __init__(self, species=None):
+        self.species = species
+
+    def fetch_darned(self):
+        '''
+        Fetch specify raw dataest from darned.ucc.ie/static/downloads/ into APP_ROOT/data,
+        species name must be given, and acceptable type is defined as:
+        human_hg18/hg19, mice_mm9/mm10, fly_dm3
+        '''
+        
+        __species = {
+            'human_hg19':'http://darned.ucc.ie/static/downloads/hg19.txt',
+            'human_hg18':'http://darned.ucc.ie/static/downloads/hg18.txt',
+            'mice_mm9':'http://darned.ucc.ie/static/downloads/mm9.txt',
+            'mice_mm10':'http://darned.ucc.ie/static/downloads/mm10.txt',
+            'fly_dm3':'http://darned.ucc.ie/static/downloads/dm3.txt'
+        }
+        
+        self.filename = self.species + '.txt'
+        if os.path.isfile(self.filename):
+            return False
+            
+        try:
+            url = __species[self.species]
+        except:
+            raise RuntimeError, "Given [%s] is not valid species name" % (self.species)
+        
+        req = Request(url)
+        try:
+            response = urlopen(req)
+        except URLError, e:
+            if hasattr(e, 'reason'):
+                print 'We failed to reach a server.'
+                print 'Reason: ', e.reason
+                return False
+            
+            elif hasattr(e, 'code'):
+                print 'The server couldn\'t fulfill the request.'
+                print 'Error code: ', e.code
+                return False
+            
+        else:
+            root_path = find_app_root()
+            if not os.path.isdir(root_path + '/data'):
+                os.makedirs(root_path + '/data')
+                print "Make directories [%s]" % (root_path + '/data')
+                
+            print "Dowloading [%s] from [%s] ..." % (self.filename, url)
+            with open(root_path+ '/data'+ self.filename, "w") as fout:
+                fout.write(response.read())
+            return True
+
+    def darned_to_csv(self, filename):
+        '''
+        Converting darned raw datafile to csv,
+        the data that fetched from darned.ucc.ie/static/downloads/*.txt is given.
+        >>> path_to_data = hg19.txt
+        >>> darned_to_csv(path_to_data)
+        Generate csv file into the APP_ROOT/data
+        '''
+        
+        if not os.path.isfile(filename):
+            raise RuntimeError, 'filename->[%s] is not found' % (filename)
+        
+        data_path = find_app_root() + '/data/'
+        if not os.path.isdir(data_path):
+            print "Create data dir"
+            os.makedirs(data_path)
+        
+        name, ext = os.path.splitext(filename)
+        out_name = data_path + name + '.csv'
+        if os.path.isfile(out_name):
+            print "File is already exisit"
+            return False
+        
+        reader = csv.reader(open(filename, 'r'), delimiter="\t", quotechar="|")
+        try:
+            line_n = 0
+            out = open(out_name, 'w')
+            for row in reader:
+                line_n += 1
+                source = row[8]
+                if len(source):
+                    mod = source.replace(r';', ',').replace(r',', ';').replace(r'; ',';').replace(r' ','_').replace(r'_T','T')
+                    out.write(",".join(row[:8]) + ",")
+                    out.write(mod + ",")
+                    out.write(",".join(row[9:]) + "\n")
+        except:
+            raise ValueError, ('Parsing error at line No.[%d]') % (line_n)
+        
+        finally:
+            out.close()
+
 class DarnedReader(object):
     '''
     DarnedReader generates the subset of DARNED db
     >>> db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
     Returns list of subset of darned db
     '''
+    
     def __init__(self, sp='', source=None, db_path=None):
         self.__sp = sp
         if source is not None:
             self.source = source
         else:
             self.source = None
-        
+        """
         if db_path is None:
             conf_path = utils.find_app_root()
             conf = ConfigParser.RawConfigParser()
@@ -31,10 +130,15 @@ class DarnedReader(object):
             else:
                 raise (ConfigParser.NoSectionError,
                        'Invalid species name [%s] is given' % (self.__sp))
-
+        
         elif db_path is not None:
             self.__darnd = {self.__sp: db_path}
             self.db = self.__generate_darned_set()
+        """
+        if db_path is not None:
+            self.__darned = {self.__sp: db_path}
+        else:
+            raise RuntimeError, ('db_path is not set')
 
     def __str__(self):
         return 'Darned file [%s]' % (self.__darned[self.__sp])
