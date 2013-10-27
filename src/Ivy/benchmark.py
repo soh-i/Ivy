@@ -39,6 +39,10 @@ class DarnedDataGenerator(object):
         species name must be given, and acceptable type is defined as:
         human_hg18/hg19, mice_mm9/mm10, fly_dm3
         '''
+        if os.path.isfile(self.saved_path + self.filename):
+            print "%s is already exist" % (self.filename)
+            return False
+        
         req = Request(self.url)
         try:
             response = urlopen(req)
@@ -62,7 +66,7 @@ class DarnedDataGenerator(object):
                 fout.write(response.read())
             return True
 
-    def darned_to_csv(self, filename):
+    def darned_to_csv(self):
         '''
         Converting darned raw datafile to csv,
         the data that fetched from darned.ucc.ie/static/downloads/*.txt is given.
@@ -71,24 +75,23 @@ class DarnedDataGenerator(object):
         Generate csv file into the APP_ROOT/data
         '''
         
-        if not os.path.isfile(self.filename):
+        if not os.path.isfile(self.saved_path + self.filename):
             raise RuntimeError, 'filename->[%s] is not found' % (self.filename)
-        
-        data_path = find_app_root() + '/data/'
-        if not os.path.isdir(data_path):
+
+        if not os.path.isdir(self.saved_path):
             print "Create data dir"
-            os.makedirs(data_path)
+            os.makedirs(self.saved_path)
         
-        name, ext = os.path.splitext(filename)
-        out_name = data_path + name + '.csv'
+        name, ext = os.path.splitext(self.filename)
+        out_name = self.saved_path + 'darned_' + name + '.csv'
         if os.path.isfile(out_name):
             print "File is already exisit"
             return False
         
-        reader = csv.reader(open(filename, 'r'), delimiter="\t", quotechar="|")
+        reader = csv.reader(open(self.saved_path+self.filename, 'r'), delimiter="\t", quotechar="|")
+        out = open(out_name, 'w')
         try:
             line_n = 0
-            out = open(out_name, 'w')
             for row in reader:
                 line_n += 1
                 source = row[8]
