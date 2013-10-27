@@ -38,13 +38,21 @@ def fetch_darned():
 
 def darned_to_csv(filename):
     if not os.path.isfile(filename):
-        return False
+        raise RuntimeError, 'filename->[%s] is not found' % (filename)
         
+    data_path = find_app_root() + '/data/'
+    if not os.path.isdir(data_path):
+        os.makedirs(data_path)
+        
+    name, ext = os.path.splitext(filename)
+    out_name = data_path + name + '.csv'
+    if os.path.isfile(out_name):
+        return False
+    
     reader = csv.reader(open(filename, 'r'), delimiter="\t", quotechar="|")
     try:
         line_n = 0
-        name, ext = os.path.splitext(filename)
-        out = open('darned_' + name + '.csv' , 'w')
+        out = open(out_name, 'w')
         for row in reader:
             line_n += 1
             source = row[8]
@@ -59,3 +67,5 @@ def darned_to_csv(filename):
     finally:
         out.close()
         
+if __name__ == '__main__':
+    print darned_to_csv("hg19.txt")
