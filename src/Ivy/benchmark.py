@@ -58,7 +58,7 @@ class DarnedDataGenerator(object):
                 print "Make directories [%s]" % (self.saved_path)
                 
             print "Dowloading [%s] from [%s] ..." % (self.filename, self.url)
-            with open(root_path+ '/data'+ self.filename, "w") as fout:
+            with open(self.saved_path+ self.filename, "w") as fout:
                 fout.write(response.read())
             return True
 
