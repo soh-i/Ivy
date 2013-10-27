@@ -1,5 +1,5 @@
 from __future__ import division
-from collections import Counter
+from collections import Counter, namedtuple
 import string
 import re
 import pysam
@@ -57,8 +57,8 @@ class AlignmentStream(object):
         
     def pileup_stream(self):
         for col in self.samfile.pileup(reference=self.chrom,
-                                           start=self.start,
-                                           end=self.end):
+                                       start=self.start,
+                                       end=self.end):
             if self.one_based:
                 pos = col.pos + 1
             else: pos = col.pos
