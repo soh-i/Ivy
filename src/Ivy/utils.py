@@ -42,13 +42,15 @@ def darned_to_csv(filename):
         
     data_path = find_app_root() + '/data/'
     if not os.path.isdir(data_path):
+        print "Create data dir"
         os.makedirs(data_path)
         
     name, ext = os.path.splitext(filename)
     out_name = data_path + name + '.csv'
     if os.path.isfile(out_name):
+        print "File is already exisit"
         return False
-    
+        
     reader = csv.reader(open(filename, 'r'), delimiter="\t", quotechar="|")
     try:
         line_n = 0
@@ -58,7 +60,7 @@ def darned_to_csv(filename):
             source = row[8]
             if len(source):
                 mod = source.replace(r';', ',').replace(r',', ';').replace(r'; ',';').replace(r' ','_').replace(r'_T','T')
-                out.write(",".join(row[:8]))
+                out.write(",".join(row[:8]) + ",")
                 out.write(mod + ",")
                 out.write(",".join(row[9:]) + "\n")
     except:
