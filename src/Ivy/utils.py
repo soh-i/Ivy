@@ -32,18 +32,18 @@ def fetch_darned(species):
         'human_hg18':'http://darned.ucc.ie/static/downloads/hg18.txt',
         'mice_mm9':'http://darned.ucc.ie/static/downloads/mm9.txt',
         'mice_mm10':'http://darned.ucc.ie/static/downloads/mm10.txt',
-        'fly':'http://darned.ucc.ie/static/downloads/dm3.txt'
+        'fly_dm3':'http://darned.ucc.ie/static/downloads/dm3.txt'
     }
     
-    try:
-        filename = __end_url_basename(__species[species])
-    except:
-        raise RuntimeError, "Given [%s] is not valid species name" % (species)
-    
+    filename = species + '.txt'
     if os.path.isfile(filename):
         return False
         
-    url = __species[species]
+    try:
+        url = __species[species]
+    except:
+        raise RuntimeError, "Given [%s] is not valid species name" % (species)
+        
     req = Request(url)
     try:
         response = urlopen(req)
@@ -60,9 +60,9 @@ def fetch_darned(species):
             
     else:
         root_path = find_app_root()
-        if not os.path.isdir(root_path+'/data'):
-            os.makedirs(root_path+'/data')
-            print "Make directories [%s]" % (root_path+'/data')
+        if not os.path.isdir(root_path + '/data'):
+            os.makedirs(root_path + '/data')
+            print "Make directories [%s]" % (root_path + '/data')
                 
         print "Dowloading [%s] from [%s] ..." % (filename, url)
         with open(root_path+ '/data'+ filename, "w") as fout:
