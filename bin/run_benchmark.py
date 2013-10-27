@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
-from Ivy.benchmark import DarnedReader, VCFReader, Benchmark
+from Ivy.benchmark import DarnedDataGenerator, DarnedReader, VCFReader, Benchmark
+import Ivy.utils
 import argparse
+import os.path
 
 if __name__ == '__main__':
     version = '0.0.1'
@@ -17,36 +19,34 @@ if __name__ == '__main__':
                         required=False,
                         dest='source',
                         action='store',
-                        help='use specific sample/tissue/cell line name from Darned db'
+                        help='use specific sample/tissue/cell line, default:All'
                     )
     parser.add_argument('--sp',
                         required=True,
-                        dest='species',
+                        dest='sp',
                         action='store',
                         help='set species name and genome version, ex: human_hg19 [required]'
                     )
-    parser.add_argument('--db',
-                        required=False,
-                        dest='db_file',
-                        action='store',
-                        help='set db name [not implemented]'
-                    )
-    parser.add_argument('--config',
-                        required=False,
-                        dest='conf_file',
-                        action='store',
-                        help='set config file [not implemented]'
-                    )
     parser.add_argument('--version', action='version', version=version)
-    args = parser.parse_args()
     
-    if args.vcf_file and args.species:
-        ans = DarnedReader(sp=args.species, source=args.source)
+    args = parser.parse_args()
+    generator = DarnedDataGenerator(species=args.sp)
+
+    darned_raw_file = generator.saved_path + generator.filename
+    if not os.path.isfile(darned_raw_file):
+        generator.fetch_darned()
+
+    darned_parsed_csv = generator.out_name
+    if not os.path.isfile(darned_parsed_csv):
+        generator.darned_to_csv()
+
+    if args.vcf_file and args.sp and args.source:
+        ans = DarnedReader(sp=args.sp, source=args.source)
         vcf = VCFReader(args.vcf_file)
         bench = Benchmark(answer=ans.db, predict=vcf.db)
         
         print "Species:%s\tDB:%s\tVCF:%s\tPrecision:%f\tRecall:%f\tF-measure:%f\tAGs:%d\tOthers:%d\tAnsCount:%d\n" % (
-            ans.sp(), ans.db_name(), vcf.vcf_name(),
+            ans.sp, ans.db_name(), vcf.vcf_name(),
             bench.precision(), bench.recall(), bench.f_measure(),
-            vcf.ag_count(), vcf.other_mutations_count(), ans.count()),
+            vcf.ag_count(), vcf.other_mutations_count(), vcf.size()),
         
