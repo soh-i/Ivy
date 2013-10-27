@@ -30,6 +30,8 @@ class DarnedDataGenerator(object):
             raise RuntimeError, "Given [%s] is not valid species name" % (species)
             
         self.filename = "".join([self.species, '.txt'])
+        self.url = __species[self.species]
+        self.saved_path = utils.find_app_root() + '/data/'
             
     def fetch_darned(self):
         '''
@@ -37,13 +39,7 @@ class DarnedDataGenerator(object):
         species name must be given, and acceptable type is defined as:
         human_hg18/hg19, mice_mm9/mm10, fly_dm3
         '''
-        
-        try:
-            url = __species[self.species]
-        except:
-            raise RuntimeError, "Given [%s] is not valid species name" % (self.species)
-        
-        req = Request(url)
+        req = Request(self.url)
         try:
             response = urlopen(req)
         except URLError, e:
@@ -57,12 +53,11 @@ class DarnedDataGenerator(object):
                 return False
         else:
             # works fine
-            root_path = find_app_root()
-            if not os.path.isdir(root_path + '/data'):
-                os.makedirs(root_path + '/data')
-                print "Make directories [%s]" % (root_path + '/data')
+            if not os.path.isdir(self.saved_path):
+                os.makedirs(self.saved_path)
+                print "Make directories [%s]" % (self.saved_path)
                 
-            print "Dowloading [%s] from [%s] ..." % (self.filename, url)
+            print "Dowloading [%s] from [%s] ..." % (self.filename, self.url)
             with open(root_path+ '/data'+ self.filename, "w") as fout:
                 fout.write(response.read())
             return True
