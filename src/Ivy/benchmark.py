@@ -109,10 +109,11 @@ class DarnedDataGenerator(object):
 class DarnedReader(object):
     '''
     DarnedReader class generates subset of DARNED db.
-    >>> db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
+    >>> dr = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
+    >>> dr.db
+    Returns array of subset of darned db.
     Do not use source option, store to all records by the default settings.
     Acceptable type of sp argument is defined as human_hg18/hg19, mice_mm9/mm10, fly_dm3.
-    Returns list of subset of darned db.
     '''
     
     def __init__(self, sp=None, source=None):
@@ -185,43 +186,54 @@ class DarnedReader(object):
 
         
 class VCFReader(object):
+    '''
+    VCFReader class provides that list of VCF file and utils methods
+    >>> vr = VCFReader(path_to_vcf_file)
+    >>> vr.db
+    Returns array of vcf file
+    '''
+    
     def __init__(self, filename):
-        self.vcf = filename
+        self.__vcf = filename
         self.db = self.__generate_vcf_set()
 
     def __generate_vcf_set(self):
-        ''' generate_vcf_set(self) -> list, returns the accumulated vcf'''
-        vcf_recs = []
-        vcf_reader = vcf.Reader(open(self.vcf, 'r'))
-        self.count = 0
-        self.substitutions = Counter()
+        _vcf_recs = []
+        _vcf_reader = vcf.Reader(open(self.__vcf, 'r'))
+        self.__substitutions = Counter()
         
-        for rec in vcf_reader:
-            types = str(rec.REF) + '-to-' + 'or'.join([str(i) for i in rec.ALT])
-            self.substitutions[types] += 1
-            mod_chr = re.sub(r'^chr', '', rec.CHROM, 1)
-            vcf_recs.append(mod_chr+ ':'+ str(rec.POS))
-            self.count += 1
-        return vcf_recs
+        for rec in _vcf_reader:
+            _types = str(rec.REF) + '-to-' + 'or'.join([str(_) for _ in rec.ALT])
+            self.__substitutions[types] += 1
+            _mod_chr = re.sub(r'^chr', '', rec.CHROM, 1)
+            _vcf_recs.append(mod_chr+ ':'+ str(rec.POS))
+        self.__size = len(vcf_recs)
+        return _vcf_recs
         
     def size(self):
         '''number of entory of the parsed vcf records'''
-        return self.count
+        return self.__size
 
     def vcf_name(self):
-        return os.path.basename(self.vcf)
+        return os.path.basename(self.__vcf)
 
     def editing_types(self):
-        return self.substitutions
+        '''All type of the base substitutions'''
+        return self.__substitutions
         
     def ag_count(self):
-        return self.substitutions.get('A-to-G')
+        '''A-to-G editing alone'''
+        return self.__substitutions.get('A-to-G')
+
+    def target_count(self, types):
+        '''Specify type of base substitutions'''
+        return self.__substitutions.get(types)
         
     def other_mutations_count(self):
         i = 0
-        for k in self.substitutions:
+        for k in self.__substitutions:
             if not k == 'A-to-G':
-                i += self.substitutions[k]
+                i += self.__substitutions[k]
         return i
         
 class Benchmark(object):
@@ -260,7 +272,6 @@ class Benchmark(object):
     def f_measure(self):
         _precision = self.precision()
         _recall = self.recall()
-        
         try:
             _f = 2*_recall*_precision/(_recall+_precision)
             return _f
