@@ -241,6 +241,9 @@ class Benchmark(object):
     >>> darned_db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
     >>> editing_db = VCFReader(filename)
     >>> bench = Benchmark(answer=darned_db, predict=candidate_db)
+    >>> bench.answer # set of darned
+    >>> bench.predict # set of candidate sites from vcf
+    >>> bench.intersect # set of the intersection between sets
     '''
     
     def __init__(self, answer=None, predict=None):
