@@ -1,5 +1,5 @@
 import sys
-from alignment import AlignmentConfig
+from Ivy.alignment.stream import AlignmentConfig
 
 class VCFWriterException(Exception):
     pass

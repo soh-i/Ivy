@@ -1,4 +1,4 @@
-from alignment import AlignmentStream
+from stream import AlignmentStream
 
 class AlignmentFilter(object):
     def __init__(self):
