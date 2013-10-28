@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from Ivy.benchmark import DarnedDataGenerator, DarnedReader, VCFReader, Benchmark
+from Ivy.benchmark.benchmark import DarnedDataGenerator, DarnedReader, VCFReader, Benchmark
 import Ivy.utils
 import argparse
 import os.path
