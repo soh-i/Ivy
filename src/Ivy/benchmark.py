@@ -130,7 +130,8 @@ class DarnedReader(object):
     def __generate_darned_set(self):
         # Store selected records
         if self.source is not None:
-            darned_list = []
+            selected = []
+
             with open(self.darned_path, 'r') as f:
                 for line in f:
                     if not line.startswith('chrom'):
@@ -140,26 +141,27 @@ class DarnedReader(object):
                         _darned_source = _data[8]
                         _each_source = _darned_source.split(";")
                         if any([_ for _ in _each_source if _ == self.source]):
-                            darned_list.append(':'.join([_chrom, _pos, self.source]))
+                            selected.append(':'.join([_chrom, _pos, self.source]))
                             
-                self.db_size = len(darned_list)
-                return darned_list
+                self.db_size = len(selected)
+                return selected
                 
         # Store all Darned records (default)
         elif self.source is 'all' or self.source is 'All':
-            selected = []
+            darned_list = []
             with open(self.darned_path, 'r') as f:
                 for line in f:
                     if not line.startswith('chrom'):
-                        data = line.split(',')
-                        chrom = data[0]
-                        pos = data[1]
-                        selected.append(chrom+ ':'+ pos+ 'All')
-                self.db_size
-                return selected
+                        _data = line.split(',')
+                        _chrom = _data[0]
+                        _pos = _data[1]
+                        _darned_source = _data[8]
+                        darned_list.append(':'.join([_chrom, _pos, _darned_source]))
+                self.db_size = len(darned_list)
+                return darned_list
                 
         elif not self.sp:
-            raise (RuntimeError, 'Given species name[%s] is not valid' % (self.__sp))
+            raise RuntimeError, 'Given species name[%s] is not valid' % (self.__sp)
 
     def sp(self):
         ''' given species name '''
