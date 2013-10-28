@@ -30,9 +30,9 @@ class DarnedDataGenerator(object):
         if self.species is not None:
             self.filename = "".join([self.species, '.txt'])
             self.url = __species[self.species]
-            self.saved_path = utils.find_app_root() + '/data/'
-            name, ext = os.path.splitext(self.filename)
-            self.out_name = self.saved_path + 'darned_' + name + '.csv'
+            self.saved_abs_path = utils.find_app_root() + '/data/'
+            name, _ = os.path.splitext(self.filename)
+            self.out_name = self.saved_abs_path + 'darned_' + name + '.csv'
             
     def fetch_darned(self):
         '''
@@ -41,7 +41,7 @@ class DarnedDataGenerator(object):
         human_hg18/hg19, mice_mm9/mm10, fly_dm3
         '''
         
-        if os.path.isfile(self.saved_path + self.filename):
+        if os.path.isfile(self.saved_abs_path + self.filename):
             print "%s is already exist" % (self.filename)
             return False
         
@@ -61,10 +61,10 @@ class DarnedDataGenerator(object):
             # works fine
             if not os.path.isdir(self.saved_path):
                 os.makedirs(self.saved_path)
-                print "Make directories [%s]" % (self.saved_path)
+                print "Create directories [%s]" % (self.saved_path)
                 
             print "Dowloading [%s] from [%s] ..." % (self.filename, self.url)
-            with open(self.saved_path+ self.filename, "w") as fout:
+            with open(self.saved_path + self.filename, "w") as fout:
                 fout.write(response.read())
             return True
 
@@ -76,19 +76,19 @@ class DarnedDataGenerator(object):
         >>> darned_to_csv(path_to_data)
         Generate csv file into the APP_ROOT/data
         '''
+        
         if not os.path.isfile(self.saved_path + self.filename):
-            raise RuntimeError, 'filename->[%s] is not found' % (self.filename)
+            raise RuntimeError, 'Darned of %s is  not found' % (self.filename)
 
         if not os.path.isdir(self.saved_path):
             print "Create data dir"
             os.makedirs(self.saved_path)
         
-        
         if os.path.isfile(self.out_name):
-            print "File is already exisit"
+            print "%s is already exisit" % (self.out_name)
             return False
         
-        reader = csv.reader(open(self.saved_path+self.filename, 'r'), delimiter="\t", quotechar="|")
+        reader = csv.reader(open(self.saved_abs_path+self.filename, 'r'), delimiter="\t", quotechar="|")
         out = open(self.out_name, 'w')
         try:
             line_n = 0
@@ -99,10 +99,10 @@ class DarnedDataGenerator(object):
                     mod = source.replace(r';', ',').replace(r',', ';').\
                           replace(r'; ',';').replace(r' ','_').replace(r'_T','T')
                     out.write(",".join(row[:8]) + ",")
-                    out.write(mod + ",")
+                    out.write(mod.upper() + ",")
                     out.write(",".join(row[9:]) + "\n")
         except:
-            raise ValueError, ('Parsing error at line No.[%d]') % (line_n)
+            raise ValueError, 'Parsing error at line No.[%d]' % (line_n)
         finally:
             out.close()
 
@@ -114,31 +114,21 @@ class DarnedReader(object):
     '''
     
     def __init__(self, sp=None, source=None):
-        self.sp = sp
-        self.source = source
-        self.darned_path = utils.find_app_root() + '/data/' + self.sp + '.csv'
+        if sp is None:
+            raise RuntimeError, "Species name must be given"
+        else: self.sp = sp
+        if source is None:
+            self.source = 'All'
+        self.darned_path = utils.find_app_root()+ '/data/'+ self.sp+ '.csv'
         self.db = self.__generate_darned_set()
         
-        """
-        if db_path is None:
-            conf = ConfigParser.RawConfigParser()
-            conf.read(conf_path+ '/data.ini')
-            if conf.has_section('DARNED'):
-                sp = conf.get('DARNED', self.__sp)
-                self.__darned = {self.__sp: conf_path+ sp}
-                self.db = self.__generate_darned_set()
-            else:
-                raise (ConfigParser.NoSectionError,
-                       'Invalid species name [%s] is given' % (self.__sp))
-        """
-
     def __str__(self):
-        return 'Darned file [%s]' % (self.darned_path)
+        return "<%s.%s>" % (self.__class__.__name__)
         
     def __generate_darned_set(self):
         # Store selected records
         self.__size = 0
-        if self.sp and self.source is not None:
+        if self.source is not None:
             darned_list = []
             with open(self.darned_path, 'r') as f:
                 for line in f:
@@ -147,15 +137,14 @@ class DarnedReader(object):
                         chrom = data[0]
                         pos = data[1]
                         darned_source = data[8]
-                        
-                        if darned_source == self.source:
+                        s = darned_source.split(";")
+                        if any([_ for _ in s if _ == self.source]):
                             darned_list.append(chrom+ ':'+ pos+ self.source)
                             self.__size += 1
                 return darned_list
                 
         # Store all Darned records (default)
-        elif self.sp and self.source is None \
-             or self.source is 'all' or self.source is 'All':
+        elif self.source is 'all' or self.source is 'All':
             selected = []
             with open(self.darned_path, 'r') as f:
                 for line in f:
