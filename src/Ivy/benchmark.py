@@ -31,9 +31,9 @@ class DarnedDataGenerator(object):
         if self.species is not None:
             self.filename = "".join([self.species, '.txt'])
             self.url = __species[self.species]
-            self.saved_path = utils.find_app_root() + '/data/'
-            name, ext = os.path.splitext(self.filename)
-            self.out_name = self.saved_path + 'darned_' + name + '.csv'
+            self.saved_abs_path = utils.find_app_root() + '/data/'
+            name, _ = os.path.splitext(self.filename)
+            self.out_name = self.saved_abs_path + 'darned_' + name + '.csv'
             
     def fetch_darned(self):
         '''
@@ -42,7 +42,7 @@ class DarnedDataGenerator(object):
         human_hg18/hg19, mice_mm9/mm10, fly_dm3
         '''
         
-        if os.path.isfile(self.saved_path + self.filename):
+        if os.path.isfile(self.saved_abs_path + self.filename):
             print "%s is already exist" % (self.filename)
             return False
         
@@ -62,10 +62,10 @@ class DarnedDataGenerator(object):
             # works fine
             if not os.path.isdir(self.saved_path):
                 os.makedirs(self.saved_path)
-                print "Make directories [%s]" % (self.saved_path)
+                print "Create directories [%s]" % (self.saved_path)
                 
             print "Dowloading [%s] from [%s] ..." % (self.filename, self.url)
-            with open(self.saved_path+ self.filename, "w") as fout:
+            with open(self.saved_path + self.filename, "w") as fout:
                 fout.write(response.read())
             return True
 
@@ -77,19 +77,19 @@ class DarnedDataGenerator(object):
         >>> darned_to_csv(path_to_data)
         Generate csv file into the APP_ROOT/data
         '''
+        
         if not os.path.isfile(self.saved_path + self.filename):
-            raise RuntimeError, 'filename->[%s] is not found' % (self.filename)
+            raise RuntimeError, 'Darned of %s is  not found' % (self.filename)
 
         if not os.path.isdir(self.saved_path):
             print "Create data dir"
             os.makedirs(self.saved_path)
         
-        
         if os.path.isfile(self.out_name):
-            print "File is already exisit"
+            print "%s is already exisit" % (self.out_name)
             return False
         
-        reader = csv.reader(open(self.saved_path+self.filename, 'r'), delimiter="\t", quotechar="|")
+        reader = csv.reader(open(self.saved_abs_path+self.filename, 'r'), delimiter="\t", quotechar="|")
         out = open(self.out_name, 'w')
         try:
             line_n = 0
@@ -98,134 +98,143 @@ class DarnedDataGenerator(object):
                 source = row[8]
                 if len(source):
                     mod = source.replace(r';', ',').replace(r',', ';').\
-                          replace(r'; ',';').replace(r' ','_').replace(r'_T','T')
+                          replace(r'; ', ';').replace(r' ', '_').replace(r'_T', 'T')
                     out.write(",".join(row[:8]) + ",")
-                    out.write(mod + ",")
+                    out.write(mod.upper() + ",")
                     out.write(",".join(row[9:]) + "\n")
         except:
-            raise ValueError, ('Parsing error at line No.[%d]') % (line_n)
+            raise ValueError, 'Parsing error at line No.[%d]' % (line_n)
         finally:
             out.close()
 
 class DarnedReader(object):
     '''
-    DarnedReader generates the subset of DARNED db
-    >>> db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
-    Returns list of subset of darned db
+    DarnedReader class generates subset of DARNED db.
+    >>> dr = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
+    >>> dr.db
+    Returns array of subset of darned db.
+    Do not use source option, store to all records by the default settings.
+    Acceptable type of sp argument is defined as human_hg18/hg19, mice_mm9/mm10, fly_dm3.
     '''
     
     def __init__(self, sp=None, source=None):
-        self.sp = sp
-        self.source = source
-        self.darned_path = utils.find_app_root() + '/data/' + self.sp + '.csv'
+        if sp is None:
+            raise RuntimeError, "Species name must be given"
+        else:
+            self.__sp = sp
+        if source is None or len(source) == 0:
+            self.__source = 'All'
+        else:
+            self.__source = source.upper()
+            
+        self.__darned_path = utils.find_app_root()+ '/data/'+ self.__sp+ '.csv'
         self.db = self.__generate_darned_set()
         
-        """
-        if db_path is None:
-            conf = ConfigParser.RawConfigParser()
-            conf.read(conf_path+ '/data.ini')
-            if conf.has_section('DARNED'):
-                sp = conf.get('DARNED', self.__sp)
-                self.__darned = {self.__sp: conf_path+ sp}
-                self.db = self.__generate_darned_set()
-            else:
-                raise (ConfigParser.NoSectionError,
-                       'Invalid species name [%s] is given' % (self.__sp))
-        """
-
     def __str__(self):
-        return 'Darned file [%s]' % (self.darned_path)
+        return "<%s.%s>" % (self.__class__.__name__)
         
     def __generate_darned_set(self):
         # Store selected records
-        self.__size = 0
-        if self.sp and self.source is not None:
-            darned_list = []
-            with open(self.darned_path, 'r') as f:
-                for line in f:
-                    if not line.startswith('chrom'):
-                        data = line.split(",")
-                        chrom = data[0]
-                        pos = data[1]
-                        darned_source = data[8]
-                        
-                        if darned_source == self.source:
-                            darned_list.append(chrom+ ':'+ pos+ self.source)
-                            self.__size += 1
-                return darned_list
-                
-        # Store all Darned records (default)
-        elif self.sp and self.source is None \
-             or self.source is 'all' or self.source is 'All':
+        if self.__source != 'All':
             selected = []
-            with open(self.darned_path, 'r') as f:
+            with open(self.__darned_path, 'r') as f:
                 for line in f:
                     if not line.startswith('chrom'):
-                        data = line.split(',')
-                        chrom = data[0]
-                        pos = data[1]
-                        selected.append(chrom+ ':'+ pos+ 'All')
-                        self.__size += 1
+                        _data = line.split(",")
+                        _chrom = _data[0]
+                        _pos = _data[1]
+                        _darned_source = _data[8]
+                        _each_source = _darned_source.split(";")
+                        if any([_ for _ in _each_source if _ == self.__source]):
+                            selected.append(':'.join([_chrom, _pos, self.__source]))
+                            
+                self.__db_size = len(selected)
                 return selected
                 
-        elif not self.sp:
-            raise (RuntimeError, 'Given species name[%s] is not valid' % (self.__sp))
+        # Store all Darned records (default)
+        elif self.__source == 'all' or self.__source == 'All':
+            darned_list = []
+            with open(self.__darned_path, 'r') as f:
+                for line in f:
+                    if not line.startswith('chrom'):
+                        _data = line.split(',')
+                        _chrom = _data[0]
+                        _pos = _data[1]
+                        _darned_source = _data[8]
+                        darned_list.append(':'.join([_chrom, _pos, _darned_source]))
+                self.__db_size = len(darned_list)
+                return darned_list
+                
+        elif not self.__sp:
+            raise RuntimeError, 'Given species name[%s] is not valid' % (self.__sp)
 
     def sp(self):
-        ''' given species name '''
-        return self.sp
+        '''return tuple of species and genome version'''
+        (sp, ver) = self.__sp.split("_")
+        return sp, ver
 
     def path(self):
-        ''' absolute path to Darned database file'''
-        return os.path.abspath(self.darned_path)
+        '''absolute path to Darned database file'''
+        return os.path.abspath(self.__darned_path)
         
     def db_name(self):
         '''Darned db name'''
-        return os.path.basename(self.path())
+        return os.path.basename(self.__darned_path)
                  
     def size(self):
         '''number of the Darned entories'''
-        return self.__size
+        return self.__db_size
 
         
 class VCFReader(object):
+    '''
+    VCFReader class provides that list of VCF file and utils methods
+    >>> vr = VCFReader(path_to_vcf_file)
+    >>> vr.db
+    Returns array of vcf file
+    '''
+    
     def __init__(self, filename):
-        self.vcf = filename
+        self.__vcf = filename
         self.db = self.__generate_vcf_set()
 
     def __generate_vcf_set(self):
-        ''' generate_vcf_set(self) -> list, returns the accumulated vcf'''
-        vcf_recs = []
-        vcf_reader = vcf.Reader(open(self.vcf, 'r'))
-        self.count = 0
-        self.substitutions = Counter()
+        _vcf_recs = []
+        _vcf_reader = vcf.Reader(open(self.__vcf, 'r'))
+        self.__substitutions = Counter()
         
-        for rec in vcf_reader:
-            types = str(rec.REF) + '-to-' + 'or'.join([str(i) for i in rec.ALT])
-            self.substitutions[types] += 1
-            mod_chr = re.sub(r'^chr', '', rec.CHROM, 1)
-            vcf_recs.append(mod_chr+ ':'+ str(rec.POS))
-            self.count += 1
-        return vcf_recs
+        for rec in _vcf_reader:
+            _types = str(rec.REF) + '-to-' + 'or'.join([str(_) for _ in rec.ALT])
+            self.__substitutions[_types] += 1
+            _mod_chr = re.sub(r'^chr', '', rec.CHROM, 1)
+            _vcf_recs.append(_mod_chr+ ':'+ str(rec.POS))
+        self.__size = len(_vcf_recs)
+        return _vcf_recs
         
     def size(self):
         '''number of entory of the parsed vcf records'''
-        return self.count
+        return self.__size
 
     def vcf_name(self):
-        return os.path.basename(self.vcf)
+        return os.path.basename(self.__vcf)
 
     def editing_types(self):
-        return self.substitutions
+        '''All type of the base substitutions'''
+        return self.__substitutions
         
     def ag_count(self):
-        return self.substitutions.get('A-to-G')
+        '''A-to-G editing alone'''
+        return self.__substitutions.get('A-to-G')
+
+    def target_count(self, types):
+        '''Specify type of base substitutions'''
+        return self.__substitutions.get(types)
         
     def other_mutations_count(self):
         i = 0
-        for k in self.substitutions:
+        for k in self.__substitutions:
             if not k == 'A-to-G':
-                i += self.substitutions[k]
+                i += self.__substitutions[k]
         return i
         
 class Benchmark(object):
@@ -233,6 +242,9 @@ class Benchmark(object):
     >>> darned_db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
     >>> editing_db = VCFReader(filename)
     >>> bench = Benchmark(answer=darned_db, predict=candidate_db)
+    >>> bench.answer # set of darned
+    >>> bench.predict # set of candidate sites from vcf
+    >>> bench.intersect # set of the intersection between sets
     '''
     
     def __init__(self, answer=None, predict=None):
@@ -244,31 +256,30 @@ class Benchmark(object):
         return "DB[%d], Predict[%d]\n" % (len(self.answer), len(self.predict))
 
     def precision(self):
-        precision = 0
         try:
-            precision = len(self.intersect)/len(self.predict)
+            _precision = len(self.intersect)/len(self.predict)
+            return _precision
         except ZeroDivisionError:
             pass
         finally:
-            return precision
+            return 0
             
     def recall(self):
-        recall = 0
         try:
-            recall = len(self.intersect)/len(self.answer)
+            _recall = len(self.intersect)/len(self.answer)
+            return _recall
         except ZeroDivisionError:
             pass
         finally:
-            return recall
+            return 0
             
     def f_measure(self):
-        precision = self.precision()
-        recall = self.recall()
-        
-        f = 0
+        _precision = self.precision()
+        _recall = self.recall()
         try:
-            f = (2*recall*precision)/(recall+precision)
+            _f = 2*_recall*_precision/(_recall+_precision)
+            return _f
         except ZeroDivisionError:
             pass
         finally:
-            return f
+            return 0
