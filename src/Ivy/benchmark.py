@@ -166,7 +166,8 @@ class DarnedReader(object):
 
     def sp(self):
         ''' given species name '''
-        return self.__sp
+        (sp, ver) = self.__sp.split("_")
+        return sp, ver
 
     def path(self):
         ''' absolute path to Darned database file'''
