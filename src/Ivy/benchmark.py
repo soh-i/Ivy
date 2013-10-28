@@ -119,6 +119,8 @@ class DarnedReader(object):
         else: self.sp = sp
         if source is None:
             self.source = 'All'
+        else:
+            self.source = source.upper()
         self.darned_path = utils.find_app_root()+ '/data/'+ self.sp+ '.csv'
         self.db = self.__generate_darned_set()
         
@@ -127,20 +129,20 @@ class DarnedReader(object):
         
     def __generate_darned_set(self):
         # Store selected records
-        self.__size = 0
         if self.source is not None:
             darned_list = []
             with open(self.darned_path, 'r') as f:
                 for line in f:
                     if not line.startswith('chrom'):
-                        data = line.split(",")
-                        chrom = data[0]
-                        pos = data[1]
-                        darned_source = data[8]
-                        s = darned_source.split(";")
-                        if any([_ for _ in s if _ == self.source]):
-                            darned_list.append(chrom+ ':'+ pos+ self.source)
-                            self.__size += 1
+                        _data = line.split(",")
+                        _chrom = _data[0]
+                        _pos = _data[1]
+                        _darned_source = _data[8]
+                        _each_source = _darned_source.split(";")
+                        if any([_ for _ in _each_source if _ == self.source]):
+                            darned_list.append(':'.join([_chrom, _pos, self.source]))
+                            
+                self.db_size = len(darned_list)
                 return darned_list
                 
         # Store all Darned records (default)
@@ -153,7 +155,7 @@ class DarnedReader(object):
                         chrom = data[0]
                         pos = data[1]
                         selected.append(chrom+ ':'+ pos+ 'All')
-                        self.__size += 1
+                self.db_size
                 return selected
                 
         elif not self.sp:
@@ -173,7 +175,7 @@ class DarnedReader(object):
                  
     def size(self):
         '''number of the Darned entories'''
-        return self.__size
+        return self.db_size
 
         
 class VCFReader(object):
