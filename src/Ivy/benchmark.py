@@ -97,7 +97,7 @@ class DarnedDataGenerator(object):
                 source = row[8]
                 if len(source):
                     mod = source.replace(r';', ',').replace(r',', ';').\
-                          replace(r'; ',';').replace(r' ','_').replace(r'_T','T')
+                          replace(r'; ', ';').replace(r' ', '_').replace(r'_T', 'T')
                     out.write(",".join(row[:8]) + ",")
                     out.write(mod.upper() + ",")
                     out.write(",".join(row[9:]) + "\n")
@@ -116,12 +116,13 @@ class DarnedReader(object):
     def __init__(self, sp=None, source=None):
         if sp is None:
             raise RuntimeError, "Species name must be given"
-        else: self.sp = sp
+        else: self.__sp = sp
         if source is None:
-            self.source = 'All'
+            self.__source = 'All'
         else:
-            self.source = source.upper()
-        self.darned_path = utils.find_app_root()+ '/data/'+ self.sp+ '.csv'
+            self.__source = source.upper()
+            
+        self.__darned_path = utils.find_app_root()+ '/data/'+ self.__sp+ '.csv'
         self.db = self.__generate_darned_set()
         
     def __str__(self):
@@ -129,10 +130,10 @@ class DarnedReader(object):
         
     def __generate_darned_set(self):
         # Store selected records
-        if self.source is not None:
+        if self.__source is not None:
             selected = []
 
-            with open(self.darned_path, 'r') as f:
+            with open(self.__darned_path, 'r') as f:
                 for line in f:
                     if not line.startswith('chrom'):
                         _data = line.split(",")
@@ -140,16 +141,16 @@ class DarnedReader(object):
                         _pos = _data[1]
                         _darned_source = _data[8]
                         _each_source = _darned_source.split(";")
-                        if any([_ for _ in _each_source if _ == self.source]):
-                            selected.append(':'.join([_chrom, _pos, self.source]))
+                        if any([_ for _ in _each_source if _ == self.__source]):
+                            selected.append(':'.join([_chrom, _pos, self.__source]))
                             
-                self.db_size = len(selected)
+                self.__db_size = len(selected)
                 return selected
                 
         # Store all Darned records (default)
-        elif self.source is 'all' or self.source is 'All':
+        elif self.__source is 'all' or self.__source is 'All':
             darned_list = []
-            with open(self.darned_path, 'r') as f:
+            with open(self.__darned_path, 'r') as f:
                 for line in f:
                     if not line.startswith('chrom'):
                         _data = line.split(',')
@@ -157,27 +158,27 @@ class DarnedReader(object):
                         _pos = _data[1]
                         _darned_source = _data[8]
                         darned_list.append(':'.join([_chrom, _pos, _darned_source]))
-                self.db_size = len(darned_list)
+                self.__db_size = len(darned_list)
                 return darned_list
                 
-        elif not self.sp:
+        elif not self.__sp:
             raise RuntimeError, 'Given species name[%s] is not valid' % (self.__sp)
 
     def sp(self):
         ''' given species name '''
-        return self.sp
+        return self.__sp
 
     def path(self):
         ''' absolute path to Darned database file'''
-        return os.path.abspath(self.darned_path)
+        return os.path.abspath(self.__darned_path)
         
     def db_name(self):
         '''Darned db name'''
-        return os.path.basename(self.path())
+        return os.path.basename(self.__darned_path)
                  
     def size(self):
         '''number of the Darned entories'''
-        return self.db_size
+        return self.__db_size
 
         
 class VCFReader(object):
