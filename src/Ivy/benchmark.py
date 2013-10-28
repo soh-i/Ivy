@@ -116,8 +116,9 @@ class DarnedReader(object):
     def __init__(self, sp=None, source=None):
         if sp is None:
             raise RuntimeError, "Species name must be given"
-        else: self.__sp = sp
-        if source is None:
+        else:
+            self.__sp = sp
+        if source is None or len(source) == 0:
             self.__source = 'All'
         else:
             self.__source = source.upper()
@@ -130,9 +131,8 @@ class DarnedReader(object):
         
     def __generate_darned_set(self):
         # Store selected records
-        if self.__source is not None:
+        if self.__source != 'All':
             selected = []
-
             with open(self.__darned_path, 'r') as f:
                 for line in f:
                     if not line.startswith('chrom'):
@@ -148,7 +148,7 @@ class DarnedReader(object):
                 return selected
                 
         # Store all Darned records (default)
-        elif self.__source is 'all' or self.__source is 'All':
+        elif self.__source == 'all' or self.__source == 'All':
             darned_list = []
             with open(self.__darned_path, 'r') as f:
                 for line in f:
@@ -237,31 +237,31 @@ class Benchmark(object):
         return "DB[%d], Predict[%d]\n" % (len(self.answer), len(self.predict))
 
     def precision(self):
-        precision = 0
         try:
-            precision = len(self.intersect)/len(self.predict)
+            _precision = len(self.intersect)/len(self.predict)
+            return _precision
         except ZeroDivisionError:
             pass
         finally:
-            return precision
+            return 0
             
     def recall(self):
-        recall = 0
         try:
-            recall = len(self.intersect)/len(self.answer)
+            _recall = len(self.intersect)/len(self.answer)
+            return _recall
         except ZeroDivisionError:
             pass
         finally:
-            return recall
+            return 0
             
     def f_measure(self):
-        precision = self.precision()
-        recall = self.recall()
+        _precision = self.precision()
+        _recall = self.recall()
         
-        f = 0
         try:
-            f = (2*recall*precision)/(recall+precision)
+            _f = 2*_recall*_precision/(_recall+_precision)
+            return _f
         except ZeroDivisionError:
             pass
         finally:
-            return f
+            return 0
