@@ -4,7 +4,7 @@ import os.path
 import re
 import csv
 import ConfigParser
-import utils
+import Ivy.utils
 from urllib2 import Request, urlopen, URLError
 from collections import Counter
 
