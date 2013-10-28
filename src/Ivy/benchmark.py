@@ -204,10 +204,10 @@ class VCFReader(object):
         
         for rec in _vcf_reader:
             _types = str(rec.REF) + '-to-' + 'or'.join([str(_) for _ in rec.ALT])
-            self.__substitutions[types] += 1
+            self.__substitutions[_types] += 1
             _mod_chr = re.sub(r'^chr', '', rec.CHROM, 1)
-            _vcf_recs.append(mod_chr+ ':'+ str(rec.POS))
-        self.__size = len(vcf_recs)
+            _vcf_recs.append(_mod_chr+ ':'+ str(rec.POS))
+        self.__size = len(_vcf_recs)
         return _vcf_recs
         
     def size(self):
