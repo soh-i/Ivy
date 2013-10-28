@@ -31,11 +31,11 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     generator = DarnedDataGenerator(species=args.sp)
-
-    darned_raw_file = generator.saved_path + generator.filename
+    
+    darned_raw_file = generator.saved_abs_path + generator.filename
     if not os.path.isfile(darned_raw_file):
         generator.fetch_darned()
-
+        
     darned_parsed_csv = generator.out_name
     if not os.path.isfile(darned_parsed_csv):
         generator.darned_to_csv()
@@ -45,8 +45,7 @@ if __name__ == '__main__':
         vcf = VCFReader(args.vcf_file)
         bench = Benchmark(answer=ans.db, predict=vcf.db)
         
-        print "Species:%s\tDB:%s\tVCF:%s\tPrecision:%f\tRecall:%f\tF-measure:%f\tAGs:%d\tOthers:%d\tAnsCount:%d\n" % (
-            ans.sp, ans.db_name(), vcf.vcf_name(),
+        print "Species:%s,DB:%s,VCF:%s,Precision:%f,Recall:%f,F-measure:%f,AGs:%d,Others:%d,AnsCount:%d" % (
+            ans.sp()[0], ans.db_name(), vcf.vcf_name(),
             bench.precision(), bench.recall(), bench.f_measure(),
-            vcf.ag_count(), vcf.other_mutations_count(), vcf.size()),
-        
+            vcf.ag_count(), vcf.other_mutations_count(), ans.size())
