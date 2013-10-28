@@ -108,9 +108,11 @@ class DarnedDataGenerator(object):
 
 class DarnedReader(object):
     '''
-    DarnedReader generates the subset of DARNED db
+    DarnedReader class generates subset of DARNED db.
     >>> db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
-    Returns list of subset of darned db
+    Do not use source option, store to all records by the default settings.
+    Acceptable type of sp argument is defined as human_hg18/hg19, mice_mm9/mm10, fly_dm3.
+    Returns list of subset of darned db.
     '''
     
     def __init__(self, sp=None, source=None):
@@ -165,12 +167,12 @@ class DarnedReader(object):
             raise RuntimeError, 'Given species name[%s] is not valid' % (self.__sp)
 
     def sp(self):
-        ''' given species name '''
+        '''return tuple of species and genome version'''
         (sp, ver) = self.__sp.split("_")
         return sp, ver
 
     def path(self):
-        ''' absolute path to Darned database file'''
+        '''absolute path to Darned database file'''
         return os.path.abspath(self.__darned_path)
         
     def db_name(self):
