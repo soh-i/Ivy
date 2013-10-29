@@ -14,16 +14,17 @@ python setup.py install
 ```
 
 ## Usage
-### Benchmarking test
-```
-python bin/run_bench.py --vcf test --sp human_hg19
-```
-
-Shows other options
+### ivy_benchmark.py: evaluate detection accuracy
+`ivy_benchmark.py` performs a benchmarking test of detected A-to-I editing sites in _H. sapiens_, _M. musclus_, _D. melanogaster_ to evaluate accuracy using recall, rrecision and F-measure score. 
 
 ```
-python bin/run_bench.py --help
+ivy_benchmark.py --vcf test.vcf --sp human_hg19 --source brain
 ```
+* `--vcf`: Set VCF(variant call format) file [required]
+* `--sp`: Set joined string of species and genome version [required]
+* `--source`: Set specific smaple/tissues/cell line name [default: All]
+* `--help`: Show help messages
+* `--version`: Show ivy_benchmark.py version
 
 ## Dependencies
 * Pysam version 0.7.5
