@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-from Ivy.benchmark.benchmark import DarnedDataGenerator, DarnedReader, VCFReader, Benchmark
+from Ivy.benchmark.benchmark import *
+from Ivy.benchmark.plot import BenchmarkPlot
 import Ivy.utils
 import argparse
 import os.path
@@ -27,6 +28,12 @@ if __name__ == '__main__':
                         action='store',
                         help='set species and genome version (eg. ehuman_hg19) [required]'
                     )
+    parser.add_argument('--plot',
+                       required=False,
+                       default=False,
+                       action='store_true',
+                       help='plot benchmarking stats (default:False)',
+                   )
     parser.add_argument('--version', action='version', version=version)
     
     args = parser.parse_args()
@@ -40,6 +47,7 @@ if __name__ == '__main__':
     if not os.path.isfile(darned_parsed_csv):
         generator.darned_to_csv()
 
+        
     if args.vcf_file and args.sp and args.source:
         ans = DarnedReader(sp=args.sp, source=args.source)
         vcf = VCFReader(args.vcf_file)
@@ -49,3 +57,13 @@ if __name__ == '__main__':
             ans.sp()[0], ans.db_name(), vcf.vcf_name(),
             bench.precision(), bench.recall(), bench.f_measure(),
             vcf.ag_count(), vcf.other_mutations_count(), ans.size())
+
+        if args.plot:
+            bplt = BenchmarkPlot("testplot")
+            bplt.plot_accuracy(lab=str(vcf.vcf_name()),
+                               recall=int(bench.recall()),
+                               precision=int(bench.recall()))
+            
+    
+        
+        
