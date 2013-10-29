@@ -25,9 +25,13 @@ ivy_benchmark.py --vcf test.vcf --sp human_hg19 --source brain
 * `--vcf`: Set VCF(variant call format) file [required]
 * `--sp`: Set joined string of species and genome version [required]
 * `--source`: Set specific smaple/tissues/cell line name [default: All]
+* `--plot`: Use this option, to visualize precision/recall plot [default: False] 
 * `--help`: Show help messages
 * `--version`: Show ivy_benchmark.py version
 
 ## Dependencies
+* `pip install -r requirements.txt` resoluves all dependencies.
 * Pysam version 0.7.5
 * PyVCF version 0.6.4
+* Numpy version 1.7.1
+* Matplotlib version 1.3.1
