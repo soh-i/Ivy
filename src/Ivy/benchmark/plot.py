@@ -5,14 +5,24 @@ import matplotlib.pyplot as plt
 from benchmark import *
 
 class BenchmarkPlot(object):
-    def __init__(self, lab, recall=None, precision=None):
+    '''
+    BenchmarkPlot class is to vizualize some stats of benchmarking results.
+    >>> bplt = BenchmarkPlot("out_file")
+    '''
+    
+    def __init__(self, filename):
+        self.filename = filename
+        
+    def plot_accuracy(self, lab=None, recall=0, precision=0):
+        '''
+        >>> bplt.plot_accuracy(lab="sample01", recall=0.8, precision=0.78)
+        Generate out_file.pdf
+        '''
+        
+        self.lab = lab
         self.recall = recall
         self.precision = precision
-        self.lab = lab
-        
-    def p_r_plot(self):
         fig = plt.figure()
-        
         plt.plot(self.precision, self.recall,
                  marker='o', color="green",
                  linestyle=".", markersize=10,
@@ -23,5 +33,14 @@ class BenchmarkPlot(object):
         plt.ylim(0.0,1.0)
         plt.xlim(0.0,1.0)
         plt.legend()
-        fig.savefig("test.pdf")
+        fig.savefig(self.filename + '.pdf')
+
+    def plot_editing_type(self):
+        pass
+
+    def plot_ag_enrichment(self):
+        pass
+        
+    def plot_all_stats(self):
+        pass
 
