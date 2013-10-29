@@ -19,13 +19,13 @@ if __name__ == '__main__':
                         required=False,
                         dest='source',
                         action='store',
-                        help='use specific sample/tissue/cell line, default:All'
+                        help='use specific sample/tissue/cell line (default:All)'
                     )
     parser.add_argument('--sp',
                         required=True,
                         dest='sp',
                         action='store',
-                        help='set species name and genome version, ex: human_hg19 [required]'
+                        help='set species and genome version (eg. ehuman_hg19) [required]'
                     )
     parser.add_argument('--version', action='version', version=version)
     
