@@ -6,6 +6,10 @@ import Ivy.utils
 import argparse
 import os.path
 
+__program__ = 'benchmark'
+__author__ = 'Soh Ishiguro <yukke@g-language.org>'
+__status__ = 'development'
+
 if __name__ == '__main__':
     version = '0.0.1'
     desc = "Benchmarking test for detected RNA editing sites based on HTSeq data."
