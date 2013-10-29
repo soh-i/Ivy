@@ -15,14 +15,13 @@ class BenchmarkPlot(object):
         
     def plot_accuracy(self, lab=None, recall=0, precision=0):
         '''
-        >>> bplt.plot_accuracy(lab="test", recall=0.8, precision=0.78)
+        >>> bplt.plot_accuracy(lab="sample01", recall=0.8, precision=0.78)
         Generate out_file.pdf
         '''
         
         self.lab = lab
         self.recall = recall
         self.precision = precision
-
         fig = plt.figure()
         plt.plot(self.precision, self.recall,
                  marker='o', color="green",
@@ -34,7 +33,7 @@ class BenchmarkPlot(object):
         plt.ylim(0.0,1.0)
         plt.xlim(0.0,1.0)
         plt.legend()
-        fig.savefig("test.pdf")
+        fig.savefig(self.filename + '.pdf')
 
     def plot_editing_type(self):
         pass
@@ -44,3 +43,4 @@ class BenchmarkPlot(object):
         
     def plot_all_stats(self):
         pass
+
