@@ -259,6 +259,12 @@ class Benchmark(object):
     def __init__(self, answer=None, predict=None):
         self.answer = set(answer)
         self.predict = set(predict)
+        
+        if len(self.answer) == 0:
+            raise ValueError, 'Answer set has NO entory'
+        elif len(self.predict) == 0:
+            raise ValueError, 'predict set has NO entory'
+                
         self.intersect = self.answer.intersection(self.predict)
 
     def __str__(self):
