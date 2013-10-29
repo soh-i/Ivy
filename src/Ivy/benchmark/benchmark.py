@@ -1,8 +1,4 @@
-__program__ = 'benchmark'
-__author__ = 'Soh Ishiguro <yukke@g-language.org>'
-__status__ = 'development'
-
-from __future__ import divisionx
+from __future__ import division
 import vcf
 import os.path
 import re
@@ -11,6 +7,10 @@ import ConfigParser
 from Ivy.utils import find_app_root
 from urllib2 import Request, urlopen, URLError
 from collections import Counter
+
+__program__ = 'benchmark'
+__author__ = 'Soh Ishiguro <yukke@g-language.org>'
+__status__ = 'development'
 
 
 class DarnedDataGenerator(object):
