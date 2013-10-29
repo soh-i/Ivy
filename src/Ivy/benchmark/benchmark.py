@@ -1,16 +1,22 @@
-from __future__ import division
+__program__ = 'benchmark'
+__author__ = 'Soh Ishiguro <yukke@g-language.org>'
+__status__ = 'development'
+
+from __future__ import divisionx
 import vcf
 import os.path
 import re
 import csv
 import ConfigParser
-from Ivy.utils import *
+from Ivy.utils import find_app_root
 from urllib2 import Request, urlopen, URLError
 from collections import Counter
+
 
 class DarnedDataGenerator(object):
     '''
     DarnedDataGenerator provides to prepare data that are used for benchmarking test.
+    >>> ddg = DarnedDataGenerator(species=human_hg18)
     '''
     
     def __init__(self, species=None):
@@ -242,9 +248,12 @@ class Benchmark(object):
     >>> darned_db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
     >>> editing_db = VCFReader(filename)
     >>> bench = Benchmark(answer=darned_db, predict=candidate_db)
-    >>> bench.answer # set of darned
-    >>> bench.predict # set of candidate sites from vcf
-    >>> bench.intersect # set of the intersection between sets
+    >>> bench.answer
+    returns set opf darned
+    >>> bench.predict
+    returns set of candidate sites from vcf
+    >>> bench.intersect
+    returns set of the intersection between sets
     '''
     
     def __init__(self, answer=None, predict=None):
