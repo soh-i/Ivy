@@ -1,12 +1,19 @@
 from Ivy.utils import ImutableDict
 from collections import namedtuple
 
-class AlignmentConfig(object):
+class AlignmentConfig_old(object):
+    '''
+    AlignmentConfig class provides to generate/access namedtupled filtering params
+    >>> cnf = AlignmentConfig()
+    >>> print cnf.config.mapq
+    >>> 25
+    '''
+    
     def __init__(self):
         self.conf = self.__init_conf()
         
     def __init_conf(self):
-        _conf = namedtuple(
+        __conf = namedtuple(
             'Conf', [
                 'is_duplicate',
                 'is_unmapped',
@@ -22,7 +29,7 @@ class AlignmentConfig(object):
                 'edit_base_c',
                 'mutation_type_c',
             ])
-        __c = _conf(
+        __c = __conf(
             is_duplicate=False,
             is_unmapped=False,
             is_deletion=False,
@@ -38,10 +45,4 @@ class AlignmentConfig(object):
             mutation_type_c=1,
         )
         return __c
-
-if __name__ == '__main__':
-    cnf = AlignmentConfig()
-    print cnf.conf
-
-
         
