@@ -1,4 +1,4 @@
-import os.path
+import os.pathn
 import collections
 
 def find_app_root():
@@ -26,6 +26,9 @@ class ImutableDict(collections.Mapping):
     >>> A 192 test 293 hoo 93
     >>> imutable['A'] = 'AA'
     >>> TypeError: ImutableDict object does not support item assignment
+    >>> im.replace('A', 209) # create NEW imutable dictionary
+    >>> print im
+    ImutableDict(A=209, test=293, hoo=93)
     '''
     
     def __init__(self, dic):
@@ -48,8 +51,25 @@ class ImutableDict(collections.Mapping):
 
     def __eq__(self, other):
         return self.__dict == other.__dict
-        
+
     def __setitem__(self, key, value):
         raise TypeError, ('%s object does not support item assignment'
                           % (self.__class__.__name__))
+        
+    def __repr__(self):
+        args = [
+            '{key}={value}'.format(key=key, value=value)
+            for key, value in self.__dict.items()
+            ]
+        args_str = '(' + ', '.join(args) + ')'
+        return self.__class__.__name__ + args_str
+        
+    def replace(self, key, value):
+        self.__dict = ImutableDict.__add__({key:value}).__dict
 
+        
+if __name__ == '__main__':
+    c = {"A":212, 'B':2192}
+    im = ImutableDict(c)
+    c = {"A":212, 'B':212}
+    print im
