@@ -11,16 +11,19 @@ class AlignmentConfig(object):
         
     def __set_default(self):
        __params = {
-           'is_duplicate' : False,
-            'is_unmapped' : False,
-            'is_deletion' : False,
-            'is_proper_pair' : True,
-            'is_qcfail' : False,
-            'is_secondary' : True,
-            'mapq' : 25,
-            'mate_is_reverse' : True,
-            'mate_is_unmapped' : False,
-            'base_qual' : 25,
+           'is_duplicate': False,
+           'is_unmapped': False,
+           'is_deletion': False,
+           'is_proper_pair': True,
+           'is_qcfail': False,
+           'is_secondary': True,
+           'mapq': 25,
+           'mate_is_reverse': True,
+           'mate_is_unmapped': False,
+           'base_qual': 25,
+           'edit_ratio': 0.1,
+           'edit_base_c': 10,
+           'mutation_type_c': 1
        }
        self.__imutable_conf = ImutableDict(__params)
        return self.__imutable_conf
@@ -33,7 +36,7 @@ if __name__ == '__main__':
     print align.params
         
 class AlignmentStream(object):
-    def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=None):
+    def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=True):
         bm = pysam.Samfile(samfile, 'rb')
         ft = pysam.Fastafile(fafile)
         
@@ -56,11 +59,11 @@ class AlignmentStream(object):
                 
             prop_read = []
             for r in col.pileups:
-                if r.alignment.is_proper_pair \
-                    and not r.alignment.is_duplicate \
-                    and not r.alignment.is_unmapped \
-                    and not r.is_del:
-                    prop_read.append(r)
+                #if r.alignment.is_proper_pair \
+                #    and not r.alignment.is_duplicate \
+                #    and not r.alignment.is_unmapped \
+                #    and not r.is_del:
+                prop_read.append(r)
             
             bam_chrom = self.samfile.getrname(col.tid)
             ref = self.fafile.fetch(reference=bam_chrom, start=col.pos, end=col.pos+1)
@@ -69,11 +72,11 @@ class AlignmentStream(object):
                 raise ValueError('No seq. content within [chr:%s, start:%s, end:%s]' % \
                                  (self.chrom, self.start, self.end))
                         
-            mismatches = [read for read in prop_read
-                          if read.alignment.seq[read.qpos] != ref]
+            mismatches = [_ for _ in prop_read
+                          if _.alignment.seq[_.qpos] != ref]
             if len(mismatches) > 1:
                 
-                # Mismatch base
+                # Mismatch basen
                 A = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'A']
                 a = [read for read in prop_read
@@ -88,8 +91,23 @@ class AlignmentStream(object):
                      if read.alignment.seq[read.qpos] == 't']
                 G = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'G']
+                #print [_.alignment.seq[_.qpos] for _ in G]
+                
                 g = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'g']
+                #print [_.alignment.seq[_.qpos] for _ in g]
+
+                
+                debug = True
+                if debug:
+                    G_r = len([_.alignment.is_reverse for _ in G
+                               if _.alignment.is_reverse])
+                    G_f = len([_.alignment.is_reverse for _ in G
+                               if not _.alignment.is_reverse])
+                    print G_r
+                    print G_f
+                    print G_r + G_f
+                    
                 N = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'N' \
                      or read.alignment.seq[read.qpos] == 'n']
