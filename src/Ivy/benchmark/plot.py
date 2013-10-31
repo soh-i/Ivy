@@ -1,9 +1,7 @@
-
 import matplotlib as mlab
 mlab.use('Agg')
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
-
 
 class BenchmarkPlot(object):
     '''
