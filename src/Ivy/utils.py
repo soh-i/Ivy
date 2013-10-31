@@ -1,4 +1,4 @@
-import os.pathn
+import os.path
 import collections
 
 def find_app_root():

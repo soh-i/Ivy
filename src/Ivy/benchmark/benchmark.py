@@ -12,7 +12,6 @@ __program__ = 'benchmark'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __status__ = 'development'
 
-
 class DarnedDataGenerator(object):
     '''
     DarnedDataGenerator provides to prepare data that are used for benchmarking test.
