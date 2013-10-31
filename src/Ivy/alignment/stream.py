@@ -97,20 +97,42 @@ class AlignmentStream(object):
                      if read.alignment.seq[read.qpos] == 'N' \
                      or read.alignment.seq[read.qpos] == 'n']
 
+                # separeted by read directions
                 debug = True
                 if debug:
                     G_r = len([_.alignment.is_reverse for _ in G
                                if _.alignment.is_reverse])
-                    G_f = len([_.alignment.is_reverse for _ in G
+                    g_f = len([_.alignment.is_reverse for _ in G
                                if not _.alignment.is_reverse])
+                    
+                    A_r = len([_.alignment.is_reverse for _ in A
+                               if _.alignment.is_reverse])
+                    a_f = len([_.alignment.is_reverse for _ in A
+                               if not _.alignment.is_reverse])
+                    
+                    T_r = len([_.alignment.is_reverse for _ in T
+                               if _.alignment.is_reverse])
+                    t_f = len([_.alignment.is_reverse for _ in T
+                               if not _.alignment.is_reverse])
+                    
+                    C_r = len([_.alignment.is_reverse for _ in C
+                               if _.alignment.is_reverse])
+                    c_f = len([_.alignment.is_reverse for _ in C
+                               if not _.alignment.is_reverse])
+                    
+                    N_r = len([_.alignment.is_reverse for _ in N
+                               if _.alignment.is_reverse])
+                    n_f = len([_.alignment.is_reverse for _ in N
+                               if not _.alignment.is_reverse])
+                    coverage = A_r+ A_f+ T_r+ T_f+ G_r+ G_f+ C_r+ C_f
                     
                     print [_.alignment.seq[_.qpos] for _ in g] # is not working
                     print [_.alignment.seq[_.qpos] for _ in G]
                     
-                    print G_r
-                    print G_f
-                    print G_r + G_f
-                
+                    print '[A:%s,%s] [T:%s,%s] [G:%s,%s] [C:%s,%s]' % (A_r, A_f, T_r, T_f, G_r, G_f, C_r, C_f)
+                    print 'Coverage:%d' % (coverage)
+                    
+                    
                 mc_A = len(A)
                 mc_a = len(a)
                 mc_T = len(T)
@@ -147,33 +169,34 @@ class AlignmentStream(object):
                 ave_baq = '{0:.2f}'.format(sum(self.average_baq(r.alignment.seq))/depth)
                 
                 # returns per a base
-                yield {'CHROM': self.chrom,
-                       'POS': pos,
-                       'REF': ref,
-                       'ALT': ",".join([(b[0]) for b in alleles]),
-                       'ID': 'ID',
-                       'FORMAT': '.',
-                       'INFO': '.',
-                       'FILTER': '.',
-                       'coverage': len(prop_read),
-                       'mismatches': mismatch_c,
-                       'mismatch_freq': mismatch_freq,
-                       'matches': depth,
-                       'mapq': mapq,
-                       'QUAL': ave_baq,
-                       'forward_allel_count': forward_allel_c,
-                       'reverse_allel_count': reverse_allel_c,
-                       'Af':mc_A,
-                       'Ar':mc_a,
-                       'Cf':mc_C,
-                       'Cr':mc_c,
-                       'Tf':mc_T,
-                       'Tr':mc_t,
-                       'Gf':mc_G,
-                       'Gr':mc_g,
-                       'N': mc_N,
-                   }
-    
+                yield {
+                    'CHROM': self.chrom,
+                    'POS': pos,
+                    'REF': ref,
+                    'ALT': ",".join([(b[0]) for b in alleles]),
+                    'ID': 'ID',
+                    'FORMAT': '.',
+                    'INFO': '.',
+                    'FILTER': '.',
+                    'coverage': len(prop_read),
+                    'mismatches': mismatch_c,
+                    'mismatch_freq': mismatch_freq,
+                    'matches': depth,
+                    'mapq': mapq,
+                    'QUAL': ave_baq,
+                    'forward_allel_count': forward_allel_c,
+                    'reverse_allel_count': reverse_allel_c,
+                    'Af':mc_A,
+                    'Ar':mc_a,
+                    'Cf':mc_C,
+                    'Cr':mc_c,
+                    'Tf':mc_T,
+                    'Tr':mc_t,
+                    'Gf':mc_G,
+                    'Gr':mc_g,
+                    'N': mc_N,
+                }
+                
     def __resolve_coords(self, start, end):
         if self.one_based:
             if start is not None:
