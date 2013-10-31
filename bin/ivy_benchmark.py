@@ -68,6 +68,3 @@ if __name__ == '__main__':
                                recall=int(bench.recall()),
                                precision=int(bench.recall()))
             
-    
-        
-        
