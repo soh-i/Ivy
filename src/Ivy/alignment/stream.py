@@ -3,14 +3,15 @@ from collections import Counter, namedtuple
 import string
 import re
 import pysam
+from Ivy.utils import ImutableDict
 
 class AlignmentConfig(object):
     def __init__(self):
-        self.conf = self.__set_default()
+        self.params = self.__set_default()
         
     def __set_default(self):
-        __initialize = {
-            'is_duplicate' : False,
+       __params = {
+           'is_duplicate' : False,
             'is_unmapped' : False,
             'is_deletion' : False,
             'is_proper_pair' : True,
@@ -20,26 +21,16 @@ class AlignmentConfig(object):
             'mate_is_reverse' : True,
             'mate_is_unmapped' : False,
             'base_qual' : 25,
-        }
-        return __initialize
-        
-    def set_filter(self, param, value):
-        self.conf.update({param:value})
-        
-    def get_filter_value(self, param):
-        return self.conf[param]
-        
-    def has_filter(self, filt):
-        for k in self.conf:
-            if filt == self.conf[k]:
-                return True
-            else:
-                return False
-        
-    def print_all_params(self):
-        for k in self.conf:
-            print "[%s]:%s" % (k, self.conf[k])
-            
+       }
+       self.__imutable_conf = ImutableDict(__params)
+       return self.__imutable_conf
+       
+if __name__ == '__main__':
+    align = AlignmentConfig()
+    
+    align.params.replace("mapq", 33)
+    print align.params["mapq"]
+    print align.params
         
 class AlignmentStream(object):
     def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=None):
