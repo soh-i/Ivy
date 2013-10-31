@@ -2,15 +2,13 @@ import os.path
 import collections
 
 def find_app_root():
-    '''
-    Absolute path to your project root from setup.py location
-    '''
+    '''Absolute path to your project root from setup.py location'''
     root = os.path.dirname(__file__)
     while not os.path.exists(os.path.join(root, 'setup.py')):
         root = os.path.abspath(os.path.join(root, os.path.pardir))
     return root
 
-def __end_url_basename(p):
+def end_url_basename(p):
     """Returns the final component of a pathname"""
     i = p.rfind('/') + 1
     return p[i:]
@@ -26,7 +24,7 @@ class ImutableDict(collections.Mapping):
     >>> A 192 test 293 hoo 93
     >>> imutable['A'] = 'AA'
     >>> TypeError: ImutableDict object does not support item assignment
-    >>> im.replace('A', 209) # create NEW imutable dictionary
+    >>> im.replace('A', 209) # update imutable dictionary
     >>> print im
     ImutableDict(A=209, test=293, hoo=93)
     '''
@@ -75,11 +73,10 @@ class ImutableDict(collections.Mapping):
         return self.__dict
 
         
+def main():
+    im = ImutableDict({'A': 91, 'B':90, 'C':302})
+    print im
+
+
 if __name__ == '__main__':
-    c = {"A":212, 'B':2192}
-    print "original: ", c
-    
-    im = ImutableDict(c)
-    #c = {"A":232, 'B':212}
-    c = im.replace("BB", 928)
-    print "replace: ", c
+    main()
