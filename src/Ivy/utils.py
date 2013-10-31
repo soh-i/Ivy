@@ -65,11 +65,21 @@ class ImutableDict(collections.Mapping):
         return self.__class__.__name__ + args_str
         
     def replace(self, key, value):
-        self.__dict = ImutableDict.__add__({key:value}).__dict
+        for old_key in self.__dict:
+            if old_key == key:
+                # replace new value into the dic
+                self.__dict[key] = value
+        else:
+            # Add new element into the original dic
+            self.__dict = dict(self.__dict.items() + {key:value}.items())
+        return self.__dict
 
         
 if __name__ == '__main__':
     c = {"A":212, 'B':2192}
+    print "original: ", c
+    
     im = ImutableDict(c)
-    c = {"A":212, 'B':212}
-    print im
+    #c = {"A":232, 'B':212}
+    c = im.replace("BB", 928)
+    print "replace: ", c
