@@ -91,27 +91,26 @@ class AlignmentStream(object):
                      if read.alignment.seq[read.qpos] == 't']
                 G = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'G']
-                #print [_.alignment.seq[_.qpos] for _ in G]
-                
                 g = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'g']
-                #print [_.alignment.seq[_.qpos] for _ in g]
+                N = [read for read in prop_read
+                     if read.alignment.seq[read.qpos] == 'N' \
+                     or read.alignment.seq[read.qpos] == 'n']
 
-                
                 debug = True
                 if debug:
                     G_r = len([_.alignment.is_reverse for _ in G
                                if _.alignment.is_reverse])
                     G_f = len([_.alignment.is_reverse for _ in G
                                if not _.alignment.is_reverse])
+                    
+                    print [_.alignment.seq[_.qpos] for _ in g] # is not working
+                    print [_.alignment.seq[_.qpos] for _ in G]
+                    
                     print G_r
                     print G_f
                     print G_r + G_f
-                    
-                N = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'N' \
-                     or read.alignment.seq[read.qpos] == 'n']
-
+                
                 mc_A = len(A)
                 mc_a = len(a)
                 mc_T = len(T)
