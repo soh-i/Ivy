@@ -67,7 +67,7 @@ class AlignmentStream(object):
             
             bam_chrom = self.samfile.getrname(col.tid)
             ref = self.fafile.fetch(reference=bam_chrom, start=col.pos, end=col.pos+1)
-
+            
             if not ref:
                 raise ValueError('No seq. content within [chr:%s, start:%s, end:%s]' % \
                                  (self.chrom, self.start, self.end))
@@ -167,6 +167,7 @@ class AlignmentStream(object):
                 
                 mapq = r.alignment.mapq
                 ave_baq = '{0:.2f}'.format(sum(self.average_baq(r.alignment.seq))/depth)
+                #print self.average_baq(r.alignment.seq)
                 
                 # returns per a base
                 yield {
