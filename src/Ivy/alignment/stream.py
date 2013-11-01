@@ -132,7 +132,6 @@ class AlignmentStream(object):
                     print '[A:%s,%s] [T:%s,%s] [G:%s,%s] [C:%s,%s]' % (A_r, a_f, T_r, t_f, G_r, g_f, C_r, c_f)
                     print 'Coverage:%d' % (coverage)
                     
-                    
                 mc_A = len(A)
                 mc_a = len(a)
                 mc_T = len(T)
