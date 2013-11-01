@@ -154,10 +154,9 @@ class AlignmentStream(object):
             n_f = [_.alignment.is_reverse for _ in N
                    if not _.alignment.is_reverse]
 
-
             mutation_type = {'A': len(A), 'T': len(T), 'G': len(G), 'C': len(C)}
-            print mutation_type
             
+                        
             debug = False
             if debug:
                 coverage = A_r+ a_f+ T_r+ t_f+ G_r+ g_f+ C_r+ c_f + N_r + n_f
