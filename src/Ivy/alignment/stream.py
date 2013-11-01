@@ -37,18 +37,31 @@ if __name__ == '__main__':
         
 class AlignmentStream(object):
     def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=True):
-        bm = pysam.Samfile(samfile, 'rb')
-        ft = pysam.Fastafile(fafile)
+        __bm = pysam.Samfile(samfile, 'rb')
+        __ft = pysam.Fastafile(fafile)
         
-        self.samfile = bm
-        self.fafile = ft
+        self.samfile = __bm
+        self.fafile = __ft
         self.one_based = one_based
         (self.start, self.end) = self.__resolve_coords(start, end)
 
         if not chrom.startswith('chr'):
             self.chrom = 'chr' + chrom
         else: self.chrom = chrom
-        
+
+        debug = True
+        if debug:
+            # info. for loaded samfile
+            print self.samfile.filename
+            print self.samfile.lengths
+            print self.samfile.mapped
+            print self.samfile.nreferences
+            print self.samfile.references
+            print self.samfile.unmapped
+
+            # info. for fasta
+            print self.fafile.filename
+            
     def pileup_stream(self):
         for col in self.samfile.pileup(reference=self.chrom,
                                        start=self.start,
