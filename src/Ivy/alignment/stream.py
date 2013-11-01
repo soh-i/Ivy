@@ -66,9 +66,13 @@ class AlignmentStream(object):
             else: pos = col.pos
             
             ref = self.fafile.fetch(reference=bam_chrom, start=col.pos, end=col.pos+1).upper()
-
             reads = co.pileups
 
+            # Raw reads (no filterings through)
+            raw_reads = [_ for _ in reads]
+            raw_mismatches = [_ for _ in row_reads if _.alignment.seq[_.qpos] != ref]
+            raw_matches = [_ for _ in row_reads if _.alignment.seq[.qpos] == ref]
+            
             # Has proper_pair and without deletion
             prop_nodel_reads = [_ for _ in reads if not _.alignment.is_del and _.alignment.is_proper_pair]
             prop_nodel_matches = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] == ref]
@@ -86,11 +90,11 @@ class AlignmentStream(object):
 
             # Has deletions alone
             del_reads = [_ for _ in reads if _.is_del]
-            del_prop_reads = [_ for _ in prop_reads if not _.is_del]
+            del_prop_reads = [_ for _ in reads if not _.is_del]
 
             # Has insertion alone
             ins_reads = [_ for _ in reads if _.is_del > 0]
-            ins_prop_reads = [_ for _ in prop_reads if _.is_del > 0]
+            ins_prop_reads = [_ for _ in reads if _.is_del > 0]
             
             
             #prop_read = []
