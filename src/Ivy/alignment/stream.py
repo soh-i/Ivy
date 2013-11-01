@@ -124,12 +124,12 @@ class AlignmentStream(object):
                                if _.alignment.is_reverse])
                     n_f = len([_.alignment.is_reverse for _ in N
                                if not _.alignment.is_reverse])
-                    coverage = A_r+ A_f+ T_r+ T_f+ G_r+ G_f+ C_r+ C_f
+                    coverage = A_r+ a_f+ T_r+ t_f+ G_r+ g_f+ C_r+ c_f + N_r + n_f
                     
                     print [_.alignment.seq[_.qpos] for _ in g] # is not working
                     print [_.alignment.seq[_.qpos] for _ in G]
                     
-                    print '[A:%s,%s] [T:%s,%s] [G:%s,%s] [C:%s,%s]' % (A_r, A_f, T_r, T_f, G_r, G_f, C_r, C_f)
+                    print '[A:%s,%s] [T:%s,%s] [G:%s,%s] [C:%s,%s]' % (A_r, a_f, T_r, t_f, G_r, g_f, C_r, c_f)
                     print 'Coverage:%d' % (coverage)
                     
                     
