@@ -189,7 +189,7 @@ class AlignmentStream(object):
                 'G': len(G),
                 'N': len(N),
             }
-            
+    
     def __resolve_coords(self, start, end, is_one_based):
         if is_one_based:
             if start is not None:
@@ -214,6 +214,36 @@ class AlignmentStream(object):
                 allele.append(base)
         return allele
 
+
+def define_allele(base, ref=None):
+    if base and ref:
+        [_.upper() for _ in base]
+        ref.upper()
+        
+    c = Counter(base)
+    comm = c.most_common()
+    #return [base for base in comm if base != ref]
+    
+    allele = {}
+    for base in comm:
+        if base[0] != ref:
+            allele.update({base[0]:base[1]})
+            
+    for j in allele:
+        for k in allele:
+            if allele[k] == allele[j] and k != j:
+                return allele
+            elif allele[k] != allele[j] and k != j:
+                return allele[j], j
+                
+        
+if __name__ == '__main__':
+    a = ['A', 'T', 'C']
+    b = ['A', 'T', 'A', 'C', 'G', 'A', 'A', 'A']
+    print define_allele(b, ref='T')
+    print ""
+    print define_allele(a, ref='A')
+        
         
 class AlignmentStreamMerger(object):
     def __init__(self, rna, dna):
