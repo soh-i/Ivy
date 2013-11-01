@@ -75,8 +75,8 @@ class AlignmentStream(object):
             
             # Has proper_pair and without deletion
             prop_nodel_reads = [_ for _ in reads if not _.alignment.is_del and _.alignment.is_proper_pair]
-            prop_nodel_matches = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] == ref]
             prop_nodel_mismatchs = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] != ref]
+            prop_nodel_matches = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] == ref]
 
             # Has NO deletion
             nodel_reads = [_ for _ in reads if not _.alignment.is_del]
@@ -86,7 +86,7 @@ class AlignmentStream(object):
             # Has proper_pair alone
             prop_reads = [_ for _ in reads if _.alignment.is_proper_pair]
             prop_mismatches =  [_ for _ in prop_reads if _.alignment.seq[_.qpos] != ref]
-            prop_matches =  [_ for _ in prop_read if _.alignment.seq[_.qpos] != ref]
+            prop_matches =  [_ for _ in prop_read if _.alignment.seq[_.qpos] == ref]
 
             # Has deletions alone
             del_reads = [_ for _ in reads if _.is_del]
@@ -111,33 +111,47 @@ class AlignmentStream(object):
                 raise ValueError('No seq. content within [chr:%s, start:%s, end:%s]' % \
                                  (self.chrom, self.start, self.end))
                         
-            
-            if len(mismatches) > 1:
+            if ref:
+                # Mismatch base with strand
+                A = [_ for _ in prop_read
+                     if _.alignment.seq[_.qpos] == 'A']
+                C = [_ for _ in prop_read
+                     if _.alignment.seq[_.qpos] == 'C']
+                T = [_ for _ in prop_read
+                     if _.alignment.seq[_.qpos] == 'T']
+                G = [_ for _ in prop_read
+                     if _.alignment.seq[_.qpos] == 'G']
+                N = [_ for _ in prop_read
+                     if _.alignment.seq[_.qpos] == 'N']
                 
-                # Mismatch basen
-                A = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'A']
-                a = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'a']
-                C = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'C']
-                c = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'c']
-                T = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'T']
-                t = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 't']
-                G = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'G']
-                g = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'g']
+                G_r = len([_.alignment.is_reverse for _ in G
+                           if _.alignment.is_reverse])
+                g_f = len([_.alignment.is_reverse for _ in G
+                           if not _.alignment.is_reverse])
                 
-                N = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'N' \
-                     or read.alignment.seq[read.qpos] == 'n']
-
+                A_r = len([_.alignment.is_reverse for _ in A
+                           if _.alignment.is_reverse])
+                a_f = len([_.alignment.is_reverse for _ in A
+                           if not _.alignment.is_reverse])
+                
+                T_r = len([_.alignment.is_reverse for _ in T
+                           if _.alignment.is_reverse])
+                t_f = len([_.alignment.is_reverse for _ in T
+                           if not _.alignment.is_reverse])
+                
+                C_r = len([_.alignment.is_reverse for _ in C
+                           if _.alignment.is_reverse])
+                c_f = len([_.alignment.is_reverse for _ in C
+                           if not _.alignment.is_reverse])
+                    
+                N_r = len([_.alignment.is_reverse for _ in N
+                           if _.alignment.is_reverse])
+                n_f = len([_.alignment.is_reverse for _ in N
+                           if not _.alignment.is_reverse])
+                
+                
                 # separeted by read directions
-                debug = True
+                debug = False
                 if debug:
                     G_r = len([_.alignment.is_reverse for _ in G
                                if _.alignment.is_reverse])
