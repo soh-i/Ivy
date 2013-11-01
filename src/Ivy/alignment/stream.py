@@ -36,7 +36,7 @@ if __name__ == '__main__':
     print align.params
         
 class AlignmentStream(object):
-    def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=True):
+    def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=False):
         __bm = pysam.Samfile(samfile, 'rb')
         __ft = pysam.Fastafile(fafile)
         
@@ -45,11 +45,11 @@ class AlignmentStream(object):
         self.one_based = one_based
         (self.start, self.end) = self.__resolve_coords(start, end)
 
-        if not chrom.startswith('chr'):
-            self.chrom = 'chr' + chrom
-        else: self.chrom = chrom
+        #if not chrom.startswith('chr'):
+        #    self.chrom = 'chr' + chrom
+        #else: self.chrom = chrom
 
-        debug = True
+        debug = False
         if debug:
             # info. for loaded samfile
             print self.samfile.filename
@@ -58,7 +58,6 @@ class AlignmentStream(object):
             print self.samfile.nreferences
             print self.samfile.references
             print self.samfile.unmapped
-
             # info. for fasta
             print self.fafile.filename
             
@@ -66,21 +65,28 @@ class AlignmentStream(object):
         for col in self.samfile.pileup(reference=self.chrom,
                                        start=self.start,
                                        end=self.end):
+            bam_chrom = self.samfile.getrname(col.tid)
             if self.one_based:
                 pos = col.pos + 1
             else: pos = col.pos
-                
-            prop_read = []
-            for r in col.pileups:
-                #if r.alignment.is_proper_pair \
-                #    and not r.alignment.is_duplicate \
-                #    and not r.alignment.is_unmapped \
-                #    and not r.is_del:
-                prop_read.append(r)
             
-            bam_chrom = self.samfile.getrname(col.tid)
-            ref = self.fafile.fetch(reference=bam_chrom, start=col.pos, end=col.pos+1)
+            reads = co.pileups
+            prop_reads = [_ for _ in reads if _.alignment.is_proper_pair]
+            nodel_reads = [_ for _ in  reads if not _.alignment.is_del]
+            prop_nodel_reads = [_ for _ in reads
+                                if not _.alignment.is_del and _.alignment.is_proper_pair]
+            ref = self.fafile.fetch(reference=bam_chrom, start=col.pos, end=col.pos+1).upper()
             
+            #prop_read = []
+            #for r in col.pileups:
+            #    #if r.alignment.is_proper_pair \
+            #    #   and not r.alignment.is_secondary \
+            #    #   and not r.alignment.is_qcfail \
+            #    #   and not r.alignment.is_duplicate \
+            #    #   and not r.alignment.is_unmapped \
+            #    #   and not r.is_del:
+            #    prop_read.append(r)
+            #        
             if not ref:
                 raise ValueError('No seq. content within [chr:%s, start:%s, end:%s]' % \
                                  (self.chrom, self.start, self.end))
@@ -106,6 +112,7 @@ class AlignmentStream(object):
                      if read.alignment.seq[read.qpos] == 'G']
                 g = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'g']
+                
                 N = [read for read in prop_read
                      if read.alignment.seq[read.qpos] == 'N' \
                      or read.alignment.seq[read.qpos] == 'n']
@@ -178,6 +185,7 @@ class AlignmentStream(object):
                     pass
                 
                 mapq = r.alignment.mapq
+                
                 ave_baq = '{0:.2f}'.format(sum(self.average_baq(r.alignment.seq))/depth)
                 #print self.average_baq(r.alignment.seq)
                 
