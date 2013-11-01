@@ -1,9 +1,10 @@
 import os.path
 import collections
+import Ivy.version
 
 class Utils(object):
     '''
-    For example, 
+    Utility class, for example, 
     >>> Utils.find_app_root()
     >>> /Users/yukke/dev/Ivy
     '''
@@ -22,6 +23,10 @@ class Utils(object):
         i = p.rfind('/') + 1
         return p[i:]
 
+    @staticmethod
+    def version():
+        return Ivy.version.__version__
+        
         
 class ImutableDict(collections.Mapping):
     '''
