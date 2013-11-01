@@ -231,18 +231,26 @@ def define_allele(base, ref=None):
             
     for j in allele:
         for k in allele:
+            # Has a allele alone
             if allele[k] == allele[j] and k != j:
-                return allele
-            elif allele[k] != allele[j] and k != j:
-                return allele[j], j
+                return tuple(allele)
                 
+            # Has many allele
+            elif allele[k] != allele[j] and k != j:
+                return k,j
         
 if __name__ == '__main__':
-    a = ['A', 'T', 'C']
-    b = ['A', 'T', 'A', 'C', 'G', 'A', 'A', 'A']
-    print define_allele(b, ref='T')
-    print ""
-    print define_allele(a, ref='A')
+    a = ['A', 'T', 'C', 'G']
+    b = ['C', 'G', 'G', 'G', 'A', 'A', 'A']
+    c = ['A', 'T', 'C', 'G']
+    print a, 'r:A',
+    print define_allele(a, ref='A') #=> C, T, Gx
+
+    print b, 'r:G',
+    print define_allele(b, ref='G') #=> A
+
+    print c, 'r:A',
+    print define_allele(c, ref='A')
         
         
 class AlignmentStreamMerger(object):
