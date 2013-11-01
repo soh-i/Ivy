@@ -5,6 +5,7 @@ import re
 import pysam
 from Ivy.utils import ImutableDict
 
+
 class AlignmentConfig(object):
     def __init__(self):
         self.params = self.__set_default()
@@ -27,14 +28,8 @@ class AlignmentConfig(object):
        }
        self.__imutable_conf = ImutableDict(__params)
        return self.__imutable_conf
+
        
-if __name__ == '__main__':
-    align = AlignmentConfig()
-    
-    align.params.replace("mapq", 33)
-    print align.params["mapq"]
-    print align.params
-        
 class AlignmentStream(object):
     def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=False):
         __bm = pysam.Samfile(samfile, 'rb')
@@ -70,12 +65,33 @@ class AlignmentStream(object):
                 pos = col.pos + 1
             else: pos = col.pos
             
-            reads = co.pileups
-            prop_reads = [_ for _ in reads if _.alignment.is_proper_pair]
-            nodel_reads = [_ for _ in  reads if not _.alignment.is_del]
-            prop_nodel_reads = [_ for _ in reads
-                                if not _.alignment.is_del and _.alignment.is_proper_pair]
             ref = self.fafile.fetch(reference=bam_chrom, start=col.pos, end=col.pos+1).upper()
+
+            reads = co.pileups
+
+            # Has proper_pair and without deletion
+            prop_nodel_reads = [_ for _ in reads if not _.alignment.is_del and _.alignment.is_proper_pair]
+            prop_nodel_matches = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] == ref]
+            prop_nodel_mismatchs = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] != ref]
+
+            # Has NO deletion
+            nodel_reads = [_ for _ in reads if not _.alignment.is_del]
+            nodel_mismatches = [_ for _ in nodel_reads if _.alignment.seq[_.qpos] != ref]
+            nodel_matches = [_ for _ in nodel_reads if _.alignment.seq[_.qpos] == ref]
+
+            # Has proper_pair alone
+            prop_reads = [_ for _ in reads if _.alignment.is_proper_pair]
+            prop_mismatches =  [_ for _ in prop_reads if _.alignment.seq[_.qpos] != ref]
+            prop_matches =  [_ for _ in prop_read if _.alignment.seq[_.qpos] != ref]
+
+            # Has deletions alone
+            del_reads = [_ for _ in reads if _.is_del]
+            del_prop_reads = [_ for _ in prop_reads if not _.is_del]
+
+            # Has insertion alone
+            ins_reads = [_ for _ in reads if _.is_del > 0]
+            ins_prop_reads = [_ for _ in prop_reads if _.is_del > 0]
+            
             
             #prop_read = []
             #for r in col.pileups:
@@ -91,8 +107,7 @@ class AlignmentStream(object):
                 raise ValueError('No seq. content within [chr:%s, start:%s, end:%s]' % \
                                  (self.chrom, self.start, self.end))
                         
-            mismatches = [_ for _ in prop_read
-                          if _.alignment.seq[_.qpos] != ref]
+            
             if len(mismatches) > 1:
                 
                 # Mismatch basen
