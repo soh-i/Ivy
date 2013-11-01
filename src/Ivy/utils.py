@@ -14,7 +14,7 @@ class Utils(object):
         return root
 
     @staticmethod
-    def __end_url_basename(p):
+    def end_url_basename(p):
         """Returns the final component of a pathname"""
         i = p.rfind('/') + 1
         return p[i:]
