@@ -2,12 +2,15 @@ import os.path
 import collections
 
 class Utils(object):
+    '''
+    For example, 
+    >>> Utils.find_app_root()
+    >>> /Users/yukke/dev/Ivy
+    '''
     
     @staticmethod
     def find_app_root():
-        '''
-        Absolute path to your project root from setup.py location
-        '''
+        '''Absolute path to your project root from setup.py location'''
         root = os.path.dirname(__file__)
         while not os.path.exists(os.path.join(root, 'setup.py')):
             root = os.path.abspath(os.path.join(root, os.path.pardir))
@@ -18,7 +21,8 @@ class Utils(object):
         """Returns the final component of a pathname"""
         i = p.rfind('/') + 1
         return p[i:]
-    
+
+        
 class ImutableDict(collections.Mapping):
     '''
     ImutableDict class generates imutalbe dictionary
@@ -70,9 +74,3 @@ class ImutableDict(collections.Mapping):
     def replace(self, key, value):
         self.__dict = ImutableDict.__add__({key:value}).__dict
 
-        
-if __name__ == '__main__':
-    c = {"A":212, 'B':2192}
-    im = ImutableDict(c)
-    c = {"A":212, 'B':212}
-    print im
