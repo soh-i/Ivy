@@ -222,7 +222,6 @@ def define_allele(base, ref=None):
         
     c = Counter(base)
     comm = c.most_common()
-    #return [base for base in comm if base != ref]
     
     allele = {}
     for base in comm:
@@ -231,33 +230,33 @@ def define_allele(base, ref=None):
             
     for j in allele:
         for k in allele:
-            # Has a allele alone
+            # print most common varinat with a allele type alone
             if allele[k] == allele[j] and k != j:
-                return tuple(allele)
-                
-            # Has many allele
+                return tuple(allele.items())
+            # print most common variant if has many allele
             elif allele[k] != allele[j] and k != j:
                 m = max(allele[k], allele[j])
                 if m == allele[k]:
-                    return tuple(k)
+                    return tuple([k, allele[k]])
                 elif m == allele[j]:
-                    return tuple(j)
+                    return tuple([j, allele[j]])
                     
 if __name__ == '__main__':
     a = ['A', 'T', 'C', 'G']
     b = ['C', 'G', 'G', 'G', 'A', 'A', 'A']
     c = ['A', 'T', 'C', 'G']
-    d = ['A', 'A', 'A', 'T', 'T', 'T', 'G']
-    print a, 'r:A',
+    d = ['A', 'A', 'A', 'T', 'T', 'T', 'C', 'C', 'C', 'G']
+    #print a, 'r:A',
     print define_allele(a, ref='A') #=> C, T, G
 
-    print b, 'r:G',
+    #print b, 'r:G',
     print define_allele(b, ref='G') #=> A
 
-    print c, 'r:A',
+    #print c, 'r:A',
     print define_allele(c, ref='A')
 
-    print d, 'r:G', define_allele(d, ref='G')
+    #print d, 'r:G',
+    print define_allele(d, ref='G')
     
     
         
