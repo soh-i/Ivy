@@ -206,59 +206,50 @@ class AlignmentStream(object):
         return [ord(s)-33 for s in string]
 
     def define_allele(self, base, ref=None):
+        if base and ref:
+            [_.upper() for _ in base]
+            ref.upper()
+        
         c = Counter(base)
         comm = c.most_common()
-        allele = []
+    
+        allele = {}
         for base in comm:
             if base[0] != ref:
-                allele.append(base)
-        return allele
-
-
-def define_allele(base, ref=None):
-    if base and ref:
-        [_.upper() for _ in base]
-        ref.upper()
-        
-    c = Counter(base)
-    comm = c.most_common()
-    
-    allele = {}
-    for base in comm:
-        if base[0] != ref:
-            allele.update({base[0]:base[1]})
+                allele.update({base[0]:base[1]})
             
-    for j in allele:
-        for k in allele:
-            # print most common varinat with a allele type alone
-            if allele[k] == allele[j] and k != j:
-                return tuple(allele.items())
-            # print most common variant if has many allele
-            elif allele[k] != allele[j] and k != j:
-                m = max(allele[k], allele[j])
-                if m == allele[k]:
-                    return tuple([k, allele[k]])
-                elif m == allele[j]:
-                    return tuple([j, allele[j]])
-                    
-if __name__ == '__main__':
-    a = ['A', 'T', 'C', 'G']
-    b = ['C', 'G', 'G', 'G', 'A', 'A', 'A']
-    c = ['A', 'T', 'C', 'G']
-    d = ['A', 'A', 'A', 'T', 'T', 'T', 'C', 'C', 'C', 'G']
-    #print a, 'r:A',
-    print define_allele(a, ref='A') #=> C, T, G
+        for j in allele:
+            for k in allele:
+                # print most common varinat with a allele type alone
+                if allele[k] == allele[j] and k != j:
+                    return tuple(allele.items())
+                # print most common variant if has many allele
+                elif allele[k] != allele[j] and k != j:
+                    m = max(allele[k], allele[j])
+                    if m == allele[k]:
+                        return tuple([k, allele[k]])
+                    elif m == allele[j]:
+                        return tuple([j, allele[j]])
 
-    #print b, 'r:G',
-    print define_allele(b, ref='G') #=> A
-
-    #print c, 'r:A',
-    print define_allele(c, ref='A')
-
-    #print d, 'r:G',
-    print define_allele(d, ref='G')
-    
-    
+                        
+#if __name__ == '__main__':
+#    a = ['A', 'T', 'C', 'G']
+#    b = ['C', 'G', 'G', 'G', 'A', 'A', 'A']
+#    c = ['A', 'T', 'C', 'G']
+#    d = ['A', 'A', 'A', 'T', 'T', 'T', 'C', 'C', 'C', 'G']
+#    #print a, 'r:A',
+#    print AlignmentStream.define_allele(a, ref='A') #=> C, T, G
+# 
+#    #print b, 'r:G',
+#    print define_allele(b, ref='G') #=> A
+# 
+#    #print c, 'r:A',
+#    print define_allele(c, ref='A')
+# 
+#    #print d, 'r:G',
+#    print define_allele(d, ref='G')
+#    
+#    
         
         
 class AlignmentStreamMerger(object):
