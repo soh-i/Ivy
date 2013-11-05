@@ -28,8 +28,16 @@ class AlignmentConfig(object):
        }
        self.__imutable_conf = ImutableDict(__params)
        return self.__imutable_conf
-
        
+    def logger(self):
+        # TODO: logging for used params with value
+        pass
+
+    def config_varidator(self):
+        # TODO: to varidate each params/values
+        pass
+        
+               
 class AlignmentPreparation(object):
     def __init__(self):
         # TODO: AlignmentStream.__init__ move into here.
