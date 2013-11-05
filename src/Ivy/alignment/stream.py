@@ -76,38 +76,39 @@ class AlignmentStream(object):
                 pos = col.pos + 1
             else:
                 pos = col.pos
-            #pos = col.pos + 1 if self.one_based else col.pos
             
             ref = self.fafile.fetch(reference=bam_chrom, start=col.pos, end=col.pos+1).upper()
             reads = col.pileups
             
             # Raw reads (no filterings through)
-            raw_reads = [_ for _ in reads]
-            raw_mismatches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] != ref]
-            raw_matches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] == ref]
-
-            # Has proper_pair and without deletion
-            prop_nodel_reads = [_ for _ in reads if not _.is_del and _.alignment.is_proper_pair]
-            prop_nodel_mismatchs = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] != ref]
-            prop_nodel_matches = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] == ref]
-            
-            # Has NO deletion
-            nodel_reads = [_ for _ in reads if not _.is_del]
-            nodel_mismatches = [_ for _ in nodel_reads if _.alignment.seq[_.qpos] != ref]
-            nodel_matches = [_ for _ in nodel_reads if _.alignment.seq[_.qpos] == ref]
-
-            # Has proper_pair alone
-            prop_reads = [_ for _ in reads if _.alignment.is_proper_pair]
-            prop_mismatches =  [_ for _ in prop_reads if _.alignment.seq[_.qpos] != ref]
-            prop_matches =  [_ for _ in prop_reads if _.alignment.seq[_.qpos] == ref]
-            
-            # Has deletions alone
-            del_reads = [_ for _ in reads if not _.is_del]
-            del_prop_reads = [_ for _ in reads if not _.is_del]
+            #raw_reads = [_ for _ in reads]
+            #raw_mismatches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] != ref]
+            #raw_matches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] == ref]
+            # 
+            ## Has proper_pair and without deletion
+            #prop_nodel_reads = [_ for _ in reads if not _.is_del and _.alignment.is_proper_pair]
+            #prop_nodel_mismatchs = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] != ref]
+            #prop_nodel_matches = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] == ref]
+            # 
+            ## Has NO deletion
+            #nodel_reads = [_ for _ in reads if not _.is_del]
+            #nodel_mismatches = [_ for _ in nodel_reads if _.alignment.seq[_.qpos] != ref]
+            #nodel_matches = [_ for _ in nodel_reads if _.alignment.seq[_.qpos] == ref]
+            # 
+            ## Has proper_pair alone
+            #prop_reads = [_ for _ in reads if _.alignment.is_proper_pair]
+            #prop_mismatches =  [_ for _ in prop_reads if _.alignment.seq[_.qpos] != ref]
+            #prop_matches =  [_ for _ in prop_reads if _.alignment.seq[_.qpos] == ref]
+            # 
+            ## Has deletions alone
+            #del_reads = [_ for _ in reads if not _.is_del]
+            #del_prop_reads = [_ for _ in reads if not _.is_del]
 
             # Has insertion alone
             ins_reads = [_ for _ in reads if _.is_del > 0]
             ins_prop_reads = [_ for _ in reads if _.is_del > 0]
+            del_reads = [_ for _ in reads if _.is_del < 0]
+            del_prop_reads = [_ for _ in reads if _.is_del < 0]
             
             filt_reads = []
             for _ in col.pileups:
@@ -122,72 +123,83 @@ class AlignmentStream(object):
             filt_mismatches = [_ for _ in filt_reads if _.alignment.seq[_.qpos] != ref]
             filt_matches = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == ref]
 
-            
             if not ref:
+                # Todo
+                # resolve difference name in fasta and bam
                 raise ValueError('No seq. content within [chr:%s, start:%s, end:%s]' % \
                                  (self.chrom, self.start, self.end))
                         
-            A = [_ for _ in prop_reads if _.alignment.seq[_.qpos] == 'A']
-            C = [_ for _ in prop_reads if _.alignment.seq[_.qpos] == 'C']
-            T = [_ for _ in prop_reads if _.alignment.seq[_.qpos] == 'T']
-            G = [_ for _ in prop_reads if _.alignment.seq[_.qpos] == 'G']
-            N = [_ for _ in prop_reads if _.alignment.seq[_.qpos] == 'N']
+            A = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'A']
+            C = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'C']
+            T = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'T']
+            G = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'G']
+            N = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'N']
+            all_bases = A + C + T + G + N
             
             G_r = [_.alignment.is_reverse for _ in G
                    if _.alignment.is_reverse]
-            g_f = [_.alignment.is_reverse for _ in G
+            G_f = [_.alignment.is_reverse for _ in G
                    if not _.alignment.is_reverse]
             A_r = [_.alignment.is_reverse for _ in A
                    if _.alignment.is_reverse]
-            a_f = [_.alignment.is_reverse for _ in A
+            A_f = [_.alignment.is_reverse for _ in A
                    if not _.alignment.is_reverse]
             T_r = [_.alignment.is_reverse for _ in T
                    if _.alignment.is_reverse]
-            t_f = [_.alignment.is_reverse for _ in T
+            T_f = [_.alignment.is_reverse for _ in T
                    if not _.alignment.is_reverse]
             C_r = [_.alignment.is_reverse for _ in C
                    if _.alignment.is_reverse]
-            c_f = [_.alignment.is_reverse for _ in C
+            C_f = [_.alignment.is_reverse for _ in C
                    if not _.alignment.is_reverse]
             N_r = [_.alignment.is_reverse for _ in N
                    if _.alignment.is_reverse]
-            n_f = [_.alignment.is_reverse for _ in N
+            N_f = [_.alignment.is_reverse for _ in N
                    if not _.alignment.is_reverse]
 
-            mutation_type = {'A': len(A), 'T': len(T), 'G': len(G), 'C': len(C)}
+            mutation_type = {'A': len(A), 'T': len(T), 'G': len(G), 'C': len(C), 'N': len(N)}
             
-                        
             debug = False
             if debug:
                 coverage = A_r+ a_f+ T_r+ t_f+ G_r+ g_f+ C_r+ c_f + N_r + n_f
                 #print [_.alignment.seq[_.qpos] for _ in G]
                 print '[A:%s,%s] [T:%s,%s] [G:%s,%s] [C:%s,%s]' % (A_r, a_f, T_r, t_f, G_r, g_f, C_r, c_f)
                 print 'Coverage:%d' % (coverage)
-                
+            
             try:
-                pass
-                #allele_freq = mismatch_c / len(raw_reads)
-                #ag_freq = (mc_G + mc_g) / (mc_G + mc_g + mc_A + mc_a)
+                allele_ratio= filt_mismatches / (filt_mismatches + filt_matches)
+                ag_ratio = len(G) / (len(G) + len(A))
             except ZeroDivisionError:
                 pass
                 
             yield {
-                'CHROM': self.chrom,
-                'POS': pos,
-                'REF': ref,
-                'raw_coverage': len(raw_reads),
-                'prop_coverage': len(prop_reads),
-                'prop_nodel_coverage': len(prop_nodel_reads),
-                'nodel_coverage': len(nodel_reads),
+                'chrom': bam_chrom,
+                'pos': pos,
+                'ref': ref,
+                'alt': self.define_allele(all_bases),
+                'coverage': len(raw_reads),
+                'insertion': ins_reads,
                 'mismatches': len(raw_mismatches),
                 'matches': len(raw_matches),
                 'cov': len(raw_mismatches) + len(raw_matches),
+                'mismach_ratio': allele_ratio,
+                'ag_ratio': ag_ratio,
                 'types': mutation_type,
-                'A': len(A),
-                'T': len(T),
-                'C': len(C),
-                'G': len(G),
-                'N': len(N),
+                'Ac': len(A),
+                'Tc': len(T),
+                'Cc': len(C),
+                'Gc': len(G),
+                'Nc': len(N),
+                'Gr': len(A_r),
+                'Gf': len(),
+                'Cr': len(),
+                'Cf': len(),
+                'Tf': len(),
+                'Tr': len(),
+                'Af': len(),
+                'Ar': len(),
+                'Nr': len(),
+                'Nf': len(),
             }
     
     def __resolve_coords(self, start, end, is_one_based):
