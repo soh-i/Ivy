@@ -30,6 +30,39 @@ class AlignmentConfig(object):
        return self.__imutable_conf
 
        
+class AlignmentPreparation(object):
+    def __init__(self):
+        pass
+
+    def alignment_prepare(self):
+        raise NotImplementedError
+        
+    def __sort(self):
+        try:
+            pysam.sort(self.samfile, self.samfile + 'sorted')
+            sort_log = pysam.sort.getMessage()
+        except:
+            raise RuntimeError()
+
+    def __index(self):
+        try:
+            pysam.index(self.samfile)
+        except:
+            raise RuntimeError()
+
+    def __faidx(self):
+        try:
+            pysam.faidx(self.fafile)
+        except:
+            raise RuntimeError()
+
+    def __merge_bams(self, bams=[]):
+        try:
+            pysam.merge([_ for _ in bams])
+        except:
+            raise RuntimeError()
+
+    
 class AlignmentStream(object):
     def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=True):
         # TODO: runs testing
@@ -64,34 +97,6 @@ class AlignmentStream(object):
             print self.samfile.unmapped
             # info. for fasta
             print self.fafile.filename
-
-    def alignment_prepare(self):
-        raise NotImplementedError
-        
-    def __sort(self):
-        try:
-            pysam.sort(self.samfile, self.samfile + 'sorted')
-            sort_log = pysam.sort.getMessage()
-        except:
-            raise RuntimeError()
-
-    def __index(self):
-        try:
-            pysam.index(self.samfile)
-        except:
-            raise RuntimeError()
-
-    def __faidx(self):
-        try:
-            pysam.faidx(self.fafile)
-        except:
-            raise RuntimeError()
-
-    def __merge_bams(self, bams=[]):
-        try:
-            pysam.merge([_ for _ in bams])
-        except:
-            raise RuntimeError()
             
     def pileup_stream(self):
         for col in self.samfile.pileup(reference=self.chrom,
