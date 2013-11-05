@@ -51,6 +51,7 @@ class AlignmentPreparation(object):
             try:
                 pysam.sort(self.samfile, self.samfile + 'sorted')
                 sort_log = pysam.sort.getMessage()
+                return True
             except:
                 raise RuntimeError()
         else:
@@ -61,6 +62,7 @@ class AlignmentPreparation(object):
         if not os.path.isfile(samfile + '.index.bam'):
             try:
                 pysam.index(self.samfile)
+                return True
             except:
                 raise RuntimeError()
         else:
@@ -71,6 +73,7 @@ class AlignmentPreparation(object):
         if not os.path.isfile(fafile + '.fai'):
             try:
                 pysam.faidx(self.fafile)
+                return True
             except:
                 raise RuntimeError()
         else:
@@ -83,10 +86,11 @@ class AlignmentPreparation(object):
                 raise RuntimeError()
         try:
             pysam.merge([_ for _ in bams])
+            return True
         except:
             raise RuntimeError()
 
-    
+            
 class AlignmentStream(object):
     def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=True):
         __bm = pysam.Samfile(samfile, 'rb')
