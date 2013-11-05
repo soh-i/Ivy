@@ -59,7 +59,8 @@ class AlignmentStream(object):
         raise NotImplementedError
         
     def __sort(self):
-        pass
+        pysam.sort(self.samfile, self.samfile + 'sorted')
+        sort_log = pysam.sort.getMessage()
 
     def __index(self):
         pass
