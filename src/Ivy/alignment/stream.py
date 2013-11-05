@@ -177,12 +177,13 @@ class AlignmentStream(object):
                 # TODO: resolve difference name in fasta and bam
                 raise ValueError('No seq. content within [chr:%s, start:%s, end:%s]' % \
                                  (self.chrom, self.start, self.end))
-                        
-            A = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'A']
-            C = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'C']
-            T = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'T']
-            G = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'G']
-            N = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'N']
+                
+            A = [_.alignment.seq[_.qpos] for _ in filt_reads if _.alignment.seq[_.qpos] == 'A']
+            C = [_.alignment.seq[_.qpos] for _ in filt_reads if _.alignment.seq[_.qpos] == 'C']
+            T = [_.alignment.seq[_.qpos] for _ in filt_reads if _.alignment.seq[_.qpos] == 'T']
+            G = [_.alignment.seq[_.qpos] for _ in filt_reads if _.alignment.seq[_.qpos] == 'G']
+            N = [_.alignment.seq[_.qpos] for _ in filt_reads if _.alignment.seq[_.qpos] == 'N']
+            
             all_bases = A + C + T + G + N
             
             G_r = [_.alignment.is_reverse for _ in G
@@ -197,21 +198,23 @@ class AlignmentStream(object):
                    if _.alignment.is_reverse]
             T_f = [_.alignment.is_reverse for _ in T
                    if not _.alignment.is_reverse]
-            C_r = [_.alignment.is_reverse for _ in C
+            
+            C_r = [_.alignment.seq[_.qpos] for _ in C
                    if _.alignment.is_reverse]
-            C_f = [_.alignment.is_reverse for _ in C
+            C_f = [_.alignment.seq[_.qpos] for _ in C
                    if not _.alignment.is_reverse]
+            
             N_r = [_.alignment.is_reverse for _ in N
                    if _.alignment.is_reverse]
             N_f = [_.alignment.is_reverse for _ in N
                    if not _.alignment.is_reverse]
 
             mutation_type = {'A': len(A), 'T': len(T), 'G': len(G), 'C': len(C), 'N': len(N)}
-            alt = self.define_allele(all_bases)
-
+            alt = self.define_allele(all_bases, ref=ref)
+            
             # compute DP4 collumn
             # TODO: to write unittest is needed!
-            if len(alt) > 0:
+            if len(alt):
                 ref_r = 0
                 ref_f = 0
                 alt_r = 0
@@ -242,6 +245,9 @@ class AlignmentStream(object):
                     ref_f = len(N_f)
                     alt_r = len(A_r+T_r+G_r+C_r)
                     alt_f = len(A_f+T_f+G_f+C_f)
+                    
+                dp4 = tuple([ref_r, ref_f, alt_r, alt_f])
+                
             else:
                 raise RuntimeError(
                     'Could not able to define the allele base %s, chr[%s], pos[%s]' % (all_bases, bam_chrom, pos))
