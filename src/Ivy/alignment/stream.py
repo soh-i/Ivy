@@ -27,178 +27,171 @@ class AlignmentConfig(object):
        }
        self.__imutable_conf = ImutableDict(__params)
        return self.__imutable_conf
+
        
-if __name__ == '__main__':
-    align = AlignmentConfig()
-    
-    align.params.replace("mapq", 33)
-    print align.params["mapq"]
-    print align.params
-        
 class AlignmentStream(object):
     def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=True):
-        bm = pysam.Samfile(samfile, 'rb')
-        ft = pysam.Fastafile(fafile)
+        __bm = pysam.Samfile(samfile, 'rb')
+        __ft = pysam.Fastafile(fafile)
         
-        self.samfile = bm
-        self.fafile = ft
+        self.samfile = __bm
+        self.fafile = __ft
         self.one_based = one_based
-        (self.start, self.end) = self.__resolve_coords(start, end)
+        (self.start, self.end) = self.__resolve_coords(start, end, one_based)
 
         if not chrom.startswith('chr'):
             self.chrom = 'chr' + chrom
         else: self.chrom = chrom
+
+        debug = False
+        if debug:
+            # info. for loaded samfile
+            print self.samfile.filename
+            print self.samfile.lengths
+            print self.samfile.mapped
+            print self.samfile.nreferences
+            print self.samfile.references
+            print self.samfile.unmapped
+            # info. for fasta
+            print self.fafile.filename
+
+    def alignment_prepare(self):
+        raise NotImplementedError
         
+    def __sort(self):
+        pass
+
+    def __index(self):
+        pass
+
+    def __faidx(self):
+        pass
+            
     def pileup_stream(self):
         for col in self.samfile.pileup(reference=self.chrom,
                                        start=self.start,
                                        end=self.end):
+            bam_chrom = self.samfile.getrname(col.tid)
             if self.one_based:
                 pos = col.pos + 1
-            else: pos = col.pos
-                
-            prop_read = []
-            for r in col.pileups:
-                #if r.alignment.is_proper_pair \
-                #    and not r.alignment.is_duplicate \
-                #    and not r.alignment.is_unmapped \
-                #    and not r.is_del:
-                prop_read.append(r)
+            else:
+                pos = col.pos
+            #pos = col.pos + 1 if self.one_based else col.pos
             
-            bam_chrom = self.samfile.getrname(col.tid)
-            ref = self.fafile.fetch(reference=bam_chrom, start=col.pos, end=col.pos+1)
+            ref = self.fafile.fetch(reference=bam_chrom, start=col.pos, end=col.pos+1).upper()
+            reads = col.pileups
+            
+            # Raw reads (no filterings through)
+            raw_reads = [_ for _ in reads]
+            raw_mismatches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] != ref]
+            raw_matches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] == ref]
+
+            # Has proper_pair and without deletion
+            prop_nodel_reads = [_ for _ in reads if not _.is_del and _.alignment.is_proper_pair]
+            prop_nodel_mismatchs = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] != ref]
+            prop_nodel_matches = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] == ref]
+            
+            # Has NO deletion
+            nodel_reads = [_ for _ in reads if not _.is_del]
+            nodel_mismatches = [_ for _ in nodel_reads if _.alignment.seq[_.qpos] != ref]
+            nodel_matches = [_ for _ in nodel_reads if _.alignment.seq[_.qpos] == ref]
+
+            # Has proper_pair alone
+            prop_reads = [_ for _ in reads if _.alignment.is_proper_pair]
+            prop_mismatches =  [_ for _ in prop_reads if _.alignment.seq[_.qpos] != ref]
+            prop_matches =  [_ for _ in prop_reads if _.alignment.seq[_.qpos] == ref]
+            
+            # Has deletions alone
+            del_reads = [_ for _ in reads if not _.is_del]
+            del_prop_reads = [_ for _ in reads if not _.is_del]
+
+            # Has insertion alone
+            ins_reads = [_ for _ in reads if _.is_del > 0]
+            ins_prop_reads = [_ for _ in reads if _.is_del > 0]
+            
+            filt_reads = []
+            for _ in col.pileups:
+                if _.alignment.is_proper_pair \
+                   and not _.alignment.is_secondary \
+                   and not _.alignment.is_qcfail \
+                   and not _.alignment.is_duplicate \
+                   and not _.alignment.is_unmapped \
+                   and not _.is_del:
+                    filt_reads.append(_)
+                    
+            filt_mismatches = [_ for _ in filt_reads if _.alignment.seq[_.qpos] != ref]
+            filt_matches = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == ref]
+
             
             if not ref:
                 raise ValueError('No seq. content within [chr:%s, start:%s, end:%s]' % \
                                  (self.chrom, self.start, self.end))
                         
-            mismatches = [_ for _ in prop_read
-                          if _.alignment.seq[_.qpos] != ref]
-            if len(mismatches) > 1:
-                
-                # Mismatch basen
-                A = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'A']
-                a = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'a']
-                C = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'C']
-                c = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'c']
-                T = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'T']
-                t = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 't']
-                G = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'G']
-                g = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'g']
-                N = [read for read in prop_read
-                     if read.alignment.seq[read.qpos] == 'N' \
-                     or read.alignment.seq[read.qpos] == 'n']
+            A = [_ for _ in prop_reads if _.alignment.seq[_.qpos] == 'A']
+            C = [_ for _ in prop_reads if _.alignment.seq[_.qpos] == 'C']
+            T = [_ for _ in prop_reads if _.alignment.seq[_.qpos] == 'T']
+            G = [_ for _ in prop_reads if _.alignment.seq[_.qpos] == 'G']
+            N = [_ for _ in prop_reads if _.alignment.seq[_.qpos] == 'N']
+            
+            G_r = [_.alignment.is_reverse for _ in G
+                   if _.alignment.is_reverse]
+            g_f = [_.alignment.is_reverse for _ in G
+                   if not _.alignment.is_reverse]
+            A_r = [_.alignment.is_reverse for _ in A
+                   if _.alignment.is_reverse]
+            a_f = [_.alignment.is_reverse for _ in A
+                   if not _.alignment.is_reverse]
+            T_r = [_.alignment.is_reverse for _ in T
+                   if _.alignment.is_reverse]
+            t_f = [_.alignment.is_reverse for _ in T
+                   if not _.alignment.is_reverse]
+            C_r = [_.alignment.is_reverse for _ in C
+                   if _.alignment.is_reverse]
+            c_f = [_.alignment.is_reverse for _ in C
+                   if not _.alignment.is_reverse]
+            N_r = [_.alignment.is_reverse for _ in N
+                   if _.alignment.is_reverse]
+            n_f = [_.alignment.is_reverse for _ in N
+                   if not _.alignment.is_reverse]
 
-                # separeted by read directions
-                debug = True
-                if debug:
-                    G_r = len([_.alignment.is_reverse for _ in G
-                               if _.alignment.is_reverse])
-                    g_f = len([_.alignment.is_reverse for _ in G
-                               if not _.alignment.is_reverse])
-                    
-                    A_r = len([_.alignment.is_reverse for _ in A
-                               if _.alignment.is_reverse])
-                    a_f = len([_.alignment.is_reverse for _ in A
-                               if not _.alignment.is_reverse])
-                    
-                    T_r = len([_.alignment.is_reverse for _ in T
-                               if _.alignment.is_reverse])
-                    t_f = len([_.alignment.is_reverse for _ in T
-                               if not _.alignment.is_reverse])
-                    
-                    C_r = len([_.alignment.is_reverse for _ in C
-                               if _.alignment.is_reverse])
-                    c_f = len([_.alignment.is_reverse for _ in C
-                               if not _.alignment.is_reverse])
-                    
-                    N_r = len([_.alignment.is_reverse for _ in N
-                               if _.alignment.is_reverse])
-                    n_f = len([_.alignment.is_reverse for _ in N
-                               if not _.alignment.is_reverse])
-                    coverage = A_r+ a_f+ T_r+ t_f+ G_r+ g_f+ C_r+ c_f + N_r + n_f
-                    
-                    print [_.alignment.seq[_.qpos] for _ in g] # is not working
-                    print [_.alignment.seq[_.qpos] for _ in G]
-                    
-                    print '[A:%s,%s] [T:%s,%s] [G:%s,%s] [C:%s,%s]' % (A_r, a_f, T_r, t_f, G_r, g_f, C_r, c_f)
-                    print 'Coverage:%d' % (coverage)
-                    
-                mc_A = len(A)
-                mc_a = len(a)
-                mc_T = len(T)
-                mc_t = len(t)
-                mc_G = len(G)
-                mc_g = len(g)
-                mc_C = len(C)
-                mc_c = len(c)
-                mc_N = len(N)
+            mutation_type = {'A': len(A), 'T': len(T), 'G': len(G), 'C': len(C)}
+            
+                        
+            debug = False
+            if debug:
+                coverage = A_r+ a_f+ T_r+ t_f+ G_r+ g_f+ C_r+ c_f + N_r + n_f
+                #print [_.alignment.seq[_.qpos] for _ in G]
+                print '[A:%s,%s] [T:%s,%s] [G:%s,%s] [C:%s,%s]' % (A_r, a_f, T_r, t_f, G_r, g_f, C_r, c_f)
+                print 'Coverage:%d' % (coverage)
                 
-                Ac = mc_A + mc_a
-                Tc = mc_T + mc_t
-                Gc = mc_G + mc_g
-                Cc = mc_C + mc_c
-                base = {'A': Ac, 'T': Tc, 'G': Gc, 'C': Cc}
-                alleles = self.define_allele(base, ref=ref)
+            try:
+                pass
+                #allele_freq = mismatch_c / len(raw_reads)
+                #ag_freq = (mc_G + mc_g) / (mc_G + mc_g + mc_A + mc_a)
+            except ZeroDivisionError:
+                pass
                 
-                forward_allel_c = (mc_A + mc_T + mc_C + mc_G)
-                reverse_allel_c = (mc_a + mc_t + mc_c + mc_g)
-                depth = len(prop_read)
-
-                mismatch_c = sum([base[1] for base in alleles])
-                mismatch_freq = '{0:.2f}'.format(mismatch_c/depth)
-                
-                allele_freq = 0
-                ag_freq = 0
-                try:
-                    allele_freq = mismatch_c / depth
-                    ag_freq = (mc_G + mc_g) / (mc_G + mc_g + mc_A + mc_a)
-                except ZeroDivisionError:
-                    pass
-                
-                mapq = r.alignment.mapq
-                ave_baq = '{0:.2f}'.format(sum(self.average_baq(r.alignment.seq))/depth)
-                #print self.average_baq(r.alignment.seq)
-                
-                # returns per a base
-                yield {
-                    'CHROM': self.chrom,
-                    'POS': pos,
-                    'REF': ref,
-                    'ALT': ",".join([(b[0]) for b in alleles]),
-                    'ID': 'ID',
-                    'FORMAT': '.',
-                    'INFO': '.',
-                    'FILTER': '.',
-                    'coverage': len(prop_read),
-                    'mismatches': mismatch_c,
-                    'mismatch_freq': mismatch_freq,
-                    'matches': depth,
-                    'mapq': mapq,
-                    'QUAL': ave_baq,
-                    'forward_allel_count': forward_allel_c,
-                    'reverse_allel_count': reverse_allel_c,
-                    'Af':mc_A,
-                    'Ar':mc_a,
-                    'Cf':mc_C,
-                    'Cr':mc_c,
-                    'Tf':mc_T,
-                    'Tr':mc_t,
-                    'Gf':mc_G,
-                    'Gr':mc_g,
-                    'N': mc_N,
-                }
-                
-    def __resolve_coords(self, start, end):
-        if self.one_based:
+            yield {
+                'CHROM': self.chrom,
+                'POS': pos,
+                'REF': ref,
+                'raw_coverage': len(raw_reads),
+                'prop_coverage': len(prop_reads),
+                'prop_nodel_coverage': len(prop_nodel_reads),
+                'nodel_coverage': len(nodel_reads),
+                'mismatches': len(raw_mismatches),
+                'matches': len(raw_matches),
+                'cov': len(raw_mismatches) + len(raw_matches),
+                'types': mutation_type,
+                'A': len(A),
+                'T': len(T),
+                'C': len(C),
+                'G': len(G),
+                'N': len(N),
+            }
+    
+    def __resolve_coords(self, start, end, is_one_based):
+        if is_one_based:
             if start is not None:
                 start = start -1
             else:
@@ -213,14 +206,51 @@ class AlignmentStream(object):
         return [ord(s)-33 for s in string]
 
     def define_allele(self, base, ref=None):
+        if base and ref:
+            [_.upper() for _ in base]
+            ref.upper()
+        
         c = Counter(base)
         comm = c.most_common()
-        allele = []
+    
+        allele = {}
         for base in comm:
             if base[0] != ref:
-                allele.append(base)
-        return allele
+                allele.update({base[0]:base[1]})
+            
+        for j in allele:
+            for k in allele:
+                # print most common varinat with a allele type alone
+                if allele[k] == allele[j] and k != j:
+                    return tuple(allele.items())
+                # print most common variant if has many allele
+                elif allele[k] != allele[j] and k != j:
+                    m = max(allele[k], allele[j])
+                    if m == allele[k]:
+                        return tuple([k, allele[k]])
+                    elif m == allele[j]:
+                        return tuple([j, allele[j]])
 
+                        
+#if __name__ == '__main__':
+#    a = ['A', 'T', 'C', 'G']
+#    b = ['C', 'G', 'G', 'G', 'A', 'A', 'A']
+#    c = ['A', 'T', 'C', 'G']
+#    d = ['A', 'A', 'A', 'T', 'T', 'T', 'C', 'C', 'C', 'G']
+#    #print a, 'r:A',
+#    print AlignmentStream.define_allele(a, ref='A') #=> C, T, G
+# 
+#    #print b, 'r:G',
+#    print define_allele(b, ref='G') #=> A
+# 
+#    #print c, 'r:A',
+#    print define_allele(c, ref='A')
+# 
+#    #print d, 'r:G',
+#    print define_allele(d, ref='G')
+#    
+#    
+        
         
 class AlignmentStreamMerger(object):
     def __init__(self, rna, dna):
