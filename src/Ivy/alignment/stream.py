@@ -32,31 +32,47 @@ class AlignmentConfig(object):
        
 class AlignmentPreparation(object):
     def __init__(self):
+        # TODO: AlignmentStream.__init__ move into here.
         pass
-
+        
     def alignment_prepare(self):
         raise NotImplementedError
-        
+    
     def __sort(self):
-        try:
-            pysam.sort(self.samfile, self.samfile + 'sorted')
-            sort_log = pysam.sort.getMessage()
-        except:
-            raise RuntimeError()
+        if not os.path.isfile(bamfile):
+            try:
+                pysam.sort(self.samfile, self.samfile + 'sorted')
+                sort_log = pysam.sort.getMessage()
+            except:
+                raise RuntimeError()
+        else:
+            print "already sorted"
+            return False
 
     def __index(self):
-        try:
-            pysam.index(self.samfile)
-        except:
-            raise RuntimeError()
+        if not os.path.isfile(samfile + '.index.bam'):
+            try:
+                pysam.index(self.samfile)
+            except:
+                raise RuntimeError()
+        else:
+            print "already indexed"
+            return False
 
     def __faidx(self):
-        try:
-            pysam.faidx(self.fafile)
-        except:
-            raise RuntimeError()
+        if not os.path.isfile(fafile + '.fai'):
+            try:
+                pysam.faidx(self.fafile)
+            except:
+                raise RuntimeError()
+        else:
+            print "already exist"
+            return False 
 
     def __merge_bams(self, bams=[]):
+        for _ in bams:
+            if not os.path.isfile(_):
+                raise RuntimeError()
         try:
             pysam.merge([_ for _ in bams])
         except:
@@ -65,15 +81,6 @@ class AlignmentPreparation(object):
     
 class AlignmentStream(object):
     def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=True):
-        # TODO: runs testing
-        if False: # off
-            if not os.path.isfile(fafile + '.fai'):
-                self.__faidx()
-            elif not os.path.isfile(samfile + '.index.bam'):
-                self.__sort()
-            elif not os.path.isfile(samfile + '.bai'):
-                self.__index()
-        
         __bm = pysam.Samfile(samfile, 'rb')
         __ft = pysam.Fastafile(fafile)
         
