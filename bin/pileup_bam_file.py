@@ -11,8 +11,8 @@ if __name__ == '__main__':
         bam_file = '/Users/yukke/dev/data/testREDItools/dna.bam'
         fa_file = '/Users/yukke/dev/data/testREDItools/reference.fa'
         chr_name = 'chr21'
-        start = 47721028
-        end = 47721033
+        start = 47721030
+        end = 47721057
         
     else:
         bam_file = '/home/soh.i/db/melanogaster/Nascent-Seq/ZT18_R1/accepted_hits.bam'
