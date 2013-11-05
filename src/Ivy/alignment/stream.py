@@ -158,6 +158,33 @@ class AlignmentStream(object):
                    if not _.alignment.is_reverse]
 
             mutation_type = {'A': len(A), 'T': len(T), 'G': len(G), 'C': len(C), 'N': len(N)}
+            alt = self.define_allele(all_bases)
+
+            # compute DP4 collumn
+            if len(alt) > 0:
+                ref_r = 0
+                ref_f = 0
+                alt_r = 0
+                alt_f = 0
+                
+                if ref == 'A':
+                    ref_r = len(A_r)
+                    ref_f = len(A_f)
+                elif ref == 'T':
+                    ref_r = len(T_r)
+                    ref_f = len(T_)
+                elif ref == 'G':
+                    ref_r = len(G_r)
+                    ref_f = len(G_f)
+                elif ref == 'C':
+                    ref_r = len(C_r)
+                    ref_f = len(C_f)
+                elif ref == 'N':
+                    ref_r = len(N_r)
+                    ref_f = len(N_f)
+            else:
+                raise RuntimeError(
+                    'Could not able to define the allele base, chr[%s], pos[%s]' % (bam_chrom, pos))
             
             debug = False
             if debug:
@@ -170,13 +197,14 @@ class AlignmentStream(object):
                 allele_ratio= filt_mismatches / (filt_mismatches + filt_matches)
                 ag_ratio = len(G) / (len(G) + len(A))
             except ZeroDivisionError:
-                pass
-                
+                allele_ratio = float(0)
+                ag_ratio = float(0)
+            
             yield {
                 'chrom': bam_chrom,
                 'pos': pos,
                 'ref': ref,
-                'alt': self.define_allele(all_bases),
+                'alt': alt,
                 'coverage': len(raw_reads),
                 'insertion': ins_reads,
                 'mismatches': len(raw_mismatches),
@@ -190,16 +218,16 @@ class AlignmentStream(object):
                 'Cc': len(C),
                 'Gc': len(G),
                 'Nc': len(N),
-                'Gr': len(A_r),
-                'Gf': len(),
-                'Cr': len(),
-                'Cf': len(),
-                'Tf': len(),
-                'Tr': len(),
-                'Af': len(),
-                'Ar': len(),
-                'Nr': len(),
-                'Nf': len(),
+                'Gr': len(G_r),
+                'Gf': len(G_f),
+                'Cr': len(C_r),
+                'Cf': len(C_f),
+                'Tf': len(T_f),
+                'Tr': len(T_r),
+                'Af': len(A_f),
+                'Ar': len(A_r),
+                'Nr': len(N_r),
+                'Nf': len(N_f),
             }
     
     def __resolve_coords(self, start, end, is_one_based):
