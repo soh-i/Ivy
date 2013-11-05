@@ -4,6 +4,7 @@ import string
 import re
 import pysam
 from Ivy.utils import ImutableDict
+import os.path
 
 class AlignmentConfig(object):
     def __init__(self):
@@ -31,6 +32,15 @@ class AlignmentConfig(object):
        
 class AlignmentStream(object):
     def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=True):
+        # TODO: runs testing
+        if False: # off
+            if not os.path.isfile(fafile + '.fai'):
+                self.__faidx()
+            elif not os.path.isfile(samfile + '.index.bam'):
+                self.__sort()
+            elif not os.path.isfile(samfile + '.bai'):
+                self.__index()
+        
         __bm = pysam.Samfile(samfile, 'rb')
         __ft = pysam.Fastafile(fafile)
         
@@ -59,14 +69,29 @@ class AlignmentStream(object):
         raise NotImplementedError
         
     def __sort(self):
-        pysam.sort(self.samfile, self.samfile + 'sorted')
-        sort_log = pysam.sort.getMessage()
+        try:
+            pysam.sort(self.samfile, self.samfile + 'sorted')
+            sort_log = pysam.sort.getMessage()
+        except:
+            raise RuntimeError()
 
     def __index(self):
-        pass
+        try:
+            pysam.index(self.samfile)
+        except:
+            raise RuntimeError()
 
     def __faidx(self):
-        pass
+        try:
+            pysam.faidx(self.fafile)
+        except:
+            raise RuntimeError()
+
+    def __merge_bams(self, bams=[]):
+        try:
+            pysam.merge([_ for _ in bams])
+        except:
+            raise RuntimeError()
             
     def pileup_stream(self):
         for col in self.samfile.pileup(reference=self.chrom,
