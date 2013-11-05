@@ -124,8 +124,7 @@ class AlignmentStream(object):
             filt_matches = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == ref]
 
             if not ref:
-                # Todo
-                # resolve difference name in fasta and bam
+                # TODO: resolve difference name in fasta and bam
                 raise ValueError('No seq. content within [chr:%s, start:%s, end:%s]' % \
                                  (self.chrom, self.start, self.end))
                         
@@ -161,6 +160,7 @@ class AlignmentStream(object):
             alt = self.define_allele(all_bases)
 
             # compute DP4 collumn
+            # TODO: to write unittest is needed!
             if len(alt) > 0:
                 ref_r = 0
                 ref_f = 0
@@ -170,21 +170,31 @@ class AlignmentStream(object):
                 if ref == 'A':
                     ref_r = len(A_r)
                     ref_f = len(A_f)
+                    alt_r = len(G_f+C_f+T_f)
+                    alt_f = len(G_r+C_r+T_r)
                 elif ref == 'T':
                     ref_r = len(T_r)
-                    ref_f = len(T_)
+                    ref_f = len(T_f)
+                    alt_r = len(G_r+C_r+A_r)
+                    alt_f = len(G_f+C_f+A_f)
                 elif ref == 'G':
                     ref_r = len(G_r)
                     ref_f = len(G_f)
+                    alt_r = len(C_r+T_r+A_r)
+                    alt_f = len(C_f+C_f+C_r)
                 elif ref == 'C':
                     ref_r = len(C_r)
                     ref_f = len(C_f)
+                    alt_r = len(A_r+T_r+G_r)
+                    alt_f = len(A_f+T_f+G_f)
                 elif ref == 'N':
                     ref_r = len(N_r)
                     ref_f = len(N_f)
+                    alt_r = len(A_r+T_r+G_r+C_r)
+                    alt_f = len(A_f+T_f+G_f+C_f)
             else:
                 raise RuntimeError(
-                    'Could not able to define the allele base, chr[%s], pos[%s]' % (bam_chrom, pos))
+                    'Could not able to define the allele base %s, chr[%s], pos[%s]' % (all_bases, bam_chrom, pos))
             
             debug = False
             if debug:
