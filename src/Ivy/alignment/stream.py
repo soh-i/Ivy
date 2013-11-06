@@ -337,7 +337,7 @@ class AlignmentStream(object):
 
     def average_baq(self, string):
         return [ord(s)-33 for s in string]
-
+    @classmethod
     def define_allele(self, base, ref=None):
         if base and ref:
             [_.upper() for _ in base]
@@ -345,8 +345,8 @@ class AlignmentStream(object):
         
         c = Counter(base)
         comm = c.most_common()
-        # allele is not found 
-        if len(comm) == 1:
+        # allele is not found
+        if comm[0][0] == ref:
             return '.'
     
         __allele = {}
@@ -356,26 +356,34 @@ class AlignmentStream(object):
         defined = ()
         for j in __allele:
             for k in __allele:
-                # print most common varinat with a allele type alone
-                if __allele[k] == __allele[j] and k != j:
-                    dedined = tuple(__allele.items())
-                # print most common variant if has many allele
+                # single alllele is found
+                if j == k:
+                    return tuple([j, __allele[j]])
+                    
+                # most common varinat with a allele type alone
+                elif __allele[k] == __allele[j] and k != j:
+                    return tuple(__allele.items())
+                    
+                # most common variant if has many allele
                 elif __allele[k] != __allele[j] and k != j:
                     m = max(__allele[k], __allele[j])
                     if m == __allele[k]:
-                        defined = tuple([k, __allele[k]])
+                        return tuple([k, __allele[k]])
                     elif m == __allele[j]:
-                        defined = tuple([j, __allele[j]])
-        return defined
-
+                        return tuple([j, __allele[j]])
                         
 if __name__ == '__main__':
     a = ['A', 'T', 'C', 'G']
     b = ['C', 'G', 'G', 'G', 'A', 'A', 'A']
     c = ['A', 'T', 'C', 'G']
-    d = ['A', 'A', 'A', 'T', 'T', 'T', 'T', 'C', 'C', 'G']
+    #d = ['A', 'A', 'A', 'T', 'T', 'T', 'T', 'C', 'C', 'G']
+    d = ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'T']
     #print a, 'r:A',
-    print AlignmentStream.define_allele(d, ref='A') #=> C, T, G
+    ref = ['A', 'T', 'G', 'C', 'N']
+    print d
+    for _ in ref:
+        print _,
+        print AlignmentStream.define_allele(d, ref=_)
  
     ##print b, 'r:G',
     #print define_allele(b, ref='G') #=> A
