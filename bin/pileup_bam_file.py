@@ -4,6 +4,7 @@ from Ivy.alignment.stream import *
 from Ivy.annotation.writer import VCFWriteHeader
 import sys
 import pprint
+import csv
 
 if __name__ == '__main__':
     SMALL = True
@@ -38,6 +39,14 @@ if __name__ == '__main__':
 
         #print "%s\t%s\t%s\t%s\t%s\t%s\t%s" % \
             #(rna['CHROM'], rna['POS'], rna['REF'], rna['raw_coverage'], rna['nodel_coverage'], rna['prop_coverage'], rna['prop_nodel_coverage'])
-        pp.pprint(rna)
+        #pp.pprint(rna)
+        print [str(_)+ ":"+ str(rna[_])for _ in rna]
         
+        
+
+
+
+
+
+
 
