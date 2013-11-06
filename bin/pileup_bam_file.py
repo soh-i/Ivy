@@ -11,8 +11,8 @@ if __name__ == '__main__':
         bam_file = '/Users/yukke/dev/data/testREDItools/dna.bam'
         fa_file = '/Users/yukke/dev/data/testREDItools/reference.fa'
         chr_name = 'chr21'
-        start = 47721028
-        end = 47721033
+        start = 47721030
+        end = 47721057
         
     else:
         bam_file = '/home/soh.i/db/melanogaster/Nascent-Seq/ZT18_R1/accepted_hits.bam'
@@ -36,7 +36,8 @@ if __name__ == '__main__':
     for rna in rna_alignment.pileup_stream():
         #print "{0}\t{1}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\n".format(rna['CHROM'], rna["POS"], rna["ID"], rna["REF"], rna["ALT"], rna["QUAL"], rna["mismatch_freq"], rna["coverage"], rna["FORMAT"])
 
-        print "%s\t%s\t%s\t%s\t%s\t%s\t%s" % \
-            (rna['CHROM'], rna['POS'], rna['REF'], rna['raw_coverage'], rna['nodel_coverage'], rna['prop_coverage'], rna['prop_nodel_coverage'])
+        #print "%s\t%s\t%s\t%s\t%s\t%s\t%s" % \
+            #(rna['CHROM'], rna['POS'], rna['REF'], rna['raw_coverage'], rna['nodel_coverage'], rna['prop_coverage'], rna['prop_nodel_coverage'])
+        pp.pprint(rna)
         
 
