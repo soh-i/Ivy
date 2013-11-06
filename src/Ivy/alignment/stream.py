@@ -184,8 +184,7 @@ class AlignmentStream(object):
             G = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'G']
             N = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'N']
             
-            all_bases = A + C + T + G + N
-            coverage = len(all_bases)
+            
             
             G_r = [_.alignment.is_reverse for _ in G
                    if _.alignment.is_reverse].count(True)
@@ -195,6 +194,7 @@ class AlignmentStream(object):
             A_r = [_.alignment.is_reverse for _ in A
                    if _.alignment.is_reverse].count(True)
             A_f = [_.alignment.is_reverse for _ in A
+                   
                    if not _.alignment.is_reverse].count(False)
             T_r = [_.alignment.is_reverse for _ in T
                    if _.alignment.is_reverse].count(True)
@@ -212,8 +212,14 @@ class AlignmentStream(object):
                    if not _.alignment.is_reverse].count(False)
 
             mutation_type = {'A': len(A), 'T': len(T), 'G': len(G), 'C': len(C), 'N': len(N)}
+            all_bases = A + C + T + G + N
+            Ac = [_.alignment.seq[_.qpos] for _ in all_bases].count('A')
+            Tc = [_.alignment.seq[_.qpos] for _ in all_bases].count('T')
+            Gc = [_.alignment.seq[_.qpos] for _ in all_bases].count('G')
+            Cc = [_.alignment.seq[_.qpos] for _ in all_bases].count('C')
+            all_bases = [Ac, Tc, Gc, Cc]
+            coverage = len(all_bases)
             alt = self.define_allele(all_bases, ref=ref)
-            
             
             # compute DP4 collumn
             # TODO: to write unittest is needed!
