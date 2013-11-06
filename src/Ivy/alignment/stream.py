@@ -230,10 +230,11 @@ class AlignmentStream(object):
             coverage = Ac + Tc + Gc + Cc + Nc
             
             _all_base = Ab + Gb + Cb + Tb
-            _all_base = ['T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'A',]
+            #_all_base = ['G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'T']
             alt = self.define_allele(_all_base, ref=ref)
 
             if True:
+                #print _all_base
                 print ref, alt
 
             
@@ -337,6 +338,7 @@ class AlignmentStream(object):
 
     def average_baq(self, string):
         return [ord(s)-33 for s in string]
+
     @classmethod
     def define_allele(self, base, ref=None):
         if base and ref:
@@ -346,9 +348,9 @@ class AlignmentStream(object):
         c = Counter(base)
         comm = c.most_common()
         # allele is not found
-        if comm[0][0] == ref:
-            return '.'
-    
+        #if comm[0][0] == ref:
+        #    return '.'
+        # 
         __allele = {}
         for base in comm:
             if base[0] != ref:
@@ -371,19 +373,24 @@ class AlignmentStream(object):
                         return tuple([k, __allele[k]])
                     elif m == __allele[j]:
                         return tuple([j, __allele[j]])
+        else:
+            return "."
                         
 if __name__ == '__main__':
     a = ['A', 'T', 'C', 'G']
     b = ['C', 'G', 'G', 'G', 'A', 'A', 'A']
     c = ['A', 'T', 'C', 'G']
     #d = ['A', 'A', 'A', 'T', 'T', 'T', 'T', 'C', 'C', 'G']
+    
     d = ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'T']
+    base = ['G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'T']
+    
     #print a, 'r:A',
     ref = ['A', 'T', 'G', 'C', 'N']
-    print d
+    print base
     for _ in ref:
-        print _,
-        print AlignmentStream.define_allele(d, ref=_)
+        print "ref:", _,
+        print AlignmentStream.define_allele(base, ref=_)
  
     ##print b, 'r:G',
     #print define_allele(b, ref='G') #=> A
