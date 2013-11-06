@@ -188,27 +188,28 @@ class AlignmentStream(object):
             coverage = len(all_bases)
             
             G_r = [_.alignment.is_reverse for _ in G
-                   if _.alignment.is_reverse]
+                   if _.alignment.is_reverse].count(True)
             G_f = [_.alignment.is_reverse for _ in G
-                   if not _.alignment.is_reverse]
+                   if not _.alignment.is_reverse].count(False)
+            
             A_r = [_.alignment.is_reverse for _ in A
-                   if _.alignment.is_reverse]
+                   if _.alignment.is_reverse].count(True)
             A_f = [_.alignment.is_reverse for _ in A
-                   if not _.alignment.is_reverse]
+                   if not _.alignment.is_reverse].count(False)
             T_r = [_.alignment.is_reverse for _ in T
-                   if _.alignment.is_reverse]
+                   if _.alignment.is_reverse].count(True)
             T_f = [_.alignment.is_reverse for _ in T
-                   if not _.alignment.is_reverse]
+                   if not _.alignment.is_reverse].count(False)
             
             C_r = [_.alignment.seq[_.qpos] for _ in C
-                   if _.alignment.is_reverse]
+                   if _.alignment.is_reverse].count(True)
             C_f = [_.alignment.seq[_.qpos] for _ in C
-                   if not _.alignment.is_reverse]
+                   if not _.alignment.is_reverse].count(False)
             
             N_r = [_.alignment.is_reverse for _ in N
-                   if _.alignment.is_reverse]
+                   if _.alignment.is_reverse].count(True)
             N_f = [_.alignment.is_reverse for _ in N
-                   if not _.alignment.is_reverse]
+                   if not _.alignment.is_reverse].count(False)
 
             mutation_type = {'A': len(A), 'T': len(T), 'G': len(G), 'C': len(C), 'N': len(N)}
             alt = self.define_allele(all_bases, ref=ref)
@@ -224,30 +225,30 @@ class AlignmentStream(object):
                 alt_f = 0
                 
                 if ref == 'A':
-                    ref_r = len(A_r)
-                    ref_f = len(A_f)
-                    alt_r = len(G_f+C_f+T_f)
-                    alt_f = len(G_r+C_r+T_r)
+                    ref_r = (A_r)
+                    ref_f = (A_f)
+                    alt_r = (G_f+C_f+T_f)
+                    alt_f = (G_r+C_r+T_r)
                 elif ref == 'T':
-                    ref_r = len(T_r)
-                    ref_f = len(T_f)
-                    alt_r = len(G_r+C_r+A_r)
-                    alt_f = len(G_f+C_f+A_f)
+                    ref_r = (T_r)
+                    ref_f = (T_f)
+                    alt_r = (G_r+C_r+A_r)
+                    alt_f = (G_f+C_f+A_f)
                 elif ref == 'G':
-                    ref_r = len(G_r)
-                    ref_f = len(G_f)
-                    alt_r = len(C_r+T_r+A_r)
-                    alt_f = len(C_f+C_f+C_r)
+                    ref_r = (G_r)
+                    ref_f = (G_f)
+                    alt_r = (C_r+T_r+A_r)
+                    alt_f = (C_f+C_f+C_r)
                 elif ref == 'C':
-                    ref_r = len(C_r)
-                    ref_f = len(C_f)
-                    alt_r = len(A_r+T_r+G_r)
-                    alt_f = len(A_f+T_f+G_f)
+                    ref_r = (C_r)
+                    ref_f = (C_f)
+                    alt_r = (A_r+T_r+G_r)
+                    alt_f = (A_f+T_f+G_f)
                 elif ref == 'N':
-                    ref_r = len(N_r)
-                    ref_f = len(N_f)
-                    alt_r = len(A_r+T_r+G_r+C_r)
-                    alt_f = len(A_f+T_f+G_f+C_f)
+                    ref_r = (N_r)
+                    ref_f = (N_f)
+                    alt_r = (A_r+T_r+G_r+C_r)
+                    alt_f = (A_f+T_f+G_f+C_f)
                     
                 dp4 = tuple([ref_r, ref_f, alt_r, alt_f])
                 
@@ -287,16 +288,16 @@ class AlignmentStream(object):
                 'Cc': len(C),
                 'Gc': len(G),
                 'Nc': len(N),
-                'Gr': len(G_r),
-                'Gf': len(G_f),
-                'Cr': len(C_r),
-                'Cf': len(C_f),
-                'Tf': len(T_f),
-                'Tr': len(T_r),
-                'Af': len(A_f),
-                'Ar': len(A_r),
-                'Nr': len(N_r),
-                'Nf': len(N_f),
+                'Gr': (G_r),
+                'Gf': (G_f),
+                'Cr': (C_r),
+                'Cf': (C_f),
+                'Tf': (T_f),
+                'Tr': (T_r),
+                'Af': (A_f),
+                'Ar': (A_r),
+                'Nr': (N_r),
+                'Nf': (N_f),
             }
     
     def __resolve_coords(self, start, end, is_one_based):
