@@ -92,7 +92,8 @@ class AlignmentPreparation(object):
 
             
 class AlignmentStream(object):
-    def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=True):
+    def __init__(self, samfile, fafile, chrom=None, start=None, end=None,
+                 one_based=True):
         __bm = pysam.Samfile(samfile, 'rb', check_header=True, check_sq=True)
         __ft = pysam.Fastafile(fafile)
         
@@ -127,7 +128,8 @@ class AlignmentStream(object):
             else:
                 pos = col.pos
             
-            ref = self.fafile.fetch(reference=bam_chrom, start=col.pos, end=col.pos+1).upper()
+            ref = self.fafile.fetch(reference=bam_chrom, start=col.pos,
+                                    end=col.pos+1).upper()
             reads = col.pileups
             
             # Raw reads (no filterings through)
@@ -177,13 +179,21 @@ class AlignmentStream(object):
                 # TODO: resolve difference name in fasta and bam
                 raise ValueError('No seq. content within [chr:%s, start:%s, end:%s]' % \
                                  (self.chrom, self.start, self.end))
-                
+
+            # array in read object per base types
             A = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'A']
             C = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'C']
             T = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'T']
             G = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'G']
             N = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'N']
+
+            # base string for 4 nucleotide types
+            Gb =  [_.alignment.seq[_.qpos] for _ in G]
+            Ab =  [_.alignment.seq[_.qpos] for _ in A]
+            Tb =  [_.alignment.seq[_.qpos] for _ in T]
+            Cb =  [_.alignment.seq[_.qpos] for _ in C]
             
+            # strand informations
             G_r = [_.alignment.is_reverse for _ in G
                    if _.alignment.is_reverse].count(True)
             G_f = [_.alignment.is_reverse for _ in G
@@ -209,20 +219,24 @@ class AlignmentStream(object):
             N_f = [_.alignment.is_reverse for _ in N
                    if not _.alignment.is_reverse].count(False)
 
-            mutation_type = {'A': len(A), 'T': len(T), 'G': len(G), 'C': len(C), 'N': len(N)}
-            all_bases = A + C + T + G + N
-            Ac = [_.alignment.seq[_.qpos] for _ in all_bases].count('A')
-            Tc = [_.alignment.seq[_.qpos] for _ in all_bases].count('T')
-            Gc = [_.alignment.seq[_.qpos] for _ in all_bases].count('G')
-            Cc = [_.alignment.seq[_.qpos] for _ in all_bases].count('C')
-            all_bases = [Ac, Tc, Gc, Cc]
-            coverage = len(all_bases)
-            alt = self.define_allele(all_bases, ref=ref)
+            mutation_type = ({'A': len(A), 'T': len(T), 'G': len(G),
+                              'C': len(C), 'N': len(N)})
+
+            Ac = [_.alignment.seq[_.qpos] for _ in A].count('A')
+            Tc = [_.alignment.seq[_.qpos] for _ in T].count('T')
+            Gc = [_.alignment.seq[_.qpos] for _ in G].count('G')
+            Cc = [_.alignment.seq[_.qpos] for _ in C].count('C')
+            Nc = [_.alignment.seq[_.qpos] for _ in C].count('N')
+            coverage = Ac + Tc + Gc + Cc + Nc
+            
+            _all_base = Ab + Gb + Cb + Tb
+            alt = self.define_allele(_all_base, ref=ref)
+            print ref, alt
             
             # compute DP4 collumn
             # TODO: to write unittest is needed!
             #if len(alt): TODO:  here is bug # TypeError: object of type 'NoneType' has no len()
-            if True:
+            if True: # TODO: set any condition(s)
                 ref_r = 0
                 ref_f = 0
                 alt_r = 0
@@ -257,13 +271,15 @@ class AlignmentStream(object):
                 
             else:
                 raise RuntimeError(
-                    'Could not able to define the allele base %s, chr[%s], pos[%s]' % (all_bases, bam_chrom, pos))
+                    'Could not able to define the allele base %s, chr[%s], pos[%s]'
+                    % (all_bases, bam_chrom, pos))
             
             debug = False
             if debug:
                 coverage = A_r+ a_f+ T_r+ t_f+ G_r+ g_f+ C_r+ c_f + N_r + n_f
                 #print [_.alignment.seq[_.qpos] for _ in G]
-                print '[A:%s,%s] [T:%s,%s] [G:%s,%s] [C:%s,%s]' % (A_r, a_f, T_r, t_f, G_r, g_f, C_r, c_f)
+                print '[A:%s,%s] [T:%s,%s] [G:%s,%s] [C:%s,%s]' \
+                    % (A_r, a_f, T_r, t_f, G_r, g_f, C_r, c_f)
                 print 'Coverage:%d' % (coverage)
             
             try:
@@ -323,48 +339,49 @@ class AlignmentStream(object):
             #[_.upper() for _ in base]
             ref.upper()
         
-        c = Counter(base)
+            c = Counter(base)
         comm = c.most_common()
     
-        allele = {}
+        __allele = {}
         for base in comm:
             if base[0] != ref:
-                allele.update({base[0]:base[1]})
-            
-        for j in allele:
-            for k in allele:
+                __allele.update({base[0]:base[1]})
+        defined = ()
+        for j in __allele:
+            for k in __allele:
                 # print most common varinat with a allele type alone
-                if allele[k] == allele[j] and k != j:
-                    return tuple(allele.items())
+                if __allele[k] == __allele[j] and k != j:
+                    defined = tuple(__allele.items())
                 # print most common variant if has many allele
-                elif allele[k] != allele[j] and k != j:
-                    m = max(allele[k], allele[j])
-                    if m == allele[k]:
-                        return tuple([k, allele[k]])
-                    elif m == allele[j]:
-                        return tuple([j, allele[j]])
+                elif __allele[k] != __allele[j] and k != j:
+                    m = max(__allele[k], __allele[j])
+                    if m == __allele[k]:
+                        defined = tuple([k, __allele[k]])
+                    elif m == __allele[j]:
+                        defined = tuple([j, __allele[j]])
+        return defined
 
                         
-#if __name__ == '__main__':
-#    a = ['A', 'T', 'C', 'G']
-#    b = ['C', 'G', 'G', 'G', 'A', 'A', 'A']
-#    c = ['A', 'T', 'C', 'G']
-#    d = ['A', 'A', 'A', 'T', 'T', 'T', 'C', 'C', 'C', 'G']
-#    #print a, 'r:A',
-#    print AlignmentStream.define_allele(a, ref='A') #=> C, T, G
-# 
-#    #print b, 'r:G',
-#    print define_allele(b, ref='G') #=> A
-# 
-#    #print c, 'r:A',
-#    print define_allele(c, ref='A')
-# 
-#    #print d, 'r:G',
-#    print define_allele(d, ref='G')
-#    
-#    
-        
-        
+if __name__ == '__main__':
+    a = ['A', 'T', 'C', 'G']
+    b = ['C', 'G', 'G', 'G', 'A', 'A', 'A']
+    c = ['A', 'T', 'C', 'G']
+    d = ['A', 'A', 'A', 'T', 'T', 'T', 'T', 'C', 'C', 'G']
+    #print a, 'r:A',
+    print AlignmentStream.define_allele(d, ref='A') #=> C, T, G
+ 
+    ##print b, 'r:G',
+    #print define_allele(b, ref='G') #=> A
+    # 
+    ##print c, 'r:A',
+    #print define_allele(c, ref='A')
+    # 
+    ##print d, 'r:G',
+    #print define_allele(d, ref='G')
+    # 
+    # 
+       
+       
 class AlignmentStreamMerger(object):
     def __init__(self, rna, dna):
         self.rna = rna
