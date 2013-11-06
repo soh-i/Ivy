@@ -230,8 +230,12 @@ class AlignmentStream(object):
             coverage = Ac + Tc + Gc + Cc + Nc
             
             _all_base = Ab + Gb + Cb + Tb
+            _all_base = ['T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'A',]
             alt = self.define_allele(_all_base, ref=ref)
-            print ref, alt
+
+            if True:
+                print ref, alt
+
             
             # compute DP4 collumn
             # TODO: to write unittest is needed!
@@ -336,11 +340,14 @@ class AlignmentStream(object):
 
     def define_allele(self, base, ref=None):
         if base and ref:
-            #[_.upper() for _ in base]
+            [_.upper() for _ in base]
             ref.upper()
         
-            c = Counter(base)
+        c = Counter(base)
         comm = c.most_common()
+        # allele is not found 
+        if len(comm) == 1:
+            return '.'
     
         __allele = {}
         for base in comm:
@@ -351,7 +358,7 @@ class AlignmentStream(object):
             for k in __allele:
                 # print most common varinat with a allele type alone
                 if __allele[k] == __allele[j] and k != j:
-                    defined = tuple(__allele.items())
+                    dedined = tuple(__allele.items())
                 # print most common variant if has many allele
                 elif __allele[k] != __allele[j] and k != j:
                     m = max(__allele[k], __allele[j])
