@@ -295,7 +295,6 @@ class AlignmentStream(object):
                 'ref': ref,
                 'alt': alt,
                 'coverage': len(filt_reads),
-                'insertion': ins_reads,
                 'mismatches': len(filt_mismatches),
                 'matches': len(filt_matches),
                 'cov': coverage,
