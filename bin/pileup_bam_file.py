@@ -36,7 +36,8 @@ if __name__ == '__main__':
     for rna in rna_alignment.pileup_stream():
         #print "{0}\t{1}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\n".format(rna['CHROM'], rna["POS"], rna["ID"], rna["REF"], rna["ALT"], rna["QUAL"], rna["mismatch_freq"], rna["coverage"], rna["FORMAT"])
 
-        print "%s\t%s\t%s\t%s\t%s\t%s\t%s" % \
-            (rna['CHROM'], rna['POS'], rna['REF'], rna['raw_coverage'], rna['nodel_coverage'], rna['prop_coverage'], rna['prop_nodel_coverage'])
+        #print "%s\t%s\t%s\t%s\t%s\t%s\t%s" % \
+            #(rna['CHROM'], rna['POS'], rna['REF'], rna['raw_coverage'], rna['nodel_coverage'], rna['prop_coverage'], rna['prop_nodel_coverage'])
+        pp.pprint(rna)
         
 
