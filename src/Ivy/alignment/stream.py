@@ -90,7 +90,12 @@ class AlignmentPreparation(object):
         except:
             raise RuntimeError()
 
-            
+def __resolve_chrom_name(bam, fa):
+    bam_obj = pysam.Samfile(bam, 'rb')
+    fa_obj = pysam.Fastafile(fa)
+    
+    
+
 class AlignmentStream(object):
     def __init__(self, samfile, fafile, chrom=None, start=None, end=None,
                  one_based=True):
@@ -105,7 +110,7 @@ class AlignmentStream(object):
         if not chrom.startswith('chr'):
             self.chrom = 'chr' + chrom
         else: self.chrom = chrom
-
+        
         debug = False
         if debug:
             # info. for loaded samfile
@@ -117,11 +122,13 @@ class AlignmentStream(object):
             print self.samfile.unmapped
             # info. for fasta
             print self.fafile.filename
-            
+        
     def pileup_stream(self):
         for col in self.samfile.pileup(reference=self.chrom,
-                                       start=self.start,
-                                       end=self.end):
+                                       #start=self.start,
+                                       #end=self.end):
+                                       ):
+            
             bam_chrom = self.samfile.getrname(col.tid)
             if self.one_based:
                 pos = col.pos + 1
