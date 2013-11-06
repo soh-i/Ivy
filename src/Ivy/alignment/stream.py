@@ -157,6 +157,7 @@ class AlignmentStream(object):
             #del_prop_reads = [_ for _ in reads if not _.is_del]
 
             # Has insertion alone
+            # TODO: fixt to print pysam object directory
             ins_reads = [_ for _ in reads if _.is_del > 0]
             ins_prop_reads = [_ for _ in reads if _.is_del > 0]
             del_reads = [_ for _ in reads if _.is_del < 0]
@@ -230,13 +231,7 @@ class AlignmentStream(object):
             coverage = Ac + Tc + Gc + Cc + Nc
             
             _all_base = Ab + Gb + Cb + Tb
-            #_all_base = ['G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'T']
             alt = self.define_allele(_all_base, ref=ref)
-
-            if True:
-                #print _all_base
-                print ref, alt
-
             
             # compute DP4 collumn
             # TODO: to write unittest is needed!
@@ -347,10 +342,7 @@ class AlignmentStream(object):
         
         c = Counter(base)
         comm = c.most_common()
-        # allele is not found
-        #if comm[0][0] == ref:
-        #    return '.'
-        # 
+
         __allele = {}
         for base in comm:
             if base[0] != ref:
@@ -374,7 +366,8 @@ class AlignmentStream(object):
                     elif m == __allele[j]:
                         return tuple([j, __allele[j]])
         else:
-            return "."
+            # allele is not found
+            return '.'
                         
 if __name__ == '__main__':
     a = ['A', 'T', 'C', 'G']
