@@ -163,11 +163,11 @@ class AlignmentStream(object):
             filt_reads = []
             for _ in col.pileups:
                 if _.alignment.is_proper_pair \
-                   and not _.alignment.is_secondary \
-                   and not _.alignment.is_qcfail \
-                   and not _.alignment.is_duplicate \
-                   and not _.alignment.is_unmapped \
-                   and not _.is_del:
+                   and not _.alignment.is_secondary:
+                   #and not _.alignment.is_qcfail \
+                   #and not _.alignment.is_duplicate \
+                   #and not _.alignment.is_unmapped \
+                   #and not _.is_del:
                     filt_reads.append(_)
                     
             filt_mismatches = [_ for _ in filt_reads if _.alignment.seq[_.qpos] != ref]
@@ -178,13 +178,14 @@ class AlignmentStream(object):
                 raise ValueError('No seq. content within [chr:%s, start:%s, end:%s]' % \
                                  (self.chrom, self.start, self.end))
                 
-            A = [_.alignment.seq[_.qpos] for _ in filt_reads if _.alignment.seq[_.qpos] == 'A']
-            C = [_.alignment.seq[_.qpos] for _ in filt_reads if _.alignment.seq[_.qpos] == 'C']
-            T = [_.alignment.seq[_.qpos] for _ in filt_reads if _.alignment.seq[_.qpos] == 'T']
-            G = [_.alignment.seq[_.qpos] for _ in filt_reads if _.alignment.seq[_.qpos] == 'G']
-            N = [_.alignment.seq[_.qpos] for _ in filt_reads if _.alignment.seq[_.qpos] == 'N']
+            A = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'A']
+            C = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'C']
+            T = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'T']
+            G = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'G']
+            N = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'N']
             
             all_bases = A + C + T + G + N
+            coverage = len(all_bases)
             
             G_r = [_.alignment.is_reverse for _ in G
                    if _.alignment.is_reverse]
@@ -212,9 +213,11 @@ class AlignmentStream(object):
             mutation_type = {'A': len(A), 'T': len(T), 'G': len(G), 'C': len(C), 'N': len(N)}
             alt = self.define_allele(all_bases, ref=ref)
             
+            
             # compute DP4 collumn
             # TODO: to write unittest is needed!
-            if len(alt):
+            #if len(alt): TODO:  here is bug # TypeError: object of type 'NoneType' has no len()
+            if True:
                 ref_r = 0
                 ref_f = 0
                 alt_r = 0
@@ -260,7 +263,7 @@ class AlignmentStream(object):
                 print 'Coverage:%d' % (coverage)
             
             try:
-                allele_ratio= filt_mismatches / (filt_mismatches + filt_matches)
+                allele_ratio= len(filt_mismatches) / (len(filt_mismatches) + len(filt_matches))
                 ag_ratio = len(G) / (len(G) + len(A))
             except ZeroDivisionError:
                 allele_ratio = float(0)
@@ -271,11 +274,11 @@ class AlignmentStream(object):
                 'pos': pos,
                 'ref': ref,
                 'alt': alt,
-                'coverage': len(raw_reads),
+                'coverage': len(filt_reads),
                 'insertion': ins_reads,
-                'mismatches': len(raw_mismatches),
-                'matches': len(raw_matches),
-                'cov': len(raw_mismatches) + len(raw_matches),
+                'mismatches': len(filt_mismatches),
+                'matches': len(filt_matches),
+                'cov': coverage,
                 'mismach_ratio': allele_ratio,
                 'ag_ratio': ag_ratio,
                 'types': mutation_type,
@@ -313,7 +316,7 @@ class AlignmentStream(object):
 
     def define_allele(self, base, ref=None):
         if base and ref:
-            [_.upper() for _ in base]
+            #[_.upper() for _ in base]
             ref.upper()
         
         c = Counter(base)
