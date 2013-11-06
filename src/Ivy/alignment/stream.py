@@ -93,7 +93,7 @@ class AlignmentPreparation(object):
             
 class AlignmentStream(object):
     def __init__(self, samfile, fafile, chrom=None, start=None, end=None, one_based=True):
-        __bm = pysam.Samfile(samfile, 'rb')
+        __bm = pysam.Samfile(samfile, 'rb', check_header=True, check_sq=True)
         __ft = pysam.Fastafile(fafile)
         
         self.samfile = __bm
@@ -184,8 +184,6 @@ class AlignmentStream(object):
             G = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'G']
             N = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'N']
             
-            
-            
             G_r = [_.alignment.is_reverse for _ in G
                    if _.alignment.is_reverse].count(True)
             G_f = [_.alignment.is_reverse for _ in G
@@ -255,7 +253,6 @@ class AlignmentStream(object):
                     ref_f = (N_f)
                     alt_r = (A_r+T_r+G_r+C_r)
                     alt_f = (A_f+T_f+G_f+C_f)
-                    
                 dp4 = tuple([ref_r, ref_f, alt_r, alt_f])
                 
             else:
