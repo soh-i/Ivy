@@ -51,13 +51,11 @@ if __name__ == '__main__':
     gen = DarnedDataGenerator(species=args.sp)
     
     darned_raw_file = gen.saved_abs_path + gen.filename
-    print darned_raw_file
     if not os.path.isfile(darned_raw_file):
         print "fetching from darned..."
         gen.fetch_darned()
         
     darned_parsed_csv = gen.out_name
-    print darned_parsed_csv
     if not os.path.isfile(darned_parsed_csv):
         print "parsing darned..."
         gen.darned_to_csv()
@@ -73,7 +71,8 @@ if __name__ == '__main__':
             vcf.ag_count(), vcf.other_mutations_count(), ans.size())
 
         if args.plot:
-            bplt = BenchmarkPlot("testplot")
+            name = os.path.basename(args.vcf_file).split('.')[0]
+            bplt = BenchmarkPlot('plot_' + name)
             bplt.plot_accuracy(lab=str(vcf.vcf_name()),
                                recall=int(bench.recall()),
                                precision=int(bench.recall()))
