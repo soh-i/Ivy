@@ -296,7 +296,6 @@ class __CSVReader(object):
 #    
 
 
-
 class Benchmark(object):
     '''
     >>> darned_db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
@@ -311,7 +310,8 @@ class Benchmark(object):
     '''
     
     def __init__(self, answer=None, predict=None):
-        
+
+        # TODO: fix here! to convert list to set
         self.answer = set([_.split(":")[:2] for _ in answer])
         self.predict = set([_.split(":")[:2] for _ in predict])
         
