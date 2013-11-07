@@ -128,12 +128,13 @@ class DarnedReader(object):
             raise RuntimeError, "Species name must be given"
         else:
             self.__sp = sp
+            
         if source is None or len(source) == 0:
-            self.__source = 'All'
+            self.__source = 'ALL'
         else:
             self.__source = source.upper()
             
-        self.__darned_path = Utils.find_app_root()+ '/data/'+ self.__sp+ '.csv'
+        self.__darned_path = Utils.find_app_root()+ '/data/darned_'+ self.__sp+ '.csv'
         self.db = self.__generate_darned_set()
         
     def __str__(self):
@@ -141,7 +142,7 @@ class DarnedReader(object):
         
     def __generate_darned_set(self):
         # Store selected records
-        if self.__source != 'All':
+        if not self.__source == 'ALL':
             selected = []
             with open(self.__darned_path, 'r') as f:
                 for line in f:
@@ -158,7 +159,7 @@ class DarnedReader(object):
                 return selected
                 
         # Store all Darned records (default)
-        elif self.__source == 'all' or self.__source == 'All':
+        elif self.__source == 'ALL':
             darned_list = []
             with open(self.__darned_path, 'r') as f:
                 for line in f:
