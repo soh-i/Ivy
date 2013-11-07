@@ -281,7 +281,7 @@ class __CSVReader(object):
         return os.path.basename(self.__filename)
 
     def ag_count(self):
-    raise NotImplementedError
+        raise NotImplementedError
 
     def other_mutations_count(self):
         raise NotImplementedError
