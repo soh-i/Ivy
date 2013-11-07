@@ -7,12 +7,14 @@ from Ivy.benchmark.benchmark import (
     Benchmark,
     )
 from Ivy.benchmark.plot import BenchmarkPlot
+from Ivy.version import __version__
 import Ivy.utils
 import argparse
 import os.path
 
-__program__ = 'benchmark'
+__program__ = 'ivy_benchmark'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
+__license__ = ''
 __status__ = 'development'
 
 if __name__ == '__main__':
@@ -35,7 +37,7 @@ if __name__ == '__main__':
                         required=True,
                         dest='sp',
                         action='store',
-                        help='set species and genome version (eg. ehuman_hg19) [required]'
+                        help='set species and genome version (eg. human_hg19) [required]'
                     )
     parser.add_argument('--plot',
                        required=False,
