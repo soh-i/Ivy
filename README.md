@@ -20,7 +20,7 @@ python setup.py install
 Called A-to-I editing sites in human brain sample with hg19 genome version, following arguments:
 
 ```
-ivy_benchmark.py --vcf test.vcf --sp human_hg19 --source brain
+ivy_benchmark --vcf test.vcf --sp human_hg19 --source brain --plot
 ```
 * `--vcf`: Set VCF(variant call format) file [required]
 * `--sp`: Set joined string of species and genome version [required]
