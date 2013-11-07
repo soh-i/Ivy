@@ -51,6 +51,7 @@ if __name__ == '__main__':
     gen = DarnedDataGenerator(species=args.sp)
     
     darned_raw_file = gen.saved_abs_path + gen.filename
+    print darned_raw_file
     if not os.path.isfile(darned_raw_file):
         print "fetching from darned..."
         gen.fetch_darned()
@@ -61,7 +62,7 @@ if __name__ == '__main__':
         print "parsing darned..."
         gen.darned_to_csv()
         
-    if args.vcf_file and args.sp and args.source:
+    if args.vcf_file and args.sp:
         ans = DarnedReader(sp=args.sp, source=args.source)
         vcf = VCFReader(args.vcf_file)
         bench = Benchmark(answer=ans.db, predict=vcf.db)
