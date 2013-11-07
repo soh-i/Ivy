@@ -254,17 +254,21 @@ class CSVReader(object):
         csv_recs = []
         with open(self.__filename) as f:
             for line in f:
-                rec = line.split(',')
-                chrom = rec[0]
-                pos = rec[1]
-                if chrom.startswith('chr'):
-                    mod_chr = re.sub(r'^chr', '', chrom, 1)
-                if pos.find(','):
-                    pos.replace(',', '')
-                csv.recs.append(chrom+ ':'+ pos)
+                if not line.startswith("track") and not line.startswith('#'):
+                    rec = line.split(',')
+                    if rec[0].startswith('chr'):
+                        chrom = re.sub(r'^chr', '', rec[0], 1)
+                    if rec[1].find(','):
+                        pos = rec[1].replace(',', '')
+                    csv_recs.append(chrom+ ':'+ pos)
         return csv_recs
 
-                    
+#if __name__ == '__main__':
+#    import sys
+#    csvr = CSVReader(sys.argv[1])
+#    print len(csvr)
+#    print csvr[:10]
+#        
 class Benchmark(object):
     '''
     >>> darned_db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
