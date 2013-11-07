@@ -48,16 +48,19 @@ if __name__ == '__main__':
     parser.add_argument('--version', action='version', version=version)
     
     args = parser.parse_args()
-    generator = DarnedDataGenerator(species=args.sp)
+    gen = DarnedDataGenerator(species=args.sp)
     
-    darned_raw_file = generator.saved_abs_path + generator.filename
+    darned_raw_file = gen.saved_abs_path + gen.filename
+    print darned_raw_file
     if not os.path.isfile(darned_raw_file):
-        generator.fetch_darned()
+        print "fetching from darned..."
+        gen.fetch_darned()
         
-    darned_parsed_csv = generator.out_name
+    darned_parsed_csv = gen.out_name
+    print darned_parsed_csv
     if not os.path.isfile(darned_parsed_csv):
-        generator.darned_to_csv()
-
+        print "parsing darned..."
+        gen.darned_to_csv()
         
     if args.vcf_file and args.sp and args.source:
         ans = DarnedReader(sp=args.sp, source=args.source)
