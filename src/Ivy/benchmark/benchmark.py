@@ -53,16 +53,16 @@ class DarnedDataGenerator(object):
         
         req = Request(self.url)
         try:
-            response = urlopen(req)
+            response = urlopen(req, timeout=10)
         except URLError, e:
             if hasattr(e, 'reason'):
                 print 'We failed to reach a server.'
                 print 'Reason: ', e.reason
-                return False
+                raise URLError(", Could not connect " + req.get_full_url())
             elif hasattr(e, 'code'):
                 print 'The server couldn\'t fulfill the request.'
                 print 'Error code: ', e.code
-                return False
+                raise URLError(", Could not connect " + req.get_full_url())
         else:
             # works fine
             if not os.path.isdir(self.saved_path):
