@@ -3,9 +3,12 @@ import vcf
 import os.path
 import re
 import csv
-import ConfigParser
 from Ivy.utils import Utils
-from urllib2 import Request, urlopen, URLError
+from urllib2 import (
+    Request,
+    urlopen,
+    URLError,
+    )
 from collections import Counter
 
 __program__ = 'benchmark'
