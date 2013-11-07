@@ -4,12 +4,13 @@ import os.path
 import re
 import csv
 import ConfigParser
-from Ivy.utils import *
+from Ivy.utils import Utils
 from urllib2 import Request, urlopen, URLError
 from collections import Counter
 
 __program__ = 'benchmark'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
+__license__ = ''
 __status__ = 'development'
 
 class DarnedDataGenerator(object):
@@ -65,12 +66,12 @@ class DarnedDataGenerator(object):
                 raise URLError(", Could not connect " + req.get_full_url())
         else:
             # works fine
-            if not os.path.isdir(self.saved_path):
-                os.makedirs(self.saved_path)
-                print "Create directories [%s]" % (self.saved_path)
+            if not os.path.isdir(self.saved_abs_path):
+                os.makedirs(self.saved_abs_path)
+                print "Create directory into [%s]" % (self.saved_abs_path)
                 
             print "Dowloading [%s] from [%s] ..." % (self.filename, self.url)
-            with open(self.saved_path + self.filename, "w") as fout:
+            with open(self.saved_abs_path + self.filename, "w") as fout:
                 fout.write(response.read())
             return True
 
@@ -83,12 +84,12 @@ class DarnedDataGenerator(object):
         Generate csv file into the APP_ROOT/data
         '''
         
-        if not os.path.isfile(self.saved_path + self.filename):
-            raise RuntimeError, 'Darned of %s is  not found' % (self.filename)
+        if not os.path.isfile(self.saved_abs_path + self.filename):
+            raise RuntimeError, 'Darned of %s is not found' % (self.filename)
 
-        if not os.path.isdir(self.saved_path):
+        if not os.path.isdir(self.saved_abs_path):
             print "Create data dir"
-            os.makedirs(self.saved_path)
+            os.makedirs(self.saved_abs_path)
         
         if os.path.isfile(self.out_name):
             print "%s is already exisit" % (self.out_name)
