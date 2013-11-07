@@ -18,7 +18,7 @@ __license__ = ''
 __status__ = 'development'
 
 if __name__ == '__main__':
-    version = '0.0.1'
+    version = __version__
     desc = "Benchmarking test for detected RNA editing sites based on HTSeq data."
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--vcf',
@@ -51,7 +51,6 @@ if __name__ == '__main__':
     gen = DarnedDataGenerator(species=args.sp)
     
     darned_raw_file = gen.saved_abs_path + gen.filename
-    print darned_raw_file
     if not os.path.isfile(darned_raw_file):
         print "fetching from darned..."
         gen.fetch_darned()
