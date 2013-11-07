@@ -248,7 +248,14 @@ class VCFReader(object):
         return i
         
 
-class CSVReader(object):
+class __CSVReader(object):
+    '''
+    CSVReader class provides to generate array of CSV file
+    >>> csv = VCFReader(path_to_csv_file)
+    >>> csv.db
+    Returns array of csv file
+    '''
+    
     def __init__(self, filename):
         self.__filename = filename
         self.db = self.__genrate_csv_set()
@@ -270,8 +277,15 @@ class CSVReader(object):
     def size(self):
         return self.__size
 
-    def filename(self):
+    def name(self):
         return os.path.basename(self.__filename)
+
+    def ag_count(self):
+    raise NotImplementedError
+
+    def other_mutations_count(self):
+        raise NotImplementedError
+        
 
 #if __name__ == '__main__':
 #    import sys
