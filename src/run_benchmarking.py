@@ -3,7 +3,6 @@ from Ivy.benchmark.benchmark import (
     DarnedReader,
     VCFReader,
     Benchmark,
-    CSVReader,
     )
 from Ivy.benchmark.plot import BenchmarkPlot
 from Ivy.version import __version__
