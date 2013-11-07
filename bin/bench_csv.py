@@ -2,7 +2,7 @@ from Ivy.benchmark.benchmark import (
     DarnedDataGenerator,
     DarnedReader,
     Benchmark,
-    CSVReader,
+    __CSVReader,
     )
 from Ivy.benchmark.plot import BenchmarkPlot
 from Ivy.version import __version__
@@ -17,7 +17,7 @@ __status__ = 'development'
 
 def run():
     version = __version__
-    desc = "For CSV data"
+    desc = "Benchmarking test For CSV data"
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--csv',
                         required=True,
@@ -60,7 +60,7 @@ def run():
         
     if args.csv_file and args.sp:
         ans = DarnedReader(sp=args.sp, source=args.source)
-        csv = CSVReader(args.csv_file)
+        csv = __CSVReader(args.csv_file)
         bench = Benchmark(answer=ans.db, predict=csv.db)
         
         print "Species:%s,DB:%s,VCF:%s,Precision:%f,Recall:%f,F-measure:%f,AGs:%d,Others:%d,AnsCount:%d" % (
