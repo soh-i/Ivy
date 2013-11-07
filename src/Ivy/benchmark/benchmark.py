@@ -264,14 +264,22 @@ class CSVReader(object):
                     if rec[1].find(','):
                         pos = rec[1].replace(',', '')
                     csv_recs.append(chrom+ ':'+ pos)
+        self.__size = len(csv_recs)
         return csv_recs
+
+    def size(self):
+        return self.__size
+
+    def filename(self):
+        return os.path.basename(self.__filename)
 
 #if __name__ == '__main__':
 #    import sys
 #    csvr = CSVReader(sys.argv[1])
 #    print len(csvr)
 #    print csvr[:10]
-#        
+#
+
 class Benchmark(object):
     '''
     >>> darned_db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
