@@ -58,7 +58,7 @@ def run():
         print "parsing darned..."
         gen.darned_to_csv()
         
-    if args.vcf_file and args.sp:
+    if args.csv_file and args.sp:
         ans = DarnedReader(sp=args.sp, source=args.source)
         csv = CSVReader(args.csv_file)
         bench = Benchmark(answer=ans.db, predict=csv.db)
