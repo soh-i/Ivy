@@ -270,7 +270,7 @@ class __CSVReader(object):
                         chrom = re.sub(r'^chr', '', rec[0], 1)
                     if rec[1].find(','):
                         pos = rec[1].replace(',', '')
-                    csv_recs.append(chrom+ ':'+ pos)
+                    csv_recs.append(chrom + ':' + pos)
         self.__size = len(csv_recs)
         return csv_recs
 
@@ -289,10 +289,13 @@ class __CSVReader(object):
 
 #if __name__ == '__main__':
 #    import sys
-#    csvr = CSVReader(sys.argv[1])
-#    print len(csvr)
-#    print csvr[:10]
-#
+#    csv = __CSVReader(sys.argv[1])
+#    print csv.size()
+#    print csv.name()
+#    print csv.db[:10]
+#    
+
+
 
 class Benchmark(object):
     '''
