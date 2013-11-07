@@ -244,6 +244,27 @@ class VCFReader(object):
                 i += self.__substitutions[k]
         return i
         
+
+class CSVReader(object):
+    def __init__(self, filename):
+        self.__filename = filename
+        self.db = self.__genrate_csv_set()
+        
+    def __genrate_csv_set(self):
+        csv_recs = []
+        with open(self.__filename) as f:
+            for line in f:
+                rec = line.split(',')
+                chrom = rec[0]
+                pos = rec[1]
+                if chrom.startswith('chr'):
+                    mod_chr = re.sub(r'^chr', '', chrom, 1)
+                if pos.find(','):
+                    pos.replace(',', '')
+                csv.recs.append(chrom+ ':'+ pos)
+        return csv_recs
+
+                    
 class Benchmark(object):
     '''
     >>> darned_db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
