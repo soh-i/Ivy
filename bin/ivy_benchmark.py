@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 
-from Ivy.benchmark.benchmark import *
+from Ivy.benchmark.benchmark import (
+    DarnedDataGenerator,
+    DarnedReader,
+    VCFReader,
+    Benchmark,
+    )
 from Ivy.benchmark.plot import BenchmarkPlot
 import Ivy.utils
 import argparse
