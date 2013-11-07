@@ -311,8 +311,9 @@ class Benchmark(object):
     '''
     
     def __init__(self, answer=None, predict=None):
-        self.answer = set(answer)
-        self.predict = set(predict)
+        
+        self.answer = set([_.split(":")[:2] for _ in answer])
+        self.predict = set([_.split(":")[:2] for _ in predict])
         
         if len(self.answer) == 0:
             raise ValueError, 'Answer set has NO entory'
