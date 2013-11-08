@@ -72,44 +72,63 @@ def run():
         print "Species,DB,VCF,Precision,Recall,F-measure,AGs,Others,AnsCount"
         
         ans = DarnedReader(sp=args.sp, source=args.source)
+        precision = []
+        recall = []
+        f_measure = []
         for v in args.vcf_file:
             vcf = VCFReader(v)
             bench = Benchmark(answer=ans.db, predict=vcf.db)
+            p = bench.precision()
+            r = bench.recall()
+            f = bench.f_measure()
             
             print "%s,%s,%s,%f,%f,%f,%d,%d,%d" % (
                 ans.sp()[0],
                 ans.db_name(),
                 vcf.vcf_name(),
-                bench.precision(),
-                bench.recall(),
-                bench.f_measure(),
+                p, r, f,
                 vcf.ag_count(),
                 vcf.other_mutations_count(),
                 ans.size())
+            
+            precision.append(float(p))
+            recall.append(float(r))
+            f_measure.append(float(f))
+            
+        if args.plot:
+            names = [os.path.basename(_).split('.')[0] for _ in args.vcf_file]
+            bplt = BenchmarkPlot('plot_' + ','.join(names))
+            bplt.plot_accuracy(lab=args.vcf_file, recall=r, precision=p)
             
     # use CSV files
     elif args.csv_file and args.sp:
         print "Species,DB,CSV,Precision,Recall,F-measure,AnsCount"
 
         ans = DarnedReader(sp=args.sp, source=args.source)
+        precision = []
+        recall = []
+        f_measure = []
+        
         for c in args.csv_file:
             csv = __CSVReader(c)
             bench = Benchmark(answer=ans.db, predict=csv.db)
+            p = bench.precision()
+            r = bench.recall()
+            f = bench.f_measure()
 
             print "%s,%s,%s,%f,%f,%f,%d" % (
                 ans.sp()[0],
                 ans.db_name(),
                 csv.name(),
-                bench.precision(),
-                bench.recall(),
-                bench.f_measure(),
+                p, r, f,
                 ans.size())
-            
+
+            precision.append(float(p))
+            recall.append(float(r))
+            f_measure.append(float(f))
+        
         if args.plot:
-            name = os.path.basename(args.vcf_file).split('.')[0]
-            bplt = BenchmarkPlot('plot_' + name)
-            bplt.plot_accuracy(lab=str(vcf.vcf_name()),
-                               recall=float(bench.recall()),
-                               precision=float(bench.precisionl()))
-            
+            names = [os.path.basename(_).split('.')[0] for _ in args.csv_file]
+            bplt = BenchmarkPlot('plot_' + ','.join(names))
+            bplt.plot_accuracy(lab=args.csv_file, recall=r, precision=p)
             
