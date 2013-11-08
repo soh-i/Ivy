@@ -71,8 +71,8 @@ def run():
             name = os.path.basename(args.csv_file).split('.')[0]
             bplt = BenchmarkPlot('plot_' + name)
             bplt.plot_accuracy(lab=str(csv.name()),
-                               recall=int(bench.recall()),
-                               precision=int(bench.recall()))
+                               recall=float(bench.recall()),
+                               precision=float(bench.precision()))
             
             
 if __name__ == '__main__':
