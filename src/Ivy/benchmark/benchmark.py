@@ -258,9 +258,9 @@ class __CSVReader(object):
     
     def __init__(self, filename):
         self.__filename = filename
-        self.db = self.__genrate_csv_set()
+        self.db = self.__generate_csv_set()
         
-    def __genrate_csv_set(self):
+    def __generate_csv_set(self):
         csv_recs = []
         with open(self.__filename) as f:
             for line in f:
