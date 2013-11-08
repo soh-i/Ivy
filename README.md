@@ -25,6 +25,11 @@ Called A-to-I editing sites with human brain transcriptome with hg19 genome vers
 ```
 ivy_benchmark --vcf test.vcf --sp human_hg19 --source brain --plot
 ```
+
+Recall/Precision plot outputs in your directory as PDF.
+![](https://f.cloud.github.com/assets/1855860/1499311/68a0ae2a-4855-11e3-8555-6ff208805de8.png)
+
+
 * `--vcf`: Set VCF(variant call format) file [required]
 * `--sp`: Set joined string of species and genome version [required]
 * `--source`: Set specific smaple/tissues/cell line name [default: All]
