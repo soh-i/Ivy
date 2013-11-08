@@ -310,12 +310,14 @@ class Benchmark(object):
     '''
     
     def __init__(self, answer=None, predict=None):
-
-        # TODO: fix here! to convert list to set
-        #self.answer = set([_.split(":")[:2] for _ in answer])
-        #self.predict = set([_.split(":")[:2] for _ in predict])
-        self.answer = set(answer)
-        self.predict = set(predict)
+        if not isinstance(answer, list):
+            raise
+        elif not isinstance(predict, list):
+            raise
+                      
+        # remove string(tissue/sample info) except chromosome and position
+        self.answer = set([":".join(_.split(":")[:2]) for _ in answer])
+        self.predict = set([":".join(_.split(":")[:2]) for _ in predict])
         
         if len(self.answer) == 0:
             raise ValueError, 'Answer data set has no entory'
@@ -355,9 +357,3 @@ class Benchmark(object):
             _recall = 0
         finally:
             return _recall
-
-if __name__ == '__main__':
-    b = Benchmark(answer=[0,2,3,0,1], predict=[0,100,1000,1,9])
-    print b.precision()
-    print b.recall()
-    print b.f_measure()
