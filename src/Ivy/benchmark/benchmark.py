@@ -285,17 +285,8 @@ class __CSVReader(object):
 
     def other_mutations_count(self):
         raise NotImplementedError
+
         
-
-#if __name__ == '__main__':
-#    import sys
-#    csv = __CSVReader(sys.argv[1])
-#    print csv.size()
-#    print csv.name()
-#    print csv.db[:10]
-#    
-
-
 class Benchmark(object):
     '''
     >>> darned_db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
@@ -311,10 +302,10 @@ class Benchmark(object):
     
     def __init__(self, answer=None, predict=None):
         if not isinstance(answer, list):
-            raise
+            raise TypeError, "[%s] is given, data must be list alone" % (type(answer))
         elif not isinstance(predict, list):
-            raise
-                      
+            raise TypeError, "[%s] is given, data must be list alone" % (type(predict)
+            
         # remove string(tissue/sample info) except chromosome and position
         self.answer = set([":".join(_.split(":")[:2]) for _ in answer])
         self.predict = set([":".join(_.split(":")[:2]) for _ in predict])
