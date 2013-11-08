@@ -3,6 +3,12 @@ mlab.use('Agg')
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 
+__program__ = 'ivy_benchmark'
+__author__ = 'Soh Ishiguro <yukke@g-language.org>'
+__license__ = ''
+__status__ = 'development'
+
+
 class BenchmarkPlot(object):
     '''
     BenchmarkPlot class is to vizualize some stats of benchmarking results.

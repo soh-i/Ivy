@@ -34,32 +34,3 @@ if __name__ == '__main__':
         #print "%s\t%s\t%s\t%s\t%s\t%s\t%s" % \
             #(rna['CHROM'], rna['POS'], rna['REF'], rna['raw_coverage'], rna['nodel_coverage'], rna['prop_coverage'], rna['prop_nodel_coverage'])
         print [str(_)+ ":"+ str(rna[_])for _ in rna]
-        
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
