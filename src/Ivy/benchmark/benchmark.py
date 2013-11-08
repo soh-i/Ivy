@@ -312,8 +312,10 @@ class Benchmark(object):
     def __init__(self, answer=None, predict=None):
 
         # TODO: fix here! to convert list to set
-        self.answer = set([_.split(":")[:2] for _ in answer])
-        self.predict = set([_.split(":")[:2] for _ in predict])
+        #self.answer = set([_.split(":")[:2] for _ in answer])
+        #self.predict = set([_.split(":")[:2] for _ in predict])
+        self.answer = set(answer)
+        self.predict = set(predict)
         
         if len(self.answer) == 0:
             raise ValueError, 'Answer data set has no entory'
@@ -330,18 +332,18 @@ class Benchmark(object):
             _precision = len(self.intersect)/len(self.predict)
             return _precision
         except ZeroDivisionError:
-            pass
+            _precision = 0
         finally:
-            return 0
+            return _precision
             
     def recall(self):
         try:
             _recall = len(self.intersect)/len(self.answer)
             return _recall
         except ZeroDivisionError:
-            pass
+            _recall = 0
         finally:
-            return 0
+            return _recall
             
     def f_measure(self):
         _precision = self.precision()
@@ -350,6 +352,12 @@ class Benchmark(object):
             _f = 2*_recall*_precision/(_recall+_precision)
             return _f
         except ZeroDivisionError:
-            pass
+            _recall = 0
         finally:
-            return 0
+            return _recall
+
+if __name__ == '__main__':
+    b = Benchmark(answer=[0,2,3,0,1], predict=[0,100,1000,1,9])
+    print b.precision()
+    print b.recall()
+    print b.f_measure()
