@@ -3,9 +3,12 @@ import vcf
 import os.path
 import re
 import csv
-import ConfigParser
 from Ivy.utils import Utils
-from urllib2 import Request, urlopen, URLError
+from urllib2 import (
+    Request,
+    urlopen,
+    URLError,
+    )
 from collections import Counter
 
 __program__ = 'benchmark'
@@ -245,7 +248,14 @@ class VCFReader(object):
         return i
         
 
-class CSVReader(object):
+class __CSVReader(object):
+    '''
+    CSVReader class provides to generate array of CSV file
+    >>> csv = VCFReader(path_to_csv_file)
+    >>> csv.db
+    Returns array of csv file
+    '''
+    
     def __init__(self, filename):
         self.__filename = filename
         self.db = self.__genrate_csv_set()
@@ -260,15 +270,32 @@ class CSVReader(object):
                         chrom = re.sub(r'^chr', '', rec[0], 1)
                     if rec[1].find(','):
                         pos = rec[1].replace(',', '')
-                    csv_recs.append(chrom+ ':'+ pos)
+                    csv_recs.append(chrom + ':' + pos)
+        self.__size = len(csv_recs)
         return csv_recs
+
+    def size(self):
+        return self.__size
+
+    def name(self):
+        return os.path.basename(self.__filename)
+
+    def ag_count(self):
+        raise NotImplementedError
+
+    def other_mutations_count(self):
+        raise NotImplementedError
+        
 
 #if __name__ == '__main__':
 #    import sys
-#    csvr = CSVReader(sys.argv[1])
-#    print len(csvr)
-#    print csvr[:10]
-#        
+#    csv = __CSVReader(sys.argv[1])
+#    print csv.size()
+#    print csv.name()
+#    print csv.db[:10]
+#    
+
+
 class Benchmark(object):
     '''
     >>> darned_db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
@@ -283,8 +310,10 @@ class Benchmark(object):
     '''
     
     def __init__(self, answer=None, predict=None):
-        self.answer = set(answer)
-        self.predict = set(predict)
+
+        # TODO: fix here! to convert list to set
+        self.answer = set([_.split(":")[:2] for _ in answer])
+        self.predict = set([_.split(":")[:2] for _ in predict])
         
         if len(self.answer) == 0:
             raise ValueError, 'Answer set has NO entory'
