@@ -264,13 +264,17 @@ class __CSVReader(object):
         csv_recs = []
         with open(self.__filename) as f:
             for line in f:
-                if not line.startswith("track") and not line.startswith('#'):
+                #if not re.match('[Cc]hr', line) and not line.startswith("#"):
+                if not line.startswith("track") and not line.startswith('#') \
+                   and not line.startswith("Chromosome"):
                     rec = line.split(',')
                     if rec[0].startswith('chr'):
-                        chrom = re.sub(r'^chr', '', rec[0], 1)
+                        _chrom = re.sub(r'^chr', '', rec[0], 1)
+                        str(_chrom)
                     if rec[1].find(','):
-                        pos = rec[1].replace(',', '')
-                    csv_recs.append(chrom + ':' + pos)
+                        _pos = rec[1].replace(',', '')
+                        str(_pos)
+                    csv_recs.append(_chrom + ':' + _pos)
         self.__size = len(csv_recs)
         return csv_recs
 
