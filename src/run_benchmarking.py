@@ -17,7 +17,6 @@ __license__ = ''
 __status__ = 'development'
 
 def run():
-    version = __version__
     desc = "Benchmarking test for detected RNA editing sites based on HTSeq data."
     
     parser = argparse.ArgumentParser(description=desc)
@@ -53,7 +52,7 @@ def run():
                        action='store_true',
                        help='plot benchmarking stats (default:False)',
                    )
-    parser.add_argument('--version', action='version', version=version)
+    parser.add_argument('--version', action='version', version=__version__)
     
     args = parser.parse_args()
     gen = DarnedDataGenerator(species=args.sp)
@@ -67,7 +66,8 @@ def run():
     if not os.path.isfile(darned_parsed_csv):
         print "parsing darned..."
         gen.darned_to_csv()
-    
+
+    # use VCF files
     if args.vcf_file and args.sp:
         print "Species,DB,VCF,Precision,Recall,F-measure,AGs,Others,AnsCount"
         
@@ -85,8 +85,9 @@ def run():
                 bench.f_measure(),
                 vcf.ag_count(),
                 vcf.other_mutations_count(),
-                ans.size()
-            )
+                ans.size())
+            
+    # use CSV files
     elif args.csv_file and args.sp:
         print "Species,DB,CSV,Precision,Recall,F-measure,AnsCount"
 
@@ -102,8 +103,7 @@ def run():
                 bench.precision(),
                 bench.recall(),
                 bench.f_measure(),
-                ans.size()
-            )
+                ans.size())
             
         if args.plot:
             name = os.path.basename(args.vcf_file).split('.')[0]
