@@ -3,6 +3,7 @@ from Ivy.benchmark.benchmark import (
     DarnedReader,
     VCFReader,
     Benchmark,
+    __CSVReader,
     )
 from Ivy.benchmark.plot import BenchmarkPlot
 from Ivy.version import __version__
@@ -18,14 +19,22 @@ __status__ = 'development'
 def run():
     version = __version__
     desc = "Benchmarking test for detected RNA editing sites based on HTSeq data."
+    
     parser = argparse.ArgumentParser(description=desc)
-    parser.add_argument('--vcf',
-                        required=True,
-                        dest='vcf_file',
-                        action='store',
-                        nargs='+',
-                        help='set VCF file [required]'
-                    )
+    group = parser.add_mutually_exclusive_group(required=True)
+    
+    group.add_argument('--vcf',
+                       dest='vcf_file',
+                       action='store',
+                       nargs='+',
+                       help='set VCF file [required]'
+                   )
+    group.add_argument('--csv',
+                       dest='csv_file',
+                       action='store',
+                       nargs='+',
+                       help='set CSV file [required]'
+                   )
     parser.add_argument('--source',
                         required=False,
                         dest='source',
@@ -58,11 +67,11 @@ def run():
     if not os.path.isfile(darned_parsed_csv):
         print "parsing darned..."
         gen.darned_to_csv()
-
+    
     if args.vcf_file and args.sp:
         print "Species,DB,VCF,Precision,Recall,F-measure,AGs,Others,AnsCount"
-        ans = DarnedReader(sp=args.sp, source=args.source)
         
+        ans = DarnedReader(sp=args.sp, source=args.source)
         for v in args.vcf_file:
             vcf = VCFReader(v)
             bench = Benchmark(answer=ans.db, predict=vcf.db)
@@ -78,7 +87,24 @@ def run():
                 vcf.other_mutations_count(),
                 ans.size()
             )
+    elif args.csv_file and args.sp:
+        print "Species,DB,CSV,Precision,Recall,F-measure,AnsCount"
 
+        ans = DarnedReader(sp=args.sp, source=args.source)
+        for c in args.csv_file:
+            csv = __CSVReader(c)
+            bench = Benchmark(answer=ans.db, predict=csv.db)
+
+            print "%s,%s,%s,%f,%f,%f,%d" % (
+                ans.sp()[0],
+                ans.db_name(),
+                csv.name(),
+                bench.precision(),
+                bench.recall(),
+                bench.f_measure(),
+                ans.size()
+            )
+            
         if args.plot:
             name = os.path.basename(args.vcf_file).split('.')[0]
             bplt = BenchmarkPlot('plot_' + name)
