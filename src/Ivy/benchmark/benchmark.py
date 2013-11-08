@@ -258,9 +258,9 @@ class __CSVReader(object):
     
     def __init__(self, filename):
         self.__filename = filename
-        self.db = self.__genrate_csv_set()
+        self.db = self.__generate_csv_set()
         
-    def __genrate_csv_set(self):
+    def __generate_csv_set(self):
         csv_recs = []
         with open(self.__filename) as f:
             for line in f:
@@ -285,17 +285,8 @@ class __CSVReader(object):
 
     def other_mutations_count(self):
         raise NotImplementedError
+
         
-
-#if __name__ == '__main__':
-#    import sys
-#    csv = __CSVReader(sys.argv[1])
-#    print csv.size()
-#    print csv.name()
-#    print csv.db[:10]
-#    
-
-
 class Benchmark(object):
     '''
     >>> darned_db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
@@ -310,38 +301,42 @@ class Benchmark(object):
     '''
     
     def __init__(self, answer=None, predict=None):
-
-        # TODO: fix here! to convert list to set
-        self.answer = set([_.split(":")[:2] for _ in answer])
-        self.predict = set([_.split(":")[:2] for _ in predict])
+        if not isinstance(answer, list):
+            raise TypeError, "[%s] is given, data must be list alone" % (type(answer))
+        elif not isinstance(predict, list):
+            raise TypeError, "[%s] is given, data must be list alone" % (type(predict))
+            
+        # remove string(tissue/sample info) except chromosome and position
+        self.answer = set([":".join(_.split(":")[:2]) for _ in answer])
+        self.predict = set([":".join(_.split(":")[:2]) for _ in predict])
         
         if len(self.answer) == 0:
-            raise ValueError, 'Answer set has NO entory'
+            raise ValueError, 'Answer data set has no entory'
         elif len(self.predict) == 0:
-            raise ValueError, 'predict set has NO entory'
+            raise ValueError, 'Candidate data set has no entory'
                 
         self.intersect = self.answer.intersection(self.predict)
 
     def __str__(self):
-        return "DB[%d], Predict[%d]\n" % (len(self.answer), len(self.predict))
+        return "Answer set[%d], Candidate set[%d]\n" % (len(self.answer), len(self.predict))
 
     def precision(self):
         try:
             _precision = len(self.intersect)/len(self.predict)
             return _precision
         except ZeroDivisionError:
-            pass
+            _precision = 0
         finally:
-            return 0
+            return _precision
             
     def recall(self):
         try:
             _recall = len(self.intersect)/len(self.answer)
             return _recall
         except ZeroDivisionError:
-            pass
+            _recall = 0
         finally:
-            return 0
+            return _recall
             
     def f_measure(self):
         _precision = self.precision()
@@ -350,6 +345,6 @@ class Benchmark(object):
             _f = 2*_recall*_precision/(_recall+_precision)
             return _f
         except ZeroDivisionError:
-            pass
+            _recall = 0
         finally:
-            return 0
+            return _recall
