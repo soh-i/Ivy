@@ -264,7 +264,6 @@ class __CSVReader(object):
         csv_recs = []
         with open(self.__filename) as f:
             for line in f:
-                #if not re.match('[Cc]hr', line) and not line.startswith("#"):
                 if not line.startswith("track") and not line.startswith('#') \
                    and not line.startswith("Chromosome"):
                     rec = line.split(',')
