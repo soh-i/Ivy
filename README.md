@@ -13,11 +13,14 @@ python setup.py test
 python setup.py install
 ```
 
-## Usage
-### `ivy_benchmark`: test for detection accuracy
-`ivy_benchmark` performs a benchmarking test of detected A-to-I editing sites in _H. sapiens_, _M. musclus_, _D. melanogaster_ to evaluate accuracy using recall, recision and F-measure score. We used DARNED database (Kiran _et al_., 2013) as true known editing sites, DARNED provides the comprehensive list of the previously described RNA editing sites.
-    
-Called A-to-I editing sites in human brain sample with hg19 genome version, following arguments:
+## Benchmarking test
+### ivy_benchmark: detection accuracy testing
+ivy_benchmark performs a benchmarking test of detected A-to-I editing sites in _H. sapiens_, _M. musclus_, _D. melanogaster_ to evaluate accuracy using recall, recision and F-measure score, which are defined as follows: (...).
+
+For benchmarking test, we used DARNED database (Kiran _et al_., 2013, http://beamish.ucc.ie) as true known editing sites. DARNED db  provides the comprehensive list of the previously identified RNA editing sites by researchers.
+
+#### Usage    
+Called A-to-I editing sites with human brain transcriptome with hg19 genome version, following arguments:
 
 ```
 ivy_benchmark --vcf test.vcf --sp human_hg19 --source brain --plot
