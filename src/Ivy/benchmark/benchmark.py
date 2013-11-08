@@ -304,7 +304,7 @@ class Benchmark(object):
         if not isinstance(answer, list):
             raise TypeError, "[%s] is given, data must be list alone" % (type(answer))
         elif not isinstance(predict, list):
-            raise TypeError, "[%s] is given, data must be list alone" % (type(predict)
+            raise TypeError, "[%s] is given, data must be list alone" % (type(predict))
             
         # remove string(tissue/sample info) except chromosome and position
         self.answer = set([":".join(_.split(":")[:2]) for _ in answer])
