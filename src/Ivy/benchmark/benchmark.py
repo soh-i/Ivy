@@ -316,14 +316,14 @@ class Benchmark(object):
         self.predict = set([_.split(":")[:2] for _ in predict])
         
         if len(self.answer) == 0:
-            raise ValueError, 'Answer set has NO entory'
+            raise ValueError, 'Answer data set has no entory'
         elif len(self.predict) == 0:
-            raise ValueError, 'predict set has NO entory'
+            raise ValueError, 'Candidate data set has no entory'
                 
         self.intersect = self.answer.intersection(self.predict)
 
     def __str__(self):
-        return "DB[%d], Predict[%d]\n" % (len(self.answer), len(self.predict))
+        return "Answer set[%d], Candidate set[%d]\n" % (len(self.answer), len(self.predict))
 
     def precision(self):
         try:
