@@ -62,8 +62,6 @@ def run():
         ans = DarnedReader(sp=args.sp, source=args.source)
         csv = __CSVReader(args.csv_file)
         bench = Benchmark(answer=ans.db, predict=csv.db)
-        print csv.db[:10]
-        print ans.db[:10]
         
         print "Species:%s,DB:%s,VCF:%s,Precision:%f,Recall:%f,F-measure:%f,AnsCount:%d" % (
             ans.sp()[0], ans.db_name(), csv.name(),
