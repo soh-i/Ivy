@@ -42,7 +42,7 @@ class BenchmarkPlot(object):
         plt.plot(self.precision, self.recall,
                  marker='o', color="black",
                  linestyle=".", markersize=10,
-        markeredgecolor="black", label=self.lab)
+                 markeredgecolor="black", label=self.lab)
         plt.title("Benchmarking test for detection accuracy in " + self.sp)
         
         plt.xlabel("Precision")
