@@ -3,9 +3,12 @@ import vcf
 import os.path
 import re
 import csv
-import ConfigParser
 from Ivy.utils import Utils
-from urllib2 import Request, urlopen, URLError
+from urllib2 import (
+    Request,
+    urlopen,
+    URLError,
+    )
 from collections import Counter
 
 __program__ = 'benchmark'
@@ -244,6 +247,49 @@ class VCFReader(object):
                 i += self.__substitutions[k]
         return i
         
+
+class __CSVReader(object):
+    '''
+    CSVReader class provides to generate array of CSV file
+    >>> csv = VCFReader(path_to_csv_file)
+    >>> csv.db
+    Returns array of csv file
+    '''
+    
+    def __init__(self, filename):
+        self.__filename = filename
+        self.db = self.__generate_csv_set()
+        
+    def __generate_csv_set(self):
+        csv_recs = []
+        with open(self.__filename) as f:
+            for line in f:
+                if not line.startswith("track") and not line.startswith('#') \
+                   and not line.startswith("Chromosome"):
+                    rec = line.split(',')
+                    if rec[0].startswith('chr'):
+                        _chrom = re.sub(r'^chr', '', rec[0], 1)
+                        str(_chrom)
+                    if rec[1].find(','):
+                        _pos = rec[1].replace(',', '')
+                        str(_pos)
+                    csv_recs.append(_chrom + ':' + _pos)
+        self.__size = len(csv_recs)
+        return csv_recs
+
+    def size(self):
+        return self.__size
+
+    def name(self):
+        return os.path.basename(self.__filename)
+
+    def ag_count(self):
+        raise NotImplementedError
+
+    def other_mutations_count(self):
+        raise NotImplementedError
+
+        
 class Benchmark(object):
     '''
     >>> darned_db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
@@ -258,36 +304,42 @@ class Benchmark(object):
     '''
     
     def __init__(self, answer=None, predict=None):
-        self.answer = set(answer)
-        self.predict = set(predict)
+        if not isinstance(answer, list):
+            raise TypeError, "[%s] is given, data must be list alone" % (type(answer))
+        elif not isinstance(predict, list):
+            raise TypeError, "[%s] is given, data must be list alone" % (type(predict))
+            
+        # remove string(tissue/sample info) except chromosome and position
+        self.answer = set([":".join(_.split(":")[:2]) for _ in answer])
+        self.predict = set([":".join(_.split(":")[:2]) for _ in predict])
         
         if len(self.answer) == 0:
-            raise ValueError, 'Answer set has NO entory'
+            raise ValueError, 'Answer data set has no entory'
         elif len(self.predict) == 0:
-            raise ValueError, 'predict set has NO entory'
+            raise ValueError, 'Candidate data set has no entory'
                 
         self.intersect = self.answer.intersection(self.predict)
 
     def __str__(self):
-        return "DB[%d], Predict[%d]\n" % (len(self.answer), len(self.predict))
+        return "Answer set[%d], Candidate set[%d]\n" % (len(self.answer), len(self.predict))
 
     def precision(self):
         try:
             _precision = len(self.intersect)/len(self.predict)
             return _precision
         except ZeroDivisionError:
-            pass
+            _precision = 0
         finally:
-            return 0
+            return _precision
             
     def recall(self):
         try:
             _recall = len(self.intersect)/len(self.answer)
             return _recall
         except ZeroDivisionError:
-            pass
+            _recall = 0
         finally:
-            return 0
+            return _recall
             
     def f_measure(self):
         _precision = self.precision()
@@ -296,6 +348,6 @@ class Benchmark(object):
             _f = 2*_recall*_precision/(_recall+_precision)
             return _f
         except ZeroDivisionError:
-            pass
+            _recall = 0
         finally:
-            return 0
+            return _recall
