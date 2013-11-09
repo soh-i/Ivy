@@ -29,15 +29,27 @@ class BenchmarkPlot(object):
         self.recall = recall
         self.precision = precision
         fig = plt.figure()
+        
+        axes = plt.subplot(111)
+        axes.spines['right'].set_color('none')
+        axes.spines['top'].set_color('none')
+        axes.xaxis.set_ticks_position('bottom')
+        axes.yaxis.set_ticks_position('left')
+        
+        axes.xaxis.grid(False)
+        axes.yaxis.grid(False)
+        
         plt.plot(self.precision, self.recall,
-                 marker='o', color="green",
+                 marker='o', color="black",
                  linestyle=".", markersize=10,
-                 markeredgecolor="green", label=self.lab)
+        markeredgecolor="black", label=self.lab)
         plt.title("Benchmarking test for detection accuracy in " + self.sp)
+        
         plt.xlabel("Precision")
         plt.ylabel("Recall")
         plt.ylim(0.0,1.0)
         plt.xlim(0.0,1.0)
+        plt.grid(color="gray")
         plt.legend()
         fig.savefig(self.filename + '.pdf')
 
