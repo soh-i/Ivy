@@ -15,8 +15,9 @@ class BenchmarkPlot(object):
     >>> bplt = BenchmarkPlot("out_file")
     '''
     
-    def __init__(self, filename):
+    def __init__(self, filename, sp):
         self.filename = filename
+        self.sp = sp
         
     def plot_accuracy(self, lab=None, recall=0, precision=0):
         '''
@@ -32,7 +33,7 @@ class BenchmarkPlot(object):
                  marker='o', color="green",
                  linestyle=".", markersize=10,
                  markeredgecolor="green", label=self.lab)
-        plt.title("Benchmarking test")
+        plt.title("Benchmarking test for detection accuracy in " + self.sp)
         plt.xlabel("Precision")
         plt.ylabel("Recall")
         plt.ylim(0.0,1.0)
