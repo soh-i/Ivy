@@ -1,20 +1,19 @@
 library("ggplot2")
 library("reshape2")
 
-#data <- read.table("/Volumes/TTCK.cs0/benchmark/results/bench_DARNED_mouse.log", header=T)
-sp <- ""
+data <- read.table("ivy_bench.log", header=T, sep=",")
 
 g <- ggplot(
-  lympho_peng,
+  data,
   aes(x=Precision, y=Recall)) +
-  #geom_point(aes(colour=Label), size=8, shape=19) +
-  geom_point(aes(colour=AnswerSet), size=4, shape=19) +
+  geom_point(aes(colour=CSV), size=10, shape=19) +
   ylim(0,1) +
   xlim(0,1) +
-  labs(#title=paste("Benchmarking test for", sp, "data set"),# sp, "data sets"),
+  labs(
+    title=paste("Benchmarking test for", "Human", "data set"),
     x="Precision",
     y="Recall"
-  ) + #scale_colour_brewer(palette="Set2") + 
+  ) + scale_colour_brewer(palette="Set2") + 
   theme_classic(base_size=20, base_family="Helvetica") +
   coord_fixed(ratio=1) +
   theme(axis.line.x=element_line(size=1),
@@ -28,7 +27,6 @@ g <- ggplot(
         legend.background=element_rect(fill="transparent", colour="transparent"),
         panel.background=element_rect(fill="transparent", colour="transparent")
   )
-
 plot(g)
 
 #ggsave(filename=(paste("benchmarking_human.png")), plot=g, height=10, width=10)
