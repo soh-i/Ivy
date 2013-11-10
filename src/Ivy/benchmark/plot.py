@@ -7,8 +7,8 @@ __program__ = 'ivy_benchmark'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
-
-
+    
+    
 class BenchmarkPlot(object):
     '''
     BenchmarkPlot class is to vizualize some stats of benchmarking results.
@@ -35,22 +35,45 @@ class BenchmarkPlot(object):
         axes.spines['top'].set_color('none')
         axes.xaxis.set_ticks_position('bottom')
         axes.yaxis.set_ticks_position('left')
-        
         axes.xaxis.grid(False)
         axes.yaxis.grid(False)
+        axes.patch.set_facecolor('0.9')
+        axes.set_axisbelow(True)
+
+        plt.grid(True, which='minor', color="0.92", linestyle="-", linewidth=0.7)
+        plt.grid(True, which='major', color="w", linestyle="-", linewidth=1.2)
         
-        plt.plot(self.precision, self.recall,
-                 marker='o', color="black",
-                 linestyle=".", markersize=10,
-                 markeredgecolor="black", label=self.lab)
-        plt.title("Benchmarking test for detection accuracy in " + self.sp)
         
         plt.xlabel("Precision")
         plt.ylabel("Recall")
         plt.ylim(0.0,1.0)
         plt.xlim(0.0,1.0)
-        plt.grid(color="gray")
+        
+        # remove axis border line
+        for child in axes.get_children():
+            # TODO: do not use mlab
+            import matplotlib
+            if isinstance(child, matplotlib.spines.Spine):
+                child.set_alpha(0)
+                
+        # background
+        for line in axes.get_xticklines() + axes.get_yticklines():
+            line.set_markersize(5)
+            line.set_color("gray")
+            line.set_markeredgewidth(1.4)
+        
+        plt.plot(self.precision, self.recall,
+                 marker='o', color="red",
+                 linestyle=".", markersize=10,
+                 markeredgecolor="red", label=self.lab)
+        plt.title("Benchmarking test for detection accuracy in " + self.sp)
+        
         plt.legend()
+        if axes.legend_ <> None:
+            lg = axes.legend_
+            lg.get_frame().set_linewidth(0)
+            lg.get_frame().set_alpha(0.5)
+
         fig.savefig(self.filename + '.pdf')
 
     def plot_editing_type(self):
@@ -62,3 +85,6 @@ class BenchmarkPlot(object):
     def plot_all_stats(self):
         pass
 
+if __name__ == '__main__':
+    bplot = BenchmarkPlot("test", "human")
+    bplot.plot_accuracy(lab="test_lab", recall=0.88, precision=0.58)
