@@ -74,13 +74,12 @@ class BenchmarkPlot(object):
             line.set_color("gray")
             line.set_markeredgewidth(1.4)
 
-        import matplotlib.cm as cm
-        for _ in self.precision:
+        for _ in range(len(self.precision)):
             plt.plot(self.precision, self.recall,
                      marker='o',
                      linestyle=".", markersize=10,
                      markeredgecolor="none",
-                     label=self.lab)
+                     label=self.lab[_])
         
         plt.title("Benchmarking test for detection accuracy in " + self.sp)
         
