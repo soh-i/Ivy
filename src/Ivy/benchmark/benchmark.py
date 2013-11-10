@@ -359,6 +359,6 @@ class Benchmark(object):
             _f = 2*_recall*_precision/(_recall+_precision)
             return _f
         except ZeroDivisionError:
-            _recall = 0
+            _f = 0
         finally:
-            return _recall
+            return _f
