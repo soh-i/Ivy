@@ -90,7 +90,7 @@ class BenchmarkPlot(object):
         
         plt.title("Benchmarking test for detection accuracy in " + self.sp)
         
-        plt.legend(fontsize=10)
+        plt.legend(fontsize=6, numpoints=1, markerscale=0.4)
         if axes.legend_ is not None:
             lg = axes.legend_
             lg.get_frame().set_linewidth(0)
