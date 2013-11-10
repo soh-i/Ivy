@@ -40,6 +40,7 @@ def run():
                        )
     parser.add_argument('--source',
                         required=False,
+                        default='All',
                         dest='source',
                         action='store',
                         metavar='',
@@ -88,8 +89,9 @@ def run():
             r = bench.recall()
             f = bench.f_measure()
             
-            print "%s,%s,%s,%f,%f,%f,%d,%d,%d" % (
+            print "%s,%s,%s,%s,%f,%f,%f,%d,%d,%d" % (
                 ans.sp()[0],
+                args.source,
                 ans.db_name(),
                 vcf.vcf_name(),
                 p, r, f,
@@ -122,8 +124,9 @@ def run():
             r = bench.recall()
             f = bench.f_measure()
 
-            print "%s,%s,%s,%f,%f,%f,%d" % (
+            print "%s,%s,%s,%s,%f,%f,%f,%d" % (
                 ans.sp()[0],
+                args.source,
                 ans.db_name(),
                 csv.name(),
                 p, r, f,
