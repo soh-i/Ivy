@@ -111,9 +111,9 @@ def run():
         print "Species,DB,CSV,Precision,Recall,F-measure,AnsCount"
 
         ans = DarnedReader(sp=args.sp, source=args.source)
-        precision = []
-        recall = []
-        f_measure = []
+        precisions = []
+        recalls = []
+        f_measures = []
         
         for c in args.csv_file:
             csv = __CSVReader(c)
@@ -129,12 +129,21 @@ def run():
                 p, r, f,
                 ans.size())
 
-            precision.append(float(p))
-            recall.append(float(r))
-            f_measure.append(float(f))
+            precisions.append(float(p))
+            recalls.append(float(r))
+            f_measures.append(float(f))
         
         if args.plot:
-            names = [os.path.basename(_).split('.')[0] for _ in args.csv_file]
-            bplt = BenchmarkPlot('plot_' + ','.join(names))
-            bplt.plot_accuracy(lab=args.csv_file, recall=r, precision=p)
-            
+            plot(precisions, recalls, args.csv_file)
+
+def plot(p, r, labs):
+    if isinstance(p, list) and isinstance(r, list) and isinstance(labs, list):
+        names = [os.path.basename(_).split('.')[0] for _ in labs]
+        #bplt = BenchmarkPlot('plot_' + ','.join(names), "human")
+        bplt = BenchmarkPlot('plot_' + "test", "human")
+        bplt.plot_accuracy(lab=names, recall=r, precision=p)
+        return True
+    else:
+        return False
+        
+    
