@@ -14,18 +14,18 @@ g <- ggplot(
     x="Precision",
     y="Recall"
   ) + 
-  theme_classic(base_size=20, base_family="Helvetica") +
-  coord_fixed(ratio=1) +
+  #theme_bw(base_size=20, base_family="Helvetica")# +
+  #coord_fixed(ratio=1) +
   theme(axis.line.x=element_line(size=1),
         axis.line.y=element_line(size=1),
         axis.ticks.x=element_line(size=1),
         axis.ticks.y=element_line(size=1),
         axis.text.y=element_text(size=18),
-        axis.text.x=element_text(size=18),
-        legend.key=element_rect(colour="transparent", fill="transparent"),
-        plot.background=element_rect(fill="transparent", colour="transparent"),
-        legend.background=element_rect(fill="transparent", colour="transparent"),
-        panel.background=element_rect(fill="transparent", colour="transparent")
+        axis.text.x=element_text(size=18)
+  #      legend.key=element_rect(colour="transparent", fill="transparent"),
+  #      plot.background=element_rect(fill="transparent", colour="transparent"),
+  #      legend.background=element_rect(fill="transparent", colour="transparent"),
+  #      panel.background=element_rect(fill="transparent", colour="transparent")
   )
 plot(g)
 
