@@ -37,12 +37,11 @@ class BenchmarkPlot(object):
         axes.yaxis.set_ticks_position('left')
         axes.xaxis.grid(False)
         axes.yaxis.grid(False)
-        axes.patch.set_facecolor('0.9')
+        axes.patch.set_facecolor('0.85')
         axes.set_axisbelow(True)
 
         plt.grid(True, which='minor', color="0.92", linestyle="-", linewidth=0.7)
         plt.grid(True, which='major', color="w", linestyle="-", linewidth=1.2)
-        
         
         plt.xlabel("Precision")
         plt.ylabel("Recall")
@@ -69,7 +68,7 @@ class BenchmarkPlot(object):
         plt.title("Benchmarking test for detection accuracy in " + self.sp)
         
         plt.legend()
-        if axes.legend_ <> None:
+        if axes.legend_ is not None:
             lg = axes.legend_
             lg.get_frame().set_linewidth(0)
             lg.get_frame().set_alpha(0.5)
@@ -87,4 +86,4 @@ class BenchmarkPlot(object):
 
 if __name__ == '__main__':
     bplot = BenchmarkPlot("test", "human")
-    bplot.plot_accuracy(lab="test_lab", recall=0.88, precision=0.58)
+    bplot.plot_accuracy(lab=["lab1", "lab2"], recall=[0.88, 0.21], precision=[0.31, 0.78])
