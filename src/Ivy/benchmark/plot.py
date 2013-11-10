@@ -33,7 +33,7 @@ class BenchmarkPlot(object):
         self.lab = lab
         self.recall = recall
         self.precision = precision
-        fig = plt.figure()
+        fig = plt.figure(num=None, figsize=(8,8), dpi=100)
         
         axes = plt.subplot(111)
     
