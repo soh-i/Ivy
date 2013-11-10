@@ -2,6 +2,7 @@ import matplotlib as mlab
 mlab.use('Agg')
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 from matplotlib.ticker import (
     MultipleLocator,
     FormatStrFormatter,
@@ -63,7 +64,7 @@ class BenchmarkPlot(object):
 
         # remove axis border line
         for child in axes.get_children():
-            # TODO: do not use mlab
+            # TODO: do not use import statement
             import matplotlib
             if isinstance(child, matplotlib.spines.Spine):
                 child.set_alpha(0)
@@ -74,21 +75,26 @@ class BenchmarkPlot(object):
             line.set_color("gray")
             line.set_markeredgewidth(1.4)
 
+        # generate color map
+        colors = []
+        for i in range(len(self.precision)):
+            colors.append(cm.PiYG(float(i)/len(self.precision),1))
+            
         for _ in range(len(self.precision)):
-            plt.plot(self.precision, self.recall,
+            plt.plot(self.precision[_], self.recall[_],
+                     color=colors[_],
                      marker='o',
                      linestyle=".", markersize=10,
-                     markeredgecolor="none",
+                     markeredgecolor=colors[_],
                      label=self.lab[_])
         
         plt.title("Benchmarking test for detection accuracy in " + self.sp)
         
-        plt.legend()
+        plt.legend(fontsize=10)
         if axes.legend_ is not None:
             lg = axes.legend_
             lg.get_frame().set_linewidth(0)
             lg.get_frame().set_alpha(0.5)
-        
         fig.savefig(self.filename + '.pdf')
 
     def plot_editing_type(self):
