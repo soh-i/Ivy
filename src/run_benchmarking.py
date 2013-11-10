@@ -76,7 +76,7 @@ def run():
 
     # use VCF files
     if args.vcf_file and args.sp:
-        print "Species,DB,VCF,Precision,Recall,F-measure,AGs,Others,AnsCount"
+        print "Species,Source,DB,VCF,Precision,Recall,F-measure,AGs,Others,AnsCount"
         
         ans = DarnedReader(sp=args.sp, source=args.source)
         precision = []
@@ -110,7 +110,7 @@ def run():
             
     # use CSV files
     elif args.csv_file and args.sp:
-        print "Species,DB,CSV,Precision,Recall,F-measure,AnsCount"
+        print "Species,Source,DB,CSV,Precision,Recall,F-measure,AnsCount"
 
         ans = DarnedReader(sp=args.sp, source=args.source)
         precisions = []
