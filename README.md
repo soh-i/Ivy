@@ -32,7 +32,7 @@ ivy_benchmark --vcf test1.vcf test2.vcf --sp human_hg19 --source brain --plot
 ```
 
 Recall/Precision plot outputs in your directory as PDF.
-![](https://f.cloud.github.com/assets/1855860/1508207/1bc43dec-49e0-11e3-8cb0-fa3946d3e532.png)
+![](https://f.cloud.github.com/assets/1855860/1509778/31ca2a1a-4a63-11e3-90dc-6e4243864fa5.png)
 
 
 * `--vcf`: Set VCF(variant call format) files [required]
