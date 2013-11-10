@@ -29,4 +29,3 @@ g <- ggplot(
   )
 plot(g)
 
-#ggsave(filename=(paste("benchmarking_human.png")), plot=g, height=10, width=10)
