@@ -23,14 +23,14 @@ For benchmarking test, we used DARNED database (Kiran _et al_., 2013, http://bea
 Called A-to-I editing sites with human brain transcriptome with hg19 genome version, following arguments:
 
 ```
-ivy_benchmark --vcf test.vcf --sp human_hg19 --source brain --plot
+ivy_benchmark --vcf test1.vcf test2.vcf --sp human_hg19 --source brain --plot
 ```
 
 Recall/Precision plot outputs in your directory as PDF.
-![](https://f.cloud.github.com/assets/1855860/1508063/08482826-49ce-11e3-81a8-ca52e1eec73a.png)
+![](https://f.cloud.github.com/assets/1855860/1508207/1bc43dec-49e0-11e3-8cb0-fa3946d3e532.png)
 
 
-* `--vcf`: Set VCF(variant call format) file [required]
+* `--vcf`: Set VCF(variant call format) files [required]
 * `--sp`: Set joined string of species and genome version [required]
 * `--source`: Set specific smaple/tissues/cell line name [default: All]
 * `--plot`: Use this option, to visualize precision/recall plot [default: False] 
