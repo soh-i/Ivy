@@ -57,8 +57,6 @@ class BenchmarkPlot(object):
         axes.yaxis.grid(True, "minor")
         axes.grid(b=True, which='major', color="w", linestyle="-", linewidth=1.4)
         axes.grid(b=True, which='minor', color="0.97", linestyle="-", linewidth=0.5)
-        
-
                                      
         for line in axes.xaxis.get_ticklines(minor=True) + axes.yaxis.get_ticklines(minor=True):
             line.set_markersize(0)
@@ -106,3 +104,5 @@ class BenchmarkPlot(object):
 if __name__ == '__main__':
     bplot = BenchmarkPlot("test", "human")
     bplot.plot_accuracy(lab=["lab1", "lab2"], recall=[0.88, 0.21], precision=[0.31, 0.78])
+
+    
