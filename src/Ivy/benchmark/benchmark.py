@@ -147,6 +147,9 @@ class DarnedReader(object):
         # Store selected records
         if not self.__source == 'ALL':
             selected = []
+            if os.path.isdir(self.__darned_path):
+                raise IOError, "[%s] is directory, not csv file"
+        
             with open(self.__darned_path, 'r') as f:
                 for line in f:
                     if not line.startswith('chrom'):
@@ -210,6 +213,10 @@ class VCFReader(object):
 
     def __generate_vcf_set(self):
         _vcf_recs = []
+        
+        if os.path.isdir(self.__vcf):
+            raise IOError, "[%s] is directory, not csv file"
+        
         _vcf_reader = vcf.Reader(open(self.__vcf, 'r'))
         self.__substitutions = Counter()
         
@@ -262,10 +269,14 @@ class __CSVReader(object):
         
     def __generate_csv_set(self):
         csv_recs = []
+        if os.path.isdir(self.__filename):
+            raise IOError, "[%s] is directory, not csv file"
+            
         with open(self.__filename) as f:
             for line in f:
                 if not line.startswith("track") and not line.startswith('#') \
-                   and not line.startswith("Chromosome"):
+                   and not line.startswith("Chromosome") \
+                   and not line.startswith("Ch,"):
                     rec = line.split(',')
                     if rec[0].startswith('chr'):
                         _chrom = re.sub(r'^chr', '', rec[0], 1)
