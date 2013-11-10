@@ -13,7 +13,7 @@ g <- ggplot(
     title=paste("Benchmarking test for", "Human", "data set"),
     x="Precision",
     y="Recall"
-  ) + scale_colour_brewer(palette="Set2") + 
+  ) + 
   theme_classic(base_size=20, base_family="Helvetica") +
   coord_fixed(ratio=1) +
   theme(axis.line.x=element_line(size=1),
@@ -30,4 +30,3 @@ g <- ggplot(
 plot(g)
 
 #ggsave(filename=(paste("benchmarking_human.png")), plot=g, height=10, width=10)
-
