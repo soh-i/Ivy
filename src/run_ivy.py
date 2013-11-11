@@ -1,3 +1,14 @@
+'''
+ooooo
+`888'
+ 888  oooo    ooo oooo    ooo
+ 888   `88.  .8'   `88.  .8'
+ 888    `88..8'     `88..8'
+ 888     `888'       `888'
+o888o     `8'         .8'
+                  .o..P'
+                  `Y8P'
+'''
 from Ivy.version import __version__
 import Ivy.utils
 from optparse import OptionParser, OptionGroup, HelpFormatter, IndentedHelpFormatter
@@ -9,12 +20,8 @@ __license__ = ''
 __status__ = 'development'
 
 
-class MyParser(OptionParser):
-    def format_epilog(self, formatter):
-        return self.epilog
-        
 def run():
-    desc = "software package for identification of RNA editing sites based on massively parallel sequencing data\n"
+    desc = 'software package for identification of RNA editing sites based on massively parallel sequencing data'
     usage = 'usage: %prog'
 
     fmt = IndentedHelpFormatter(indent_increment=2, max_help_position=60, width=120, short_first=1)
