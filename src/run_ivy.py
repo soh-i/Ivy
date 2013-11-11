@@ -15,10 +15,10 @@ class MyParser(OptionParser):
         
 def run():
     desc = "software package for identification of RNA editing sites based on massively parallel sequencing data\n"
-    usage = '%prog'
+    usage = 'usage: %prog'
 
     fmt = IndentedHelpFormatter(indent_increment=2, max_help_position=60, width=120, short_first=1)
-    parser = OptionParser(usage=usage, formatter=fmt)
+    parser = OptionParser(usage=usage, formatter=fmt, version=__version__, description=desc)
     basic_filter_group = OptionGroup(parser, 'Basic filter options')
     ext_filter_group = OptionGroup(parser, 'Extended filter options')
     stat_filter_group = OptionGroup(parser, 'Statistical filter options')
