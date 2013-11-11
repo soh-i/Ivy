@@ -72,9 +72,18 @@ def run():
                                   nargs=1,
                                   help='Max edit base ratio'
                                   )
+
+    stat_filter_group.add_option('-b', '--base_call_bias',
+                                  metavar=' ',
+                                  dest='baq_bias',
+                                  action='store',
+                                  nargs=1,
+                                  help='Consider base call bias'
+                                  )
     
     parser.add_option_group(input_group)
     parser.add_option_group(basic_filter_group)
+    parser.add_option_group(stat_filter_group)
     (options, args) = parser.parse_args()    
 
 if __name__ == '__main__':
