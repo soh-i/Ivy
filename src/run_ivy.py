@@ -22,8 +22,9 @@ def run():
     basic_filter_group = OptionGroup(parser, 'Basic filter options')
     ext_filter_group = OptionGroup(parser, 'Extended filter options')
     stat_filter_group = OptionGroup(parser, 'Statistical filter options')
+    sample_group = OptionGroup(parser, 'Sample options')
 
-    # Optiopns
+    # Basic options
     parser.add_option('-f',
                       dest='fasta',
                       action='store',
@@ -57,14 +58,15 @@ def run():
                       dest='gtf',
                       action='store',
                       nargs=1,
-                      help='GTF',
+                      help='GTF file',
                       )
     parser.add_option('--num_threads',
                       metavar='',
                       dest='n_threads',
                       action='store',
                       nargs=1,
-                      help='Number of threads',
+                      default=1,
+                      help='Number of threads [default: %default]',
                       )
     parser.add_option('--verbose',
                       metavar='',
@@ -72,53 +74,183 @@ def run():
                       default=False,
                       help='Show verbously messages'
                       )
-                      
-    basic_filter_group.add_option('--max_edit_ratio',
+    
+    # sample options
+    sample_group.add_option('--strand',
+                            metavar='',
+                            action='store',
+                            nargs=1,
+                            default=False,
+                            help='Strand-specific seq. data is used. [default: %default]'
+                            )
+    sample_group.add_option('--ko_strain',
+                            metavar='',
+                            action='store',
+                            nargs=1,
+                            default=False,
+                            help='Adar null strain is used. [default: %default]'
+                            )
+    sample_group.add_option('--replicate',
+                            metavar='',
+                            action='store',
+                            nargs=1,
+                            default=False,
+                            help='Biological replicate is used [default: %default]'
+                            )
+
+    # basic filter options
+    basic_filter_group.add_option('--min_ag_ratio',
                                   metavar='',
-                                  dest='edit_ratio',
+                                  dest='ag_ratio',
                                   action='store',
                                   nargs=1,
-                                  help='Max edit base ratio'
+                                  default=0.1,
+                                  help='Min A-to-G edit base ratio [default: %default]'
                                   )
-    basic_filter_group.add_option('--min_coverage',
+    basic_filter_group.add_option('--min_rna_coverage',
                                   metavar='',
-                                  dest='min_coverage',
+                                  dest='min_rna_cov',
                                   action='store',
                                   nargs=1,
-                                  help='Min read coverage'
+                                  default=10,
+                                  help='Min RNA read coverage [default: %default]'
                                   )
+    basic_filter_group.add_option('--min_dna_coverage',
+                                  metavar='',
+                                  dest='min_dna_cov',
+                                  action='store',
+                                  nargs=1,
+                                  default=20,
+                                  help='Min DNA read coverage [default: %default]'
+                                  )
+    basic_filter_group.add_option('--rm-duplicated-read',
+                                  metavar='',
+                                  dest='is_duplicated',
+                                  action='store',
+                                  nargs=1,
+                                  default=True,
+                                  help='Remove duplicated reads [default: %default]'
+                                  )
+    basic_filter_group.add_option('--rm-deletion-read',
+                                  metavar='',
+                                  dest='is_deletion',
+                                  action='store',
+                                  nargs=1,
+                                  default=True,
+                                  help='Remove deletion reads [default: %default]'
+                                  )
+    basic_filter_group.add_option('--min_mapq',
+                                  metavar='',
+                                  dest='min_mapq',
+                                  action='store',
+                                  nargs=1,
+                                  default=30,
+                                  help='Min mapping quality [default: %default]'
+                                  )
+    basic_filter_group.add_option('--num_allow_type',
+                                  metavar='',
+                                  dest='num_type',
+                                  action='store',
+                                  nargs=1,
+                                  default=1,
+                                  help='Number of allowing base modification type [default: %default]'
+                                  )
+    basic_filter_group.add_option('--min_baq_rna',
+                                  metavar='',
+                                  dest='min_baq_r',
+                                  action='store',
+                                  nargs=1,
+                                  default=28,
+                                  help='Min base call quality in RNA [default: %default]'
+                                  )
+    basic_filter_group.add_option('--min_baq_dna',
+                                  metavar='',
+                                  dest='min_baq_d',
+                                  action='store',
+                                  nargs=1,
+                                  default=28,
+                                  help='Min base call quality in DNA [default: %default]'
+                                  )
+    stat_filter_group.add_option('--sig_level',
+                                 metavar='',
+                                 dest='sig_level',
+                                 action='store',
+                                 nargs=1,
+                                 default=0.05,
+                                 help='Significance level [default: %default]'
+                                 )
     stat_filter_group.add_option('--base_call_bias',
                                  metavar='',
                                  dest='baq_bias',
                                  action='store',
                                  nargs=1,
-                                 help='Consider base call bias'
+                                 default=True,
+                                 help='Consider base call bias [default: %default]'
                                  )
     stat_filter_group.add_option('--strand_bias',
                                  metavar='',
                                  dest='strand_bias',
                                  action='store',
                                  nargs=1,
-                                 help='Consider strand bias'
+                                 default=True,
+                                 help='Consider strand bias [default: %default]'
                                  )
+    stat_filter_group.add_option('--positional_bias',
+                                 metavar='',
+                                 dest='pos_bias',
+                                 action='store',
+                                 nargs=1,
+                                 default=True,
+                                 help='Consider positional bias [default: %default]'
+                                 )
+
+    # extended options
     ext_filter_group.add_option('--blat_collection',
                                 metavar='',
                                 dest='blat',
                                 action='store',
                                 nargs=1,
-                                help='Reduce mis-alignment with blat'
+                                default=False,
+                                help='Reduce mis-alignment with Blat [default: %default]'
                                 )
     ext_filter_group.add_option('--snp',
                                 metavar='',
                                 dest='snp',
                                 action='store',
                                 nargs=1,
-                                help='Exclude SNP locations'
+                                default=False,
+                                help='Exclude sites within SNP locations [default: %default]'
                                 )
+    ext_filter_group.add_option('--ss_num',
+                                metavar='',
+                                dest='ss_num',
+                                action='store',
+                                nargs=1,
+                                default=5,
+                                help='Exclude site around the splice sistes [default: %defaultbp]'
+                                )
+    ext_filter_group.add_option('--trim_n',
+                                metavar='',
+                                dest='trim_n',
+                                action='store',
+                                nargs=1,
+                                default=10,
+                                help='Do not call Nbp in up/down read [default: %defaultbp]'
+                                )
+    ext_filter_group.add_option('--mask_repeat',
+                                metavar='',
+                                dest='is_mask_rep',
+                                action='store',
+                                nargs=1,
+                                default=False,
+                                help='Mask repeat sequence [default: %default]'
+                                )
+
     
     parser.add_option_group(basic_filter_group)
     parser.add_option_group(stat_filter_group)
     parser.add_option_group(ext_filter_group)
+    parser.add_option_group(sample_group)
     (options, args) = parser.parse_args()    
 
 if __name__ == '__main__':
