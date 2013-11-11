@@ -203,6 +203,8 @@ def run():
                                  default=True,
                                  help='Consider positional bias [default: %default]'
                                  )
+
+    # extended options
     ext_filter_group.add_option('--blat_collection',
                                 metavar='',
                                 dest='blat',
