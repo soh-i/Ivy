@@ -276,15 +276,22 @@ class __CSVReader(object):
             for line in f:
                 if not line.startswith("track") and not line.startswith('#') \
                    and not line.startswith("Chromosome") \
-                   and not line.startswith("Ch,"):
+                   and not line.startswith("Ch,") \
+                   and not line.startswith("Arm,"):
+                    
                     rec = line.split(',')
                     if rec[0].startswith('chr'):
                         _chrom = re.sub(r'^chr', '', rec[0], 1)
                         str(_chrom)
+                    elif len(rec[0]):
+                        _chrom = str(rec[0])
                     if rec[1].find(','):
                         _pos = rec[1].replace(',', '')
                         str(_pos)
+                    elif len(rec[1]):
+                        _pos = str(rec[0])
                     csv_recs.append(_chrom + ':' + _pos)
+                    
         self.__size = len(csv_recs)
         return csv_recs
 
