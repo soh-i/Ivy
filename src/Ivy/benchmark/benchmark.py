@@ -274,7 +274,8 @@ class __CSVReader(object):
             
         with open(self.__filename) as f:
             for line in f:
-                if not line.startswith("track") and not line.startswith('#') \
+                if not line.startswith("track") \
+                   and not line.startswith('#') \
                    and not line.startswith("Chromosome") \
                    and not line.startswith("Ch,") \
                    and not line.startswith("Arm,"):
