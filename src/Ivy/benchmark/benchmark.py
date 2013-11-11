@@ -10,11 +10,13 @@ from urllib2 import (
     URLError,
     )
 from collections import Counter
+import inspect
 
 __program__ = 'benchmark'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
+
 
 class DarnedDataGenerator(object):
     '''
@@ -254,7 +256,7 @@ class VCFReader(object):
                 i += self.__substitutions[k]
         return i
         
-
+    
 class __CSVReader(object):
     '''
     CSVReader class provides to generate array of CSV file
@@ -272,14 +274,17 @@ class __CSVReader(object):
         if os.path.isdir(self.__filename):
             raise IOError, "[%s] is directory, not csv file"
             
+        __line__ = 1
         with open(self.__filename) as f:
             for line in f:
-                if not line.startswith("track") \
+                #if not line.startswith("track") \
+                #  and not line.startswith('#') \
+                #  and not line.startswith("Chromosome") \
+                #  and not line.startswith("Ch,") \
+                #  and not line.startswith("Arm,"):
+                if __line__ != 1 \
                    and not line.startswith('#') \
-                   and not line.startswith("Chromosome") \
-                   and not line.startswith("Ch,") \
-                   and not line.startswith("Arm,"):
-                    
+                   and not line.startswith('Chr,'):
                     rec = line.split(',')
                     if rec[0].startswith('chr'):
                         _chrom = re.sub(r'^chr', '', rec[0], 1)
@@ -290,7 +295,8 @@ class __CSVReader(object):
                         _pos = rec[1].replace(',', '')
                         str(_pos)
                     csv_recs.append(_chrom + ':' + _pos)
-                    
+                __line__ += 1
+                
         self.__size = len(csv_recs)
         return csv_recs
 
@@ -305,6 +311,10 @@ class __CSVReader(object):
 
     def other_mutations_count(self):
         raise NotImplementedError
+
+    #def __line__(self):
+    #    frame = inspect.currentframe(1)
+    #    return frame.f_lineno
 
         
 class Benchmark(object):
