@@ -32,12 +32,13 @@ class DarnedDataGenerator(object):
             'mice_mm10':'http://darned.ucc.ie/static/downloads/mm10.txt',
             'fly_dm3':'http://darned.ucc.ie/static/downloads/dm3.txt',
         }
-
         for k in __species:
             if k == species:
                 self.species = species
                 break;
-        else: raise RuntimeError, "Given [%s] is not valid species name" % (species)
+        else:
+            raise RuntimeError, ('Given species name: %s is invalid, %s is only acceptable' %
+                                 (species, [_ for _ in __species]))
 
         if self.species is not None:
             self.filename = "".join([self.species, '.txt'])
