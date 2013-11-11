@@ -24,7 +24,7 @@ def run():
     stat_filter_group = OptionGroup(parser, 'Statistical filter options')
     sample_group = OptionGroup(parser, 'Sample options')
 
-    # Optiopns
+    # Basic options
     parser.add_option('-f',
                       dest='fasta',
                       action='store',
@@ -75,7 +75,7 @@ def run():
                       help='Show verbously messages'
                       )
     
-    #sample params
+    # sample options
     sample_group.add_option('--strand',
                             metavar='',
                             action='store',
@@ -83,8 +83,22 @@ def run():
                             default=False,
                             help='Strand-specific seq. data is used. [default: %default]'
                             )
+    sample_group.add_option('--ko_strain',
+                            metavar='',
+                            action='store',
+                            nargs=1,
+                            default=False,
+                            help='Adar null strain is used. [default: %default]'
+                            )
+    sample_group.add_option('--replicate',
+                            metavar='',
+                            action='store',
+                            nargs=1,
+                            default=False,
+                            help='Biological replicate is used [default: %default]'
+                            )
 
-    
+    # basic filter options
     basic_filter_group.add_option('--min_ag_ratio',
                                   metavar='',
                                   dest='ag_ratio',
@@ -141,13 +155,21 @@ def run():
                                   default=1,
                                   help='Number of allowing base modification type [default: %default]'
                                   )
-    basic_filter_group.add_option('--min_baq',
+    basic_filter_group.add_option('--min_baq_rna',
                                   metavar='',
-                                  dest='min_baq',
+                                  dest='min_baq_r',
                                   action='store',
                                   nargs=1,
                                   default=28,
-                                  help='Min base call quality [default: %default]'
+                                  help='Min base call quality in RNA [default: %default]'
+                                  )
+    basic_filter_group.add_option('--min_baq_dna',
+                                  metavar='',
+                                  dest='min_baq_d',
+                                  action='store',
+                                  nargs=1,
+                                  default=28,
+                                  help='Min base call quality in DNA [default: %default]'
                                   )
     stat_filter_group.add_option('--sig_level',
                                  metavar='',
@@ -202,8 +224,24 @@ def run():
                                 dest='ss_num',
                                 action='store',
                                 nargs=1,
+                                default=5,
+                                help='Exclude site around the splice sistes [default: %defaultbp]'
+                                )
+    ext_filter_group.add_option('--trim_n',
+                                metavar='',
+                                dest='trim_n',
+                                action='store',
+                                nargs=1,
                                 default=10,
-                                help='Exclude site around the splice sistes [default: %default]'
+                                help='Do not call Nbp in up/down read [default: %defaultbp]'
+                                )
+    ext_filter_group.add_option('--mask_repeat',
+                                metavar='',
+                                dest='is_mask_rep',
+                                action='store',
+                                nargs=1,
+                                default=False,
+                                help='Mask repeat sequence [default: %default]'
                                 )
 
     
