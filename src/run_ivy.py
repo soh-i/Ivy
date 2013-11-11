@@ -57,14 +57,15 @@ def run():
                       dest='gtf',
                       action='store',
                       nargs=1,
-                      help='GTF',
+                      help='GTF file',
                       )
     parser.add_option('--num_threads',
                       metavar='',
                       dest='n_threads',
                       action='store',
                       nargs=1,
-                      help='Number of threads',
+                      default=1,
+                      help='Number of threads [default: %default]',
                       )
     parser.add_option('--verbose',
                       metavar='',
@@ -73,47 +74,109 @@ def run():
                       help='Show verbously messages'
                       )
                       
-    basic_filter_group.add_option('--max_edit_ratio',
+    basic_filter_group.add_option('--min_edit_ratio',
                                   metavar='',
                                   dest='edit_ratio',
                                   action='store',
                                   nargs=1,
-                                  help='Max edit base ratio'
+                                  default=0.1,
+                                  help='Min edit base ratio [default: %default]'
                                   )
-    basic_filter_group.add_option('--min_coverage',
+    basic_filter_group.add_option('--min_rna_coverage',
                                   metavar='',
-                                  dest='min_coverage',
+                                  dest='min_rna_cov',
                                   action='store',
                                   nargs=1,
-                                  help='Min read coverage'
+                                  default=10,
+                                  help='Min RNA read coverage [default: %default]'
                                   )
+    basic_filter_group.add_option('--min_dna_coverage',
+                                  metavar='',
+                                  dest='min_dna_cov',
+                                  action='store',
+                                  nargs=1,
+                                  default=20,
+                                  help='Min DNA read coverage [default: %default]'
+                                  )
+    basic_filter_group.add_option('--rm-duplicated-read',
+                                  metavar='',
+                                  dest='is_duplicated',
+                                  action='store',
+                                  nargs=1,
+                                  default=True,
+                                  help='Remove duplicated reads [default: %default]'
+                                  )
+    basic_filter_group.add_option('--rm-deletion-read',
+                                  metavar='',
+                                  dest='is_deletion',
+                                  action='store',
+                                  nargs=1,
+                                  default=True,
+                                  help='Remove deletion reads [default: %default]'
+                                  )
+    basic_filter_group.add_option('--min_mapq',
+                                  metavar='',
+                                  dest='min_mapq',
+                                  action='store',
+                                  nargs=1,
+                                  default=30,
+                                  help='Min mapping quality [default: %default]'
+                                  )
+    basic_filter_group.add_option('--num_allow_type',
+                                  metavar='',
+                                  dest='num_type',
+                                  action='store',
+                                  nargs=1,
+                                  default=1,
+                                  help='Number of allowing base modification type [default: %default]'
+                                  )
+    basic_filter_group.add_option('--min_baq',
+                                  metavar='',
+                                  dest='min_baq',
+                                  action='store',
+                                  nargs=1,
+                                  default=28,
+                                  help='Min base call quality [default: %default]'
+                                  )
+    stat_filter_group.add_option('--sig_level',
+                                 metavar='',
+                                 dest='sig_level',
+                                 action='store',
+                                 nargs=1,
+                                 default=0.05,
+                                 help='Significance level [default: %default]'
+                                 )
     stat_filter_group.add_option('--base_call_bias',
                                  metavar='',
                                  dest='baq_bias',
                                  action='store',
                                  nargs=1,
-                                 help='Consider base call bias'
+                                 default=True,
+                                 help='Consider base call bias [default: %default]'
                                  )
     stat_filter_group.add_option('--strand_bias',
                                  metavar='',
                                  dest='strand_bias',
                                  action='store',
                                  nargs=1,
-                                 help='Consider strand bias'
+                                 default=True,
+                                 help='Consider strand bias [default: %default]'
                                  )
     ext_filter_group.add_option('--blat_collection',
                                 metavar='',
                                 dest='blat',
                                 action='store',
                                 nargs=1,
-                                help='Reduce mis-alignment with blat'
+                                default=False,
+                                help='Reduce mis-alignment with Blat [default: %default]'
                                 )
     ext_filter_group.add_option('--snp',
                                 metavar='',
                                 dest='snp',
                                 action='store',
                                 nargs=1,
-                                help='Exclude SNP locations'
+                                default=False,
+                                help='Exclude sites within SNP locations [default: %default]'
                                 )
     
     parser.add_option_group(basic_filter_group)
