@@ -6,6 +6,12 @@ import pysam
 from Ivy.utils import ImutableDict
 import os.path
 
+__program__ = 'stream'
+__author__ = 'Soh Ishiguro <yukke@g-language.org>'
+__license__ = ''
+__status__ = 'development'
+
+
 class AlignmentConfig(object):
     def __init__(self):
         self.params = self.__set_default()
