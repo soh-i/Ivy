@@ -22,6 +22,7 @@ def run():
     basic_filter_group = OptionGroup(parser, 'Basic filter options')
     ext_filter_group = OptionGroup(parser, 'Extended filter options')
     stat_filter_group = OptionGroup(parser, 'Statistical filter options')
+    sample_group = OptionGroup(parser, 'Sample options')
 
     # Optiopns
     parser.add_option('-f',
@@ -73,14 +74,24 @@ def run():
                       default=False,
                       help='Show verbously messages'
                       )
-                      
-    basic_filter_group.add_option('--min_edit_ratio',
+    
+    #sample params
+    sample_group.add_option('--strand',
+                            metavar='',
+                            action='store',
+                            nargs=1,
+                            default=False,
+                            help='Strand-specific seq. data is used. [default: %default]'
+                            )
+
+    
+    basic_filter_group.add_option('--min_ag_ratio',
                                   metavar='',
-                                  dest='edit_ratio',
+                                  dest='ag_ratio',
                                   action='store',
                                   nargs=1,
                                   default=0.1,
-                                  help='Min edit base ratio [default: %default]'
+                                  help='Min A-to-G edit base ratio [default: %default]'
                                   )
     basic_filter_group.add_option('--min_rna_coverage',
                                   metavar='',
@@ -162,6 +173,14 @@ def run():
                                  default=True,
                                  help='Consider strand bias [default: %default]'
                                  )
+    stat_filter_group.add_option('--positional_bias',
+                                 metavar='',
+                                 dest='pos_bias',
+                                 action='store',
+                                 nargs=1,
+                                 default=True,
+                                 help='Consider positional bias [default: %default]'
+                                 )
     ext_filter_group.add_option('--blat_collection',
                                 metavar='',
                                 dest='blat',
@@ -178,10 +197,20 @@ def run():
                                 default=False,
                                 help='Exclude sites within SNP locations [default: %default]'
                                 )
+    ext_filter_group.add_option('--ss_num',
+                                metavar='',
+                                dest='ss_num',
+                                action='store',
+                                nargs=1,
+                                default=10,
+                                help='Exclude site around the splice sistes [default: %default]'
+                                )
+
     
     parser.add_option_group(basic_filter_group)
     parser.add_option_group(stat_filter_group)
     parser.add_option_group(ext_filter_group)
+    parser.add_option_group(sample_group)
     (options, args) = parser.parse_args()    
 
 if __name__ == '__main__':
