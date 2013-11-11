@@ -23,76 +23,97 @@ def run():
     ext_filter_group = OptionGroup(parser, 'Extended filter options')
     stat_filter_group = OptionGroup(parser, 'Statistical filter options')
 
-    # Input params
-    parser.add_option('-f', '--fasta',
+    # Optiopns
+    parser.add_option('-f',
                       dest='fasta',
                       action='store',
                       metavar='',
                       nargs=1,
                       help='set reference genome [fasta]'
                       )
-    parser.add_option('-r', '--rbam',
+    parser.add_option('-r',
                       dest='r_bams',
                       action='store',
                       metavar='',
                       nargs='+',
                       help='RNA-seq file(s) [bam]',
                       )
-    parser.add_option('-d', '--dbam',
+    parser.add_option('-b',
                       metavar='',
                       dest='d_bams',
                       action='store',
                       nargs='+',
                       help='DNA-seq file(s) [bam]',
                       )
-    parser.add_option('-R', '--region',
+    parser.add_option('-l',
                       dest='regions',
                       action='store',
                       metavar='',
                       nargs=2,
                       help='Explore specify region [chr:start chr:end]'
                       )
-    parser.add_option('-G', '--GTF',
+    parser.add_option('-G',
                       metavar='',
                       dest='gtf',
                       action='store',
                       nargs=1,
                       help='GTF',
                       )
-    parser.add_option('-p', '--num_threads',
+    parser.add_option('--num_threads',
                       metavar='',
                       dest='n_threads',
                       action='store',
                       nargs=1,
                       help='Number of threads',
                       )
-    basic_filter_group.add_option('-e', '--max_edit_ratio',
+    parser.add_option('--verbose',
+                      metavar='',
+                      dest='verbose',
+                      default=False,
+                      help='Show verbously messages'
+                      )
+                      
+    basic_filter_group.add_option('--max_edit_ratio',
                                   metavar='',
                                   dest='edit_ratio',
                                   action='store',
                                   nargs=1,
                                   help='Max edit base ratio'
                                   )
-    stat_filter_group.add_option('-b', '--base_call_bias',
+    basic_filter_group.add_option('--min_coverage',
+                                  metavar='',
+                                  dest='min_coverage',
+                                  action='store',
+                                  nargs=1,
+                                  help='Min read coverage'
+                                  )
+    stat_filter_group.add_option('--base_call_bias',
                                  metavar='',
                                  dest='baq_bias',
                                  action='store',
                                  nargs=1,
                                  help='Consider base call bias'
                                  )
-    stat_filter_group.add_option('-s', '--strand_bias',
+    stat_filter_group.add_option('--strand_bias',
                                  metavar='',
                                  dest='strand_bias',
                                  action='store',
                                  nargs=1,
                                  help='Consider strand bias'
                                  )
-    ext_filter_group.add_option('-B', '--blat_collection',
+    ext_filter_group.add_option('--blat_collection',
                                 metavar='',
                                 dest='blat',
                                 action='store',
                                 nargs=1,
                                 help='Reduce mis-alignment with blat'
+                                )
+    ext_filter_group.add_option('--snp',
+                                metavar='',
+                                dest='snp',
+                                action='store',
+                                nargs=1,
+                                help='Exclude SNP locations'
                                 )
     
     parser.add_option_group(basic_filter_group)
