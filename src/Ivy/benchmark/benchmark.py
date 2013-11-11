@@ -289,8 +289,6 @@ class __CSVReader(object):
                     if rec[1].find(','):
                         _pos = rec[1].replace(',', '')
                         str(_pos)
-                    elif len(rec[1]):
-                        _pos = str(rec[0])
                     csv_recs.append(_chrom + ':' + _pos)
                     
         self.__size = len(csv_recs)
