@@ -3,6 +3,8 @@ import Ivy.utils
 from optparse import OptionParser, OptionGroup, HelpFormatter, IndentedHelpFormatter
 import os.path
 
+from Ivy.alignment.stream import AlignmentConfig
+
 __program__ = 'ivy'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
@@ -277,18 +279,17 @@ def run():
         passed_params.update({'fasta': opt.fasta})
     elif opt.fasta is None:
         parser.error('[-f] Reference fasta file is a required argument')
-        
     if opt.r_bams:
         passed_params.update({'r_bams': opt.r_bams})
     elif opt.r_bams is None:
         parser.error('[-r] RNA-seq bam file is a required argument')
-        
     if opt.outname:
         passed_params.update({'outname': opt.outname})
     elif opt.outname is None:
         parser.error('[-o] Output filename is a required argument')
 
-    print passed_params
+    align_conf = AlignmentConfig(passed_params)
+    print align_conf.cl_params
         
 if __name__ == '__main__':
     run()
