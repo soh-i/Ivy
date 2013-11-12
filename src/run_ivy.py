@@ -11,87 +11,86 @@ __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
 
-def die(msg=''):
-    raise SystemExit(msg)
-
-class Ivy(object):
+    
+class CommandLineParser(object):
     def __init__(self):
         desc = 'software package for identification of RNA editing sites based on massively parallel sequencing data'
         usage = 'usage: %prog [options]'
         fmt = IndentedHelpFormatter(indent_increment=2, max_help_position=60, width=120, short_first=1)
         self.parser = OptionParser(usage=usage, formatter=fmt, version=__version__, description=desc)
+        self.parse()
         
         #logging.basicConfig(level=logging.ERROR, format="%(asctime)s %(message)s")
         #logging.error('Job started')
         #align_conf = AlignmentConfig(passed_params)
         
-    def paser_basic_args(self):
-        #basic options
-        basic_filter_group = OptionGroup(self.parser, 'Basic filter options')
-        parser.add_option('-f',
-                          dest='fasta',
-                          action='store',
-                          metavar='',
-                          nargs=1,
-                          type='string',
-                          help='set reference genome [fasta]'
-                          )
-        parser.add_option('-r',
-                          dest='r_bams',
-                          action='store',
-                          metavar='',
-                          type='string',
-                          help='RNA-seq file(s) [bam]',
-                          )
-        parser.add_option('-b',
-                          metavar='',
-                          dest='d_bams',
-                          action='store',
-                          type='string',
-                          help='DNA-seq file(s) [bam]',
-                          )
-        parser.add_option('-o',
-                          dest='outname',
-                          metavar='',
-                          action='store',
-                          type='string',
-                          help='Output filename',
-                          )
-        parser.add_option('-l',
-                          dest='regions',
-                          action='store',
-                          metavar='',
-                          nargs=2,
-                          type='string',
-                          help='Explore specify region [chr:start chr:end]'
-                          )
-        parser.add_option('-G',
-                          metavar='',
-                          dest='gtf',
-                          action='store',
-                          nargs=1,
-                          type='string',
-                          help='GTF file',
-                          )
-        parser.add_option('--num_threads', '-p',
-                          metavar='',
-                          dest='n_threads',
-                          action='store',
-                          nargs=1,
-                          default=1,
-                          type='int',
-                          help='Number of threads [default: %default]',
-                          )
-        parser.add_option('--verbose',
-                          metavar='',
-                          dest='verbose',
-                          default=False,
-                          help='Show verbously messages'
-                          )
+        
+    def parse_basic_opt(self):
+        # basic options
+        self.parser.add_option('-f',
+                               dest='fasta',
+                               action='store',
+                               metavar='',
+                               nargs=1,
+                               type='string',
+                               help='set reference genome [fasta]'
+                               )
+        self.parser.add_option('-r',
+                               dest='r_bams',
+                               action='store',
+                               metavar='',
+                               type='string',
+                               help='RNA-seq file(s) [bam]',
+                               )
+        self.parser.add_option('-b',
+                               metavar='',
+                               dest='d_bams',
+                               action='store',
+                               type='string',
+                               help='DNA-seq file(s) [bam]',
+                               )
+        self.parser.add_option('-o',
+                               dest='outname',
+                               metavar='',
+                               action='store',
+                               type='string',
+                               help='Output filename',
+                               )
+        self.parser.add_option('-l',
+                               dest='regions',
+                               action='store',
+                               metavar='',
+                               nargs=2,
+                               type='string',
+                               help='Explore specify region [chr:start chr:end]'
+                               )
+        self.parser.add_option('-G',
+                               metavar='',
+                               dest='gtf',
+                               action='store',
+                               nargs=1,
+                               type='string',
+                               help='GTF file',
+                               )
+        self.parser.add_option('--num_threads', '-p',
+                               metavar='',
+                               dest='n_threads',
+                               action='store',
+                               nargs=1,
+                               default=1,
+                               type='int',
+                               help='Number of threads [default: %default]',
+                               )
+        self.parser.add_option('--verbose',
+                               metavar='',
+                               dest='verbose',
+                               default=False,
+                               help='Show verbously messages'
+                               )
         
     def parse_sample_opt(self):
-        sample_group = OptionGroup(self.parser, 'Sample options')
         # sample options
+        sample_group = OptionGroup(self.parser, 'Sample options')
         sample_group.add_option('--strand',
                                 metavar='',
                                 action='store',
@@ -113,9 +112,11 @@ class Ivy(object):
                                 default=False,
                                 help='Biological replicate is used [default: %default]'
                                 )
+        self.parser.add_option_group(sample_group)
         
     def parse_basic_filt_opt(self):
         # basic filter options
+        basic_filter_group = OptionGroup(self.parser, 'Basic filter options')
         basic_filter_group.add_option('--min_ag_ratio',
                                       metavar='',
                                       dest='ag_ratio',
@@ -195,6 +196,7 @@ class Ivy(object):
                                       type='int',
                                       help='Min base call quality in DNA [default: %default]'
                                       )
+        self.parser.add_option_group(basic_filter_group)
         
     def parse_stat_filt_opt(self):
         # statistical filters options
@@ -232,6 +234,7 @@ class Ivy(object):
                                      default=True,
                                      help='Consider positional bias [default: %default]'
                                      )
+        self.parser.add_option_group(stat_filter_group)
         
     def parse_ext_filt_opt(self):
         # extended options
@@ -278,30 +281,35 @@ class Ivy(object):
                                     default=False,
                                     help='Mask repeat sequence [default: %default]'
                                     )
-        # parsing args
-        self.parser.add_option_group(basic_filter_group)
-        self.parser.add_option_group(stat_filter_group)
         self.parser.add_option_group(ext_filter_group)
-        self.parser.add_option_group(sample_group)
+
+    def parse(self):
+        self.parse_basic_opt()
+        self.parse_ext_filt_opt()
+        self.parse_sample_opt()
+        self.parse_basic_filt_opt()
+        
         (opt, args) = self.parser.parse_args()
         
         # Checking for required options
-        passed_params = {}
+        self.passed_params = {}
         if opt.fasta:
             passed_params.update({'fasta': opt.fasta})
         elif opt.fasta is None:
-            parser.error('[-f] Reference fasta file is a required argument')
+            self.parser.error('[-f] Reference fasta file is a required argument')
         if opt.r_bams:
             passed_params.update({'r_bams': opt.r_bams})
         elif opt.r_bams is None:
-            parser.error('[-r] RNA-seq bam file is a required argument')
+            self.parser.error('[-r] RNA-seq bam file is a required argument')
         if opt.outname:
             passed_params.update({'outname': opt.outname})
         elif opt.outname is None:
-            parser.error('[-o] Output filename is a required argument')
+            self.parser.error('[-o] Output filename is a required argument')
 
-        
+def die(msg=''):
+    raise SystemExit(msg)
+
+
 if __name__ == '__main__':
-    run()
-    
+    ivy = CommandLineParser()
     
