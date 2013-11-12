@@ -114,6 +114,7 @@ def run():
                                   action='store',
                                   nargs=1,
                                   default=0.1,
+                                  type='float',
                                   help='Min A-to-G edit base ratio [default: %default]'
                                   )
     basic_filter_group.add_option('--min_rna_coverage',
@@ -122,6 +123,7 @@ def run():
                                   action='store',
                                   nargs=1,
                                   default=10,
+                                  type='int',
                                   help='Min RNA read coverage [default: %default]'
                                   )
     basic_filter_group.add_option('--min_dna_coverage',
@@ -130,6 +132,7 @@ def run():
                                   action='store',
                                   nargs=1,
                                   default=20,
+                                  type='int',
                                   help='Min DNA read coverage [default: %default]'
                                   )
     basic_filter_group.add_option('--rm-duplicated-read',
@@ -154,6 +157,7 @@ def run():
                                   action='store',
                                   nargs=1,
                                   default=30,
+                                  type='int',
                                   help='Min mapping quality [default: %default]'
                                   )
     basic_filter_group.add_option('--num_allow_type',
@@ -162,6 +166,7 @@ def run():
                                   action='store',
                                   nargs=1,
                                   default=1,
+                                  type='int',
                                   help='Number of allowing base modification type [default: %default]'
                                   )
     basic_filter_group.add_option('--min_baq_rna',
@@ -170,6 +175,7 @@ def run():
                                   action='store',
                                   nargs=1,
                                   default=28,
+                                  type='int',
                                   help='Min base call quality in RNA [default: %default]'
                                   )
     basic_filter_group.add_option('--min_baq_dna',
@@ -178,6 +184,7 @@ def run():
                                   action='store',
                                   nargs=1,
                                   default=28,
+                                  type='int',
                                   help='Min base call quality in DNA [default: %default]'
                                   )
     stat_filter_group.add_option('--sig_level',
@@ -186,6 +193,7 @@ def run():
                                  action='store',
                                  nargs=1,
                                  default=0.05,
+                                 type='float',
                                  help='Significance level [default: %default]'
                                  )
     stat_filter_group.add_option('--base_call_bias',
@@ -236,6 +244,7 @@ def run():
                                 action='store',
                                 nargs=1,
                                 default=5,
+                                type='int',
                                 help='Exclude site around the splice sistes [default: %defaultbp]'
                                 )
     ext_filter_group.add_option('--trim_n',
@@ -244,6 +253,7 @@ def run():
                                 action='store',
                                 nargs=1,
                                 default=10,
+                                type='int',
                                 help='Do not call Nbp in up/down read [default: %defaultbp]'
                                 )
     ext_filter_group.add_option('--mask_repeat',
