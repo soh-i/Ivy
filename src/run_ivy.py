@@ -11,19 +11,14 @@ __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
 
-    
+
 class CommandLineParser(object):
     def __init__(self):
         desc = 'software package for identification of RNA editing sites based on massively parallel sequencing data'
         usage = 'usage: %prog [options]'
         fmt = IndentedHelpFormatter(indent_increment=2, max_help_position=60, width=120, short_first=1)
         self.parser = OptionParser(usage=usage, formatter=fmt, version=__version__, description=desc)
-        self.parse()
-        
-        #logging.basicConfig(level=logging.ERROR, format="%(asctime)s %(message)s")
-        #logging.error('Job started')
-        #align_conf = AlignmentConfig(passed_params)
-        
+        #self.parse()
         
     def parse_basic_opt(self):
         # basic options
@@ -306,10 +301,21 @@ class CommandLineParser(object):
         elif opt.outname is None:
             self.parser.error('[-o] Output filename is a required argument')
 
+            
+class Ivy(CommandLineParser):
+    def __init__(self):
+        CommandLineParser.__init__(self)
+        self.parse()
+
+        #logging.basicConfig(level=logging.ERROR, format="%(asctime)s %(message)s")
+        #logging.error('Job started')
+        #align_conf = AlignmentConfig(passed_params)
+        
+            
 def die(msg=''):
     raise SystemExit(msg)
 
 
 if __name__ == '__main__':
-    ivy = CommandLineParser()
+    ivy = Ivy()
     
