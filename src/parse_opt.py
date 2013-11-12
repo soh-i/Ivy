@@ -3,7 +3,6 @@ import os.path
 import logging
 
 from Ivy.version import __version__
-from Ivy.alignment.stream import AlignmentConfig
 import Ivy.utils
 
 __program__ = 'ivy'
@@ -300,22 +299,6 @@ class CommandLineParser(object):
             passed_params.update({'outname': opt.outname})
         elif opt.outname is None:
             self.parser.error('[-o] Output filename is a required argument')
-
-            
-class Ivy(CommandLineParser):
-    def __init__(self):
-        CommandLineParser.__init__(self)
-        self.parse()
-
-        #logging.basicConfig(level=logging.ERROR, format="%(asctime)s %(message)s")
-        #logging.error('Job started')
-        #align_conf = AlignmentConfig(passed_params)
-        
             
 def die(msg=''):
     raise SystemExit(msg)
-
-
-if __name__ == '__main__':
-    ivy = Ivy()
-    
