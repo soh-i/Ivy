@@ -28,24 +28,28 @@ def run():
                       action='store',
                       metavar='',
                       nargs=1,
+                      type='string',
                       help='set reference genome [fasta]'
                       )
     parser.add_option('-r',
                       dest='r_bams',
                       action='store',
                       metavar='',
+                      type='string',
                       help='RNA-seq file(s) [bam]',
                       )
     parser.add_option('-b',
                       metavar='',
                       dest='d_bams',
                       action='store',
+                      type='string',
                       help='DNA-seq file(s) [bam]',
                       )
     parser.add_option('-o',
                       dest='outname',
                       metavar='',
                       action='store',
+                      type='string',
                       help='Output filename',
                       )
     parser.add_option('-l',
@@ -53,6 +57,7 @@ def run():
                       action='store',
                       metavar='',
                       nargs=2,
+                      type='string',
                       help='Explore specify region [chr:start chr:end]'
                       )
     parser.add_option('-G',
@@ -60,14 +65,16 @@ def run():
                       dest='gtf',
                       action='store',
                       nargs=1,
+                      type='string',
                       help='GTF file',
                       )
-    parser.add_option('--num_threads',
+    parser.add_option('--num_threads', '-p',
                       metavar='',
                       dest='n_threads',
                       action='store',
                       nargs=1,
                       default=1,
+                      type='int',
                       help='Number of threads [default: %default]',
                       )
     parser.add_option('--verbose',
@@ -247,30 +254,21 @@ def run():
                                 default=False,
                                 help='Mask repeat sequence [default: %default]'
                                 )
-
-    
+    # parsing args
     parser.add_option_group(basic_filter_group)
     parser.add_option_group(stat_filter_group)
     parser.add_option_group(ext_filter_group)
     parser.add_option_group(sample_group)
-
-    # parsing args
     (opt, args) = parser.parse_args()
 
     # Checking for required options
     if opt.fasta is None:
-        parser.error('[-f] Reference fasta file is required argument')
+        parser.error('[-f] Reference fasta file is a required argument')
     elif opt.r_bams is None:
-        parser.error('[-r] RNA-seq bam file is required argument')
-    #elif opt.b is None:
-    #    parser.error('[-b] DNA-seq bam file is required argument')
+        parser.error('[-r] RNA-seq bam file is a required argument')
     elif opt.outname is None:
-        parser.error('[-o] Output filename is required argument')
+        parser.error('[-o] Output filename is a required argument')
         
-
-    
-
-
     
 if __name__ == '__main__':
     run()
