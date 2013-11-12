@@ -11,31 +11,23 @@ __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
 
-
 def die(msg=''):
     raise SystemExit(msg)
 
 class Ivy(object):
     def __init__(self):
-        logging.basicConfig(level=logging.ERROR, format="%(asctime)s %(message)s")
-        logging.error('Job started')
-        
-        align_conf = AlignmentConfig(passed_params)
-
-    def parse_args(self):
         desc = 'software package for identification of RNA editing sites based on massively parallel sequencing data'
         usage = 'usage: %prog [options]'
-
         fmt = IndentedHelpFormatter(indent_increment=2, max_help_position=60, width=120, short_first=1)
-        parser = OptionParser(usage=usage, formatter=fmt, version=__version__, description=desc)
-
-        # Option groups
-        basic_filter_group = OptionGroup(parser, 'Basic filter options')
-        ext_filter_group = OptionGroup(parser, 'Extended filter options')
-        stat_filter_group = OptionGroup(parser, 'Statistical filter options')
-        sample_group = OptionGroup(parser, 'Sample options')
-    
-        # Basic options
+        self.parser = OptionParser(usage=usage, formatter=fmt, version=__version__, description=desc)
+        
+        #logging.basicConfig(level=logging.ERROR, format="%(asctime)s %(message)s")
+        #logging.error('Job started')
+        #align_conf = AlignmentConfig(passed_params)
+        
+    def paser_basic_args(self):
+        #basic options
+        basic_filter_group = OptionGroup(self.parser, 'Basic filter options')
         parser.add_option('-f',
                           dest='fasta',
                           action='store',
@@ -89,14 +81,16 @@ class Ivy(object):
                           default=1,
                           type='int',
                           help='Number of threads [default: %default]',
-                      )
+                          )
         parser.add_option('--verbose',
                           metavar='',
                           dest='verbose',
                           default=False,
                           help='Show verbously messages'
-                      )
+                          )
         
+    def parse_sample_opt(self):
+        sample_group = OptionGroup(self.parser, 'Sample options')
         # sample options
         sample_group.add_option('--strand',
                                 metavar='',
@@ -104,22 +98,23 @@ class Ivy(object):
                                 nargs=1,
                                 default=False,
                                 help='Strand-specific seq. data is used. [default: %default]'
-                            )
+                                )
         sample_group.add_option('--ko_strain',
                                 metavar='',
                                 action='store',
                                 nargs=1,
                                 default=False,
                                 help='Adar null strain is used. [default: %default]'
-                            )
+                                )
         sample_group.add_option('--replicate',
                                 metavar='',
                                 action='store',
                                 nargs=1,
                                 default=False,
                                 help='Biological replicate is used [default: %default]'
-                            )
+                                )
         
+    def parse_basic_filt_opt(self):
         # basic filter options
         basic_filter_group.add_option('--min_ag_ratio',
                                       metavar='',
@@ -129,7 +124,7 @@ class Ivy(object):
                                       default=0.1,
                                       type='float',
                                       help='Min A-to-G edit base ratio [default: %default]'
-                                  )
+                                      )
         basic_filter_group.add_option('--min_rna_coverage',
                                       metavar='',
                                       dest='min_rna_cov',
@@ -138,7 +133,7 @@ class Ivy(object):
                                       default=10,
                                       type='int',
                                       help='Min RNA read coverage [default: %default]'
-                                  )
+                                      )
         basic_filter_group.add_option('--min_dna_coverage',
                                       metavar='',
                                       dest='min_dna_cov',
@@ -147,7 +142,7 @@ class Ivy(object):
                                       default=20,
                                       type='int',
                                       help='Min DNA read coverage [default: %default]'
-                                  )
+                                      )
         basic_filter_group.add_option('--rm-duplicated-read',
                                       metavar='',
                                       dest='is_duplicated',
@@ -155,7 +150,7 @@ class Ivy(object):
                                       nargs=1,
                                       default=True,
                                       help='Remove duplicated reads [default: %default]'
-                                  )
+                                      )
         basic_filter_group.add_option('--rm-deletion-read',
                                       metavar='',
                                       dest='is_deletion',
@@ -163,7 +158,7 @@ class Ivy(object):
                                       nargs=1,
                                       default=True,
                                       help='Remove deletion reads [default: %default]'
-                                  )
+                                      )
         basic_filter_group.add_option('--min_mapq',
                                       metavar='',
                                       dest='min_mapq',
@@ -172,7 +167,7 @@ class Ivy(object):
                                       default=30,
                                       type='int',
                                       help='Min mapping quality [default: %default]'
-                                  )
+                                      )
         basic_filter_group.add_option('--num_allow_type',
                                       metavar='',
                                       dest='num_type',
@@ -181,7 +176,7 @@ class Ivy(object):
                                       default=1,
                                       type='int',
                                       help='Number of allowing base modification type [default: %default]'
-                                  )
+                                      )
         basic_filter_group.add_option('--min_baq_rna',
                                       metavar='',
                                       dest='min_baq_r',
@@ -190,7 +185,7 @@ class Ivy(object):
                                       default=28,
                                       type='int',
                                       help='Min base call quality in RNA [default: %default]'
-                                  )
+                                      )
         basic_filter_group.add_option('--min_baq_dna',
                                       metavar='',
                                       dest='min_baq_d',
@@ -199,7 +194,11 @@ class Ivy(object):
                                       default=28,
                                       type='int',
                                       help='Min base call quality in DNA [default: %default]'
-                                  )
+                                      )
+        
+    def parse_stat_filt_opt(self):
+        # statistical filters options
+        stat_filter_group = OptionGroup(self.parser, 'Statistical filter options')
         stat_filter_group.add_option('--sig_level',
                                      metavar='',
                                      dest='sig_level',
@@ -208,7 +207,7 @@ class Ivy(object):
                                      default=0.05,
                                      type='float',
                                      help='Significance level [default: %default]'
-                                 )
+                                     )
         stat_filter_group.add_option('--base_call_bias',
                                      metavar='',
                                      dest='baq_bias',
@@ -216,7 +215,7 @@ class Ivy(object):
                                      nargs=1,
                                      default=True,
                                      help='Consider base call bias [default: %default]'
-                                 )
+                                     )
         stat_filter_group.add_option('--strand_bias',
                                      metavar='',
                                      dest='strand_bias',
@@ -224,7 +223,7 @@ class Ivy(object):
                                      nargs=1,
                                      default=True,
                                      help='Consider strand bias [default: %default]'
-                                 )
+                                     )
         stat_filter_group.add_option('--positional_bias',
                                      metavar='',
                                      dest='pos_bias',
@@ -232,9 +231,11 @@ class Ivy(object):
                                      nargs=1,
                                      default=True,
                                      help='Consider positional bias [default: %default]'
-                                 )
+                                     )
         
+    def parse_ext_filt_opt(self):
         # extended options
+        ext_filter_group = OptionGroup(self.parser, 'Extended filter options')
         ext_filter_group.add_option('--blat_collection',
                                     metavar='',
                                     dest='blat',
@@ -242,7 +243,7 @@ class Ivy(object):
                                     nargs=1,
                                     default=False,
                                     help='Reduce mis-alignment with Blat [default: %default]'
-                                )
+                                    )
         ext_filter_group.add_option('--snp',
                                     metavar='',
                                     dest='snp',
@@ -250,7 +251,7 @@ class Ivy(object):
                                     nargs=1,
                                     default=False,
                                     help='Exclude sites within SNP locations [default: %default]'
-                                )
+                                    )
         ext_filter_group.add_option('--ss_num',
                                     metavar='',
                                     dest='ss_num',
@@ -259,7 +260,7 @@ class Ivy(object):
                                     default=5,
                                     type='int',
                                     help='Exclude site around the splice sistes [default: %defaultbp]'
-                                )
+                                    )
         ext_filter_group.add_option('--trim_n',
                                     metavar='',
                                     dest='trim_n',
@@ -268,7 +269,7 @@ class Ivy(object):
                                     default=10,
                                     type='int',
                                     help='Do not call Nbp in up/down read [default: %defaultbp]'
-                                )
+                                    )
         ext_filter_group.add_option('--mask_repeat',
                                     metavar='',
                                     dest='is_mask_rep',
@@ -276,13 +277,13 @@ class Ivy(object):
                                     nargs=1,
                                     default=False,
                                     help='Mask repeat sequence [default: %default]'
-                                )
+                                    )
         # parsing args
-        parser.add_option_group(basic_filter_group)
-        parser.add_option_group(stat_filter_group)
-        parser.add_option_group(ext_filter_group)
-        parser.add_option_group(sample_group)
-        (opt, args) = parser.parse_args()
+        self.parser.add_option_group(basic_filter_group)
+        self.parser.add_option_group(stat_filter_group)
+        self.parser.add_option_group(ext_filter_group)
+        self.parser.add_option_group(sample_group)
+        (opt, args) = self.parser.parse_args()
         
         # Checking for required options
         passed_params = {}
