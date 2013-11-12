@@ -11,7 +11,7 @@ __status__ = 'development'
 
 def run():
     desc = 'software package for identification of RNA editing sites based on massively parallel sequencing data'
-    usage = 'usage: %prog'
+    usage = 'usage: %prog [options]'
 
     fmt = IndentedHelpFormatter(indent_increment=2, max_help_position=60, width=120, short_first=1)
     parser = OptionParser(usage=usage, formatter=fmt, version=__version__, description=desc)
@@ -41,6 +41,12 @@ def run():
                       dest='d_bams',
                       action='store',
                       help='DNA-seq file(s) [bam]',
+                      )
+    parser.add_option('-o',
+                      dest='outname',
+                      metavar='',
+                      action='store',
+                      help='Output filename',
                       )
     parser.add_option('-l',
                       dest='regions',
@@ -247,8 +253,24 @@ def run():
     parser.add_option_group(stat_filter_group)
     parser.add_option_group(ext_filter_group)
     parser.add_option_group(sample_group)
-    (options, args) = parser.parse_args()
+
+    # parsing args
+    (opt, args) = parser.parse_args()
+
+    # Checking for required options
+    if opt.fasta is None:
+        parser.error('[-f] Reference fasta file is required argument')
+    elif opt.r_bams is None:
+        parser.error('[-r] RNA-seq bam file is required argument')
+    #elif opt.b is None:
+    #    parser.error('[-b] DNA-seq bam file is required argument')
+    elif opt.outname is None:
+        parser.error('[-o] Output filename is required argument')
+        
+
     
 
+
+    
 if __name__ == '__main__':
     run()
