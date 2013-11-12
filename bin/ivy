@@ -1,0 +1,6 @@
+#!/usr/bin/env python 
+
+import run_ivy
+
+if __name__ == '__main__':
+    run_ivy.run()
