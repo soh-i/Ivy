@@ -270,15 +270,25 @@ def run():
     parser.add_option_group(ext_filter_group)
     parser.add_option_group(sample_group)
     (opt, args) = parser.parse_args()
-
+    
     # Checking for required options
-    if opt.fasta is None:
+    passed_params = {}
+    if opt.fasta:
+        passed_params.update({'fasta': opt.fasta})
+    elif opt.fasta is None:
         parser.error('[-f] Reference fasta file is a required argument')
+        
+    if opt.r_bams:
+        passed_params.update({'r_bams': opt.r_bams})
     elif opt.r_bams is None:
         parser.error('[-r] RNA-seq bam file is a required argument')
+        
+    if opt.outname:
+        passed_params.update({'outname': opt.outname})
     elif opt.outname is None:
         parser.error('[-o] Output filename is a required argument')
+
+    print passed_params
         
-    
 if __name__ == '__main__':
     run()
