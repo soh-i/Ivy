@@ -1,6 +1,6 @@
 from Ivy.version import __version__
 from Ivy.alignment.stream import AlignmentConfig
-from parse_opt import CommandLineParser
+from Ivy.parse_opt import CommandLineParser
 
 __program__ = 'run_ivy'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
