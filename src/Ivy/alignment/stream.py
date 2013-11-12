@@ -1,10 +1,10 @@
 from __future__ import division
 from collections import Counter, namedtuple
+import os.path
 import string
 import re
 import pysam
 from Ivy.utils import ImutableDict
-import os.path
 
 __program__ = 'stream'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -13,8 +13,13 @@ __status__ = 'development'
 
 
 class AlignmentConfig(object):
-    def __init__(self):
+    def __init__(self, params_from_cl):
         self.params = self.__set_default()
+        
+        if isinstance(params_from_cl, dict):
+            self.cl_params = ImutableDict(params_from_cl)
+        else:
+            raise ValueError, ('Dict is only acceptable as command-line argument')
         
     def __set_default(self):
        __params = {
@@ -382,32 +387,33 @@ class AlignmentStream(object):
             return '.'
                         
 if __name__ == '__main__':
-    a = ['A', 'T', 'C', 'G']
-    b = ['C', 'G', 'G', 'G', 'A', 'A', 'A']
-    c = ['A', 'T', 'C', 'G']
-    #d = ['A', 'A', 'A', 'T', 'T', 'T', 'T', 'C', 'C', 'G']
-    
-    d = ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'T']
-    base = ['G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'T']
-    
-    #print a, 'r:A',
-    ref = ['A', 'T', 'G', 'C', 'N']
-    print base
-    for _ in ref:
-        print "ref:", _,
-        print AlignmentStream.define_allele(base, ref=_)
- 
-    ##print b, 'r:G',
-    #print define_allele(b, ref='G') #=> A
+    conf = AlignmentConfig()
+    #a = ['A', 'T', 'C', 'G']
+    #b = ['C', 'G', 'G', 'G', 'A', 'A', 'A']
+    #c = ['A', 'T', 'C', 'G']
+    ##d = ['A', 'A', 'A', 'T', 'T', 'T', 'T', 'C', 'C', 'G']
     # 
-    ##print c, 'r:A',
-    #print define_allele(c, ref='A')
+    #d = ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'T']
+    #base = ['G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'T']
     # 
-    ##print d, 'r:G',
-    #print define_allele(d, ref='G')
+    ##print a, 'r:A',
+    #ref = ['A', 'T', 'G', 'C', 'N']
+    #print base
+    #for _ in ref:
+    #    print "ref:", _,
+    #    print AlignmentStream.define_allele(base, ref=_)
     # 
-    # 
-       
+    ###print b, 'r:G',
+    ##print define_allele(b, ref='G') #=> A
+    ## 
+    ###print c, 'r:A',
+    ##print define_allele(c, ref='A')
+    ## 
+    ###print d, 'r:G',
+    ##print define_allele(d, ref='G')
+    ## 
+    ## 
+    #   
        
 class AlignmentStreamMerger(object):
     def __init__(self, rna, dna):
