@@ -1,14 +1,3 @@
-'''
-ooooo
-`888'
- 888  oooo    ooo oooo    ooo
- 888   `88.  .8'   `88.  .8'
- 888    `88..8'     `88..8'
- 888     `888'       `888'
-o888o     `8'         .8'
-                  .o..P'
-                  `Y8P'
-'''
 from Ivy.version import __version__
 import Ivy.utils
 from optparse import OptionParser, OptionGroup, HelpFormatter, IndentedHelpFormatter
@@ -26,6 +15,8 @@ def run():
 
     fmt = IndentedHelpFormatter(indent_increment=2, max_help_position=60, width=120, short_first=1)
     parser = OptionParser(usage=usage, formatter=fmt, version=__version__, description=desc)
+
+    # Option groups
     basic_filter_group = OptionGroup(parser, 'Basic filter options')
     ext_filter_group = OptionGroup(parser, 'Extended filter options')
     stat_filter_group = OptionGroup(parser, 'Statistical filter options')
@@ -43,14 +34,12 @@ def run():
                       dest='r_bams',
                       action='store',
                       metavar='',
-                      nargs='+',
                       help='RNA-seq file(s) [bam]',
                       )
     parser.add_option('-b',
                       metavar='',
                       dest='d_bams',
                       action='store',
-                      nargs='+',
                       help='DNA-seq file(s) [bam]',
                       )
     parser.add_option('-l',
@@ -104,7 +93,7 @@ def run():
                             default=False,
                             help='Biological replicate is used [default: %default]'
                             )
-
+    
     # basic filter options
     basic_filter_group.add_option('--min_ag_ratio',
                                   metavar='',
@@ -258,7 +247,8 @@ def run():
     parser.add_option_group(stat_filter_group)
     parser.add_option_group(ext_filter_group)
     parser.add_option_group(sample_group)
-    (options, args) = parser.parse_args()    
+    (options, args) = parser.parse_args()
+    
 
 if __name__ == '__main__':
     run()
