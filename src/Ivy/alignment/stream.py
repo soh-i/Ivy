@@ -1,10 +1,10 @@
 from __future__ import division
 from collections import Counter, namedtuple
+import os.path
 import string
 import re
 import pysam
 from Ivy.utils import ImutableDict
-import os.path
 
 __program__ = 'stream'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -13,8 +13,13 @@ __status__ = 'development'
 
 
 class AlignmentConfig(object):
-    def __init__(self):
+    def __init__(self, params_from_cl):
         self.params = self.__set_default()
+        
+        if isinstance(params_from_cl, dict):
+            self.cl_params = ImutableDict(params_from_cl)
+        else:
+            raise ValueError, ('Dict is only acceptable as command-line argument')
         
     def __set_default(self):
        __params = {
