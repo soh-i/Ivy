@@ -22,17 +22,13 @@ class Ivy(CommandLineParser):
     def run(self):
         CommandLineParser.__init__(self)
         params = self.ivy_parse_options()
-
-        # just test code is here
-        params.update({'chrom': '21', 'start': 47721030, 'end': 47721057, 'one_based': True})
         align_conf = AlignmentConfig(params)
-        print align_conf.cl_params
         
         stream = AlignmentStream(align_conf.cl_params)
         pp = pprint.PrettyPrinter(indent=6)
         for rna in stream.pileup_stream():
             pp.pprint(rna)
-         
+                     
 
         
     
