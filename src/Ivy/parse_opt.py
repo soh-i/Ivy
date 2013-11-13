@@ -299,12 +299,12 @@ class CommandLineParser(object):
                 print k+':', v
             die()
 
-        ###
+        ##############################
         ### Check input some files ###
-        ###
+        ##############################
         passed_params = {}
         
-        # fasta file
+        # fasta file, -f
         if not opt.fasta:
             self.parser.error('[-f] Reference fasta file is a required argument')
         elif self._ok_file(opt.fasta):
@@ -312,7 +312,7 @@ class CommandLineParser(object):
         elif not self._ok_file(opt.fasta):
             self.parser.error(opt.fasta + " is not found or writable file!")
             
-        # bam file
+        # RNA-seq bam file, r_bams
         if not opt.r_bams:
             self.parser.error('[-r] RNA-seq bam file is a required argument')
         elif self._ok_file(opt.r_bams):
@@ -320,7 +320,7 @@ class CommandLineParser(object):
         elif not self._ok_file(opt.r_bams):
             self.parser.error(opt.r_bams + " is not found or writable file!")
         
-        # output filename
+        # output filename, -o
         if opt.outname:
             passed_params.update({'outname': opt.outname})
             #self.parser.error('[-o] Output filename is a required argument')
@@ -328,9 +328,9 @@ class CommandLineParser(object):
             default_filename = 'ivy_run.log'
             passed_params.update({'outname': default_filename})
 
-        ###
-        ### Check basic options
-        ###
+        ###########################
+        ### Check basic options ###
+        ###########################
 
         # -l, regions
         if opt.regions:
