@@ -297,8 +297,11 @@ class CommandLineParser(object):
                 print k+':', v
             die()
 
+        ###
         ### Check input some files ###
+        ###
         passed_params = {}
+        
         # fasta file
         if not opt.fasta:
             self.parser.error('[-f] Reference fasta file is a required argument')
@@ -323,7 +326,11 @@ class CommandLineParser(object):
             default_filename = 'ivy_run.log'
             passed_params.update({'outname': default_filename})
 
-        # Check basic opts
+        ###
+        ### Check basic opts
+        ###
+
+        # -l, regions
         if opt.regions:
             if self._is_region(opt.regions):
                 passed_params.update({'region':opt.regions})
@@ -333,7 +340,7 @@ class CommandLineParser(object):
         return passed_params
 
     def _ok_file(self, filename):
-        if os.path.isfile(filename) and os.access(opt.fasta, os.R_OK):
+        if os.path.isfile(filename) and os.access(filename, os.R_OK):
             return True
         else:
             return False
