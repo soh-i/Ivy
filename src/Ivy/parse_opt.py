@@ -414,7 +414,33 @@ class CommandLineParser(object):
         # --min-baq-dna
         if opt.min_baq_d:
             passed_params.update({'min_baq_dba': opt.min_baq_d})
-    
+
+
+        ##################################
+        ### Statistical filter options ###
+        ##################################
+        # --blat-collection
+        if opt.blat:
+            passed_params.update({'blat': opt.blat})
+        elif opt.blat is False:
+            passed_params.update({'blat': False})
+
+        # --snp
+        if opt.snp_file:
+            passed_params.update({'snp_file': opt.snp})
+            
+        # --ss-num
+        if opt.ss_num:
+            passed_params.update({'ss_num': opt.ss_num})
+
+        # --trim-n
+        if opt.trim_n:
+            passed_params.update({'trim_n': opt.trim_n})
+
+        # --mask-repeat
+        if opt.is_mask_rep:
+            passed_params.update({'is_mask_rep': opt.is_mask_rep})
+
         return passed_params
 
     def _ok_file(self, filename):
