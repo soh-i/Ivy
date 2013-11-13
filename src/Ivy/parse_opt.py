@@ -332,10 +332,9 @@ class CommandLineParser(object):
 
         # -l, regions
         if opt.regions:
-            if self._is_region(opt.regions):
+            if len(self._is_region(opt.regions)):
                 passed_params.update({'region': self._is_region(opt.regions)})
             
-        die(passed_params)
         return passed_params
 
     def _ok_file(self, filename):
