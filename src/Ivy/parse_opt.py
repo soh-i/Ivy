@@ -313,34 +313,35 @@ class CommandLineParser(object):
 
         # Check basic opts
         if opt.regions:
-            print opt.regions
-            
-            # chr21:3912-212
-            (chrom, pos) = opt.regions.split(':')
-            if not chrom:
-                self.parser.error(opt.regions + 'is invalid chromosome name')
-            elif not pos:
-                self.parser.error(opt.regions + 'is invalid position')
-            else:
-                # everything is fine
-                (start, end) = pos.split('-')
-                if start.isdigit() and end.isdigit():
-                    if start < end:
-                        print start, end
-                        passed_params.update({'regions':opt.regions})
-                        die(passed_params)
-                    elif start > end:
-                        self.parser.error('end:' + end + ' is greater than ' + 'start:' + start)
-                    elif start == end:
-                        self.parser.error("start:" + start + ", end:" + end + " is same values")
-                else:
-                    self.parser.error(opt.regions + 'in pos is not numetric (expected integer)')
-            
+            if self._is_region(opt.regions):
+                passed_params.update({'region':opt.regions})
+                die("OK")
+        
         return passed_params
 
-    def _is_region(self):
-        pass
-        
+    def _is_region(self, regions):
+        (chrom, pos) = regions.split(':')
+        if not chrom:
+            self.parser.error(regions + 'is invalid chromosome name')
+            return False
+        elif not pos:
+            self.parser.error(regions + 'is invalid position')
+            return False
+        else:
+            # everything is fine
+            (start, end) = pos.split('-')
+            if start.isdigit() and end.isdigit():
+                if start < end:
+                    return True
+                elif start > end:
+                    self.parser.error('end:' + end + ' is greater than ' + 'start:' + start)
+                    return False
+                elif start == end:
+                    self.parser.error("start:" + start + ", end:" + end + " is same values")
+                    return False
+            else:
+                self.parser.error(regions + 'in pos is not numetric (expected integer)')
+                return False
             
 def die(msg=''):
     raise SystemExit(msg)
