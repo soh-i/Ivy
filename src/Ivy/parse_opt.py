@@ -1,6 +1,7 @@
 from optparse import OptionParser, OptionGroup, HelpFormatter, IndentedHelpFormatter
 import os.path
 import logging
+import string
 
 from Ivy.version import __version__
 import Ivy.utils
@@ -56,7 +57,7 @@ class CommandLineParser(object):
                                metavar='',
                                nargs=2,
                                type='string',
-                               help='Explore specify region [chr:start chr:end]'
+                               help='Explore specify region [chr:start-end]'
                                )
         self.parser.add_option('-G',
                                metavar='',
@@ -66,7 +67,12 @@ class CommandLineParser(object):
                                type='string',
                                help='GTF file',
                                )
-        self.parser.add_option('--num_threads', '-p',
+        self.parser.add_option('--one_based',
+                               metavar='',
+                               action='store_false',
+                               help='Genomic coordinate'
+                               )
+        self.parser.add_option('--num_threads',
                                metavar='',
                                dest='n_threads',
                                action='store',
@@ -75,17 +81,17 @@ class CommandLineParser(object):
                                type='int',
                                help='Number of threads [default: %default]',
                                )
+        self.parser.add_option('--dry-run',
+                               metavar='',
+                               action='store_false',
+                               help='dry run ivy'
+                               )
         self.parser.add_option('--verbose',
                                metavar='',
                                action='store_false',
                                help='Show verbously messages'
                                )
-        self.parser.add_option('--one_based',
-                               metavar='',
-                               action='store_false',
-                               help='Genomic coordinate'
-                               )
-
+        
     def parse_sample_opt(self):
         # sample options
         sample_group = OptionGroup(self.parser, 'Sample options')
@@ -280,7 +286,7 @@ class CommandLineParser(object):
         
         (opt, args) = self.parser.parse_args()
         
-        # Checking for required options
+        # Check required options
         passed_params = {}
         if opt.fasta:
             passed_params.update({'fasta': opt.fasta})
@@ -294,6 +300,25 @@ class CommandLineParser(object):
             passed_params.update({'outname': opt.outname})
         elif opt.outname is None:
             self.parser.error('[-o] Output filename is a required argument')
+
+        # Check basic opts
+        if opt.regions:
+            print opt.regions
+            
+            # chr21:3912-212
+            (chrom, pos) = opt.regions.split(':')
+            if not chrom:
+                self.parser.error(opt.regions + 'is invalid chromosome name')
+            elif not pos:
+                self.parser.error(opt.regions + 'is invalid position')
+            else:
+                # everything is fine
+                (start, end) = pos.split('-')
+                if start.isdigit() and end.isdigit():
+                    passed_params.update({'regions':opt.regions})
+                else:
+                    self.parser.error(opt.regions + 'in pos is not numetric (expected integer)')
+            
         return passed_params
             
 def die(msg=''):
