@@ -355,11 +355,9 @@ class CommandLineParser(object):
         if opt.n_threads:
             passed_params.update({'n_threads': opt.n_threads})
 
-            
         ############################
         ### Check sample options ###
         ###########################
-
         # --strand
         if opt.strand is True:
             passed_params.update({'strand': opt.strand})
@@ -381,7 +379,41 @@ class CommandLineParser(object):
         ############################
         ### Basic filter options ###
         ############################
-        
+        # --min-ag-ratio
+        if opt.ag_ratio:
+            passed_params.update({'ag_ratio': opt.ag_ratio})
+
+        # --min-rna-coverage
+        if opt.min_rna_cov:
+            passed_params.update({'min_rna_cov': opt.min_rna_cov})
+
+        # --min_dna_coverage
+        if opt.min_dna_cov:
+            passed_params.update({'min_dna_cov': opt.min_dna_cov})
+
+        # --rm-duplicated-read
+        if opt.is_duplicated:
+            passed_params.update({'is_duplicated': opt.is_duplicated})
+
+        # --rm-deletion-read
+        if opt.is_deletion:
+            passed_params.update({'is_deletion': opt.is_deletion})
+
+        # --min-mapq
+        if opt.min_mapq:
+            passed_params.update({'min_mapq': opt.min_mapq})
+
+        # --num-allow-type
+        if opt.num_type:
+            passed_params.update({'num_type': opt.num_type})
+
+        # --min-baq-rna
+        if opt.min_baq_r:
+            passed_params.update({'min_baq_rna': opt.min_baq_r})
+
+        # --min-baq-dna
+        if opt.min_baq_d:
+            passed_params.update({'min_baq_dba': opt.min_baq_d})
     
         return passed_params
 
