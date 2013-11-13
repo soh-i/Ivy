@@ -70,13 +70,14 @@ class CommandLineParser(object):
                                type='string',
                                help='GTF file',
                                )
-        self.parser.add_option('--one_based',
+        self.parser.add_option('--one-based',
                                metavar='',
                                action='store_true',
                                dest='one_based',
+                               default=False,
                                help='Genomic coordinate'
                                )
-        self.parser.add_option('--num_threads',
+        self.parser.add_option('--num-threads',
                                metavar='',
                                dest='n_threads',
                                action='store',
@@ -106,7 +107,7 @@ class CommandLineParser(object):
                                 action='store_false',
                                 help='Strand-specific seq. data is used. [default: %default]'
                                 )
-        sample_group.add_option('--ko_strain',
+        sample_group.add_option('--ko-strain',
                                 metavar='',
                                 default=False,
                                 action='store_false',
@@ -123,7 +124,7 @@ class CommandLineParser(object):
     def parse_basic_filt_opt(self):
         # basic filter options
         basic_filter_group = OptionGroup(self.parser, 'Basic filter options')
-        basic_filter_group.add_option('--min_ag_ratio',
+        basic_filter_group.add_option('--min-ag-ratio',
                                       metavar='',
                                       dest='ag_ratio',
                                       action='store',
@@ -132,7 +133,7 @@ class CommandLineParser(object):
                                       type='float',
                                       help='Min A-to-G edit base ratio [default: %default]'
                                       )
-        basic_filter_group.add_option('--min_rna_coverage',
+        basic_filter_group.add_option('--min-rna-coverage',
                                       metavar='',
                                       dest='min_rna_cov',
                                       action='store',
@@ -141,7 +142,7 @@ class CommandLineParser(object):
                                       type='int',
                                       help='Min RNA read coverage [default: %default]'
                                       )
-        basic_filter_group.add_option('--min_dna_coverage',
+        basic_filter_group.add_option('--min-dna-coverage',
                                       metavar='',
                                       dest='min_dna_cov',
                                       action='store',
@@ -166,7 +167,7 @@ class CommandLineParser(object):
                                       default=True,
                                       help='Remove deletion reads [default: %default]'
                                       )
-        basic_filter_group.add_option('--min_mapq',
+        basic_filter_group.add_option('--min-mapq',
                                       metavar='',
                                       dest='min_mapq',
                                       action='store',
@@ -175,7 +176,7 @@ class CommandLineParser(object):
                                       type='int',
                                       help='Min mapping quality [default: %default]'
                                       )
-        basic_filter_group.add_option('--num_allow_type',
+        basic_filter_group.add_option('--num-allow-type',
                                       metavar='',
                                       dest='num_type',
                                       action='store',
@@ -184,7 +185,7 @@ class CommandLineParser(object):
                                       type='int',
                                       help='Number of allowing base modification type [default: %default]'
                                       )
-        basic_filter_group.add_option('--min_baq_rna',
+        basic_filter_group.add_option('--min-baq-rna',
                                       metavar='',
                                       dest='min_baq_r',
                                       action='store',
@@ -193,7 +194,7 @@ class CommandLineParser(object):
                                       type='int',
                                       help='Min base call quality in RNA [default: %default]'
                                       )
-        basic_filter_group.add_option('--min_baq_dna',
+        basic_filter_group.add_option('--min-baq-dna',
                                       metavar='',
                                       dest='min_baq_d',
                                       action='store',
@@ -207,7 +208,7 @@ class CommandLineParser(object):
     def parse_stat_filt_opt(self):
         # statistical filters options
         stat_filter_group = OptionGroup(self.parser, 'Statistical filter options')
-        stat_filter_group.add_option('--sig_level',
+        stat_filter_group.add_option('--sig-level',
                                      metavar='',
                                      dest='sig_level',
                                      action='store',
@@ -216,21 +217,21 @@ class CommandLineParser(object):
                                      type='float',
                                      help='Significance level [default: %default]'
                                      )
-        stat_filter_group.add_option('--base_call_bias',
+        stat_filter_group.add_option('--base-call-bias',
                                      metavar='',
                                      dest='baq_bias',
                                      action='store_true',
                                      default=True,
                                      help='Consider base call bias [default: %default]'
                                      )
-        stat_filter_group.add_option('--strand_bias',
+        stat_filter_group.add_option('--strand-bias',
                                      metavar='',
                                      dest='strand_bias',
                                      action='store_true',
                                      default=True,
                                      help='Consider strand bias [default: %default]'
                                      )
-        stat_filter_group.add_option('--positional_bias',
+        stat_filter_group.add_option('--positional-bias',
                                      metavar='',
                                      dest='pos_bias',
                                      action='store_true',
@@ -242,7 +243,7 @@ class CommandLineParser(object):
     def parse_ext_filt_opt(self):
         # extended options
         ext_filter_group = OptionGroup(self.parser, 'Extended filter options')
-        ext_filter_group.add_option('--blat_collection',
+        ext_filter_group.add_option('--blat-collection',
                                     metavar='',
                                     dest='blat',
                                     action='store_false',
@@ -255,7 +256,7 @@ class CommandLineParser(object):
                                     action='store',
                                     help='Exclude variation sites [vcf]'
                                     )
-        ext_filter_group.add_option('--ss_num',
+        ext_filter_group.add_option('--ss-num',
                                     metavar='',
                                     dest='ss_num',
                                     action='store',
@@ -264,7 +265,7 @@ class CommandLineParser(object):
                                     type='int',
                                     help='Exclude site around the splice sistes [default: %defaultbp]'
                                     )
-        ext_filter_group.add_option('--trim_n',
+        ext_filter_group.add_option('--trim-n',
                                     metavar='',
                                     dest='trim_n',
                                     action='store',
@@ -273,7 +274,7 @@ class CommandLineParser(object):
                                     type='int',
                                     help='Do not call Nbp in up/down read [default: %defaultbp]'
                                     )
-        ext_filter_group.add_option('--mask_repeat',
+        ext_filter_group.add_option('--mask-repeat',
                                     metavar='',
                                     dest='is_mask_rep',
                                     action='store_false',
@@ -335,6 +336,13 @@ class CommandLineParser(object):
         if opt.regions:
             if len(self._is_region(opt.regions)):
                 passed_params.update({'region': self._is_region(opt.regions)})
+
+        # --one_based
+        if isinstance(opt.one_based, bool):
+            passed_params.update({'one_based': opt.one_based})
+        else:
+            self.parser.error("expected boolean" + opt.one_based)
+    
         die(passed_params)
         return passed_params
 
