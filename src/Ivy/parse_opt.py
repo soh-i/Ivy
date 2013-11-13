@@ -343,7 +343,6 @@ class CommandLineParser(object):
         else:
             self.parser.error("expected boolean" + opt.one_based)
     
-        die(passed_params)
         return passed_params
 
     def _ok_file(self, filename):
