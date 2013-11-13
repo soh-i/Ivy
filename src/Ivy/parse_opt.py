@@ -334,7 +334,6 @@ class CommandLineParser(object):
         ###########################
         ### Check basic options ###
         ###########################
-        
         # -l, regions
         if opt.regions:
             if len(self._is_region(opt.regions)):
@@ -355,6 +354,7 @@ class CommandLineParser(object):
         # --num-threads
         if opt.n_threads:
             passed_params.update({'n_threads': opt.n_threads})
+
             
         ############################
         ### Check sample options ###
@@ -378,9 +378,10 @@ class CommandLineParser(object):
         elif opt.replicate is False:
             passed_params.update({'replicate': opt.replicate})
 
-
-
-            
+        ############################
+        ### Basic filter options ###
+        ############################
+        
     
         return passed_params
 
