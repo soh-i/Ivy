@@ -373,7 +373,7 @@ class CommandLineParser(object):
             if start.isdigit() and end.isdigit():
                 if start < end:
                     # everything is fine
-                    return {'chrom': chrom, 'start': start, 'end': end}
+                    return {'chrom': str(chrom), 'start': int(start), 'end': int(end)}
                 elif start > end:
                     self.parser.error('end:' + end + ' is greater than ' + 'start:' + start)
                     return False
