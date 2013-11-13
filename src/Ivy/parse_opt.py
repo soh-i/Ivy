@@ -77,33 +77,34 @@ class CommandLineParser(object):
                                )
         self.parser.add_option('--verbose',
                                metavar='',
-                               dest='verbose',
-                               default=False,
+                               action='store_false',
                                help='Show verbously messages'
                                )
-        
+        self.parser.add_option('--one_based',
+                               metavar='',
+                               action='store_false',
+                               help='Genomic coordinate'
+                               )
+
     def parse_sample_opt(self):
         # sample options
         sample_group = OptionGroup(self.parser, 'Sample options')
         sample_group.add_option('--strand',
                                 metavar='',
-                                action='store',
-                                nargs=1,
                                 default=False,
+                                action='store_false',
                                 help='Strand-specific seq. data is used. [default: %default]'
                                 )
         sample_group.add_option('--ko_strain',
                                 metavar='',
-                                action='store',
-                                nargs=1,
                                 default=False,
+                                action='store_false',
                                 help='Adar null strain is used. [default: %default]'
                                 )
         sample_group.add_option('--replicate',
                                 metavar='',
-                                action='store',
-                                nargs=1,
                                 default=False,
+                                action='store_false',
                                 help='Biological replicate is used [default: %default]'
                                 )
         self.parser.add_option_group(sample_group)
@@ -199,32 +200,29 @@ class CommandLineParser(object):
                                      metavar='',
                                      dest='sig_level',
                                      action='store',
-                                     nargs=1,
                                      default=0.05,
+                                     nargs=1,
                                      type='float',
                                      help='Significance level [default: %default]'
                                      )
         stat_filter_group.add_option('--base_call_bias',
                                      metavar='',
                                      dest='baq_bias',
-                                     action='store',
-                                     nargs=1,
+                                     action='store_true',
                                      default=True,
                                      help='Consider base call bias [default: %default]'
                                      )
         stat_filter_group.add_option('--strand_bias',
                                      metavar='',
                                      dest='strand_bias',
-                                     action='store',
-                                     nargs=1,
+                                     action='store_true',
                                      default=True,
                                      help='Consider strand bias [default: %default]'
                                      )
         stat_filter_group.add_option('--positional_bias',
                                      metavar='',
                                      dest='pos_bias',
-                                     action='store',
-                                     nargs=1,
+                                     action='store_true',
                                      default=True,
                                      help='Consider positional bias [default: %default]'
                                      )
@@ -236,18 +234,15 @@ class CommandLineParser(object):
         ext_filter_group.add_option('--blat_collection',
                                     metavar='',
                                     dest='blat',
-                                    action='store',
-                                    nargs=1,
+                                    action='store_false',
                                     default=False,
                                     help='Reduce mis-alignment with Blat [default: %default]'
                                     )
         ext_filter_group.add_option('--snp',
                                     metavar='',
-                                    dest='snp',
+                                    dest='snp_file',
                                     action='store',
-                                    nargs=1,
-                                    default=False,
-                                    help='Exclude sites within SNP locations [default: %default]'
+                                    help='Exclude variation sites [vcf]'
                                     )
         ext_filter_group.add_option('--ss_num',
                                     metavar='',
@@ -270,8 +265,7 @@ class CommandLineParser(object):
         ext_filter_group.add_option('--mask_repeat',
                                     metavar='',
                                     dest='is_mask_rep',
-                                    action='store',
-                                    nargs=1,
+                                    action='store_false',
                                     default=False,
                                     help='Mask repeat sequence [default: %default]'
                                     )
@@ -282,6 +276,7 @@ class CommandLineParser(object):
         self.parse_ext_filt_opt()
         self.parse_sample_opt()
         self.parse_basic_filt_opt()
+        self.parse_stat_filt_opt()
         
         (opt, args) = self.parser.parse_args()
         
