@@ -28,7 +28,7 @@ class CommandLineParser(object):
                                metavar='',
                                nargs=1,
                                type='string',
-                               help='set reference genome [fasta]'
+                               help='Reference genome [fasta]'
                                )
         self.parser.add_option('-r',
                                dest='r_bams',
@@ -55,7 +55,7 @@ class CommandLineParser(object):
                                dest='regions',
                                action='store',
                                metavar='',
-                               nargs=2,
+                               nargs=1,
                                type='string',
                                help='Explore specify region [chr:start-end]'
                                )
@@ -83,8 +83,9 @@ class CommandLineParser(object):
                                )
         self.parser.add_option('--dry-run',
                                metavar='',
-                               action='store_false',
-                               help='dry run ivy'
+                               dest='dry_run',
+                               action='store_true',
+                               help='Dry run ivy'
                                )
         self.parser.add_option('--verbose',
                                metavar='',
@@ -285,7 +286,11 @@ class CommandLineParser(object):
         self.parse_stat_filt_opt()
         
         (opt, args) = self.parser.parse_args()
-        
+
+        # enable --dry-run or not
+        if opt.dry_run:
+            die(msg=opt)
+            
         # Check required options
         passed_params = {}
         if opt.fasta:
@@ -303,7 +308,7 @@ class CommandLineParser(object):
 
         # Check basic opts
         if opt.regions:
-            print opt.regions
+            die(opt.regions)
             
             # chr21:3912-212
             (chrom, pos) = opt.regions.split(':')
