@@ -415,10 +415,28 @@ class CommandLineParser(object):
         if opt.min_baq_d:
             passed_params.update({'min_baq_dba': opt.min_baq_d})
 
-
         ##################################
         ### Statistical filter options ###
         ##################################
+        # --sig-level
+        if opt.sig_level:
+            passed_params.update({'sig_level': opt.sig_level})
+            
+        # base-call-bias
+        if opt.baq_bias:
+            passed_params.update({'baq_bias': opt.baq_bias})
+
+        # strand-bias
+        if opt.strand_bias:
+            passed_params.update({'strnad_bias': opt.strand_bias})
+        
+        # --potitional-bias
+        if opt.pos_bias:
+            passed_params.update({'has bias': opt.pos_bias})
+
+        ###########################
+        ### Ext. filter options ###
+        ###########################
         # --blat-collection
         if opt.blat:
             passed_params.update({'blat': opt.blat})
@@ -440,7 +458,7 @@ class CommandLineParser(object):
         # --mask-repeat
         if opt.is_mask_rep:
             passed_params.update({'is_mask_rep': opt.is_mask_rep})
-
+ 
         return passed_params
 
     def _ok_file(self, filename):
