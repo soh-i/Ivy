@@ -327,16 +327,15 @@ class CommandLineParser(object):
             passed_params.update({'outname': default_filename})
 
         ###
-        ### Check basic opts
+        ### Check basic options
         ###
 
         # -l, regions
         if opt.regions:
             if self._is_region(opt.regions):
-                passed_params.update({'region':opt.regions})
-                print passed_params
-                die("OK")
-        
+                passed_params.update({'region': self._is_region(opt.regions)})
+            
+        die(passed_params)
         return passed_params
 
     def _ok_file(self, filename):
@@ -367,7 +366,7 @@ class CommandLineParser(object):
             if start.isdigit() and end.isdigit():
                 if start < end:
                     # everything is fine
-                    return True
+                    return list([chrom, start, end])
                 elif start > end:
                     self.parser.error('end:' + end + ' is greater than ' + 'start:' + start)
                     return False
