@@ -72,7 +72,8 @@ class CommandLineParser(object):
                                )
         self.parser.add_option('--one_based',
                                metavar='',
-                               action='store_false',
+                               action='store_true',
+                               dest='one_based',
                                help='Genomic coordinate'
                                )
         self.parser.add_option('--num_threads',
@@ -334,7 +335,7 @@ class CommandLineParser(object):
         if opt.regions:
             if len(self._is_region(opt.regions)):
                 passed_params.update({'region': self._is_region(opt.regions)})
-            
+        die(passed_params)
         return passed_params
 
     def _ok_file(self, filename):
@@ -365,7 +366,7 @@ class CommandLineParser(object):
             if start.isdigit() and end.isdigit():
                 if start < end:
                     # everything is fine
-                    return list([chrom, start, end])
+                    return {'chrom': chrom, 'start': start, 'end': end}
                 elif start > end:
                     self.parser.error('end:' + end + ' is greater than ' + 'start:' + start)
                     return False
