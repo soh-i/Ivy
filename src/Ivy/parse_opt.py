@@ -105,17 +105,21 @@ class CommandLineParser(object):
         sample_group = OptionGroup(self.parser, 'Sample options')
         sample_group.add_option('--strand',
                                 metavar='',
+                                dest='strand',
                                 action='store_true',
+                                default=False,
                                 help='Strand-specific seq. data is used. [default: %default]'
                                 )
         sample_group.add_option('--ko-strain',
                                 metavar='',
+                                dest='ko_strain',
                                 action='store_true',
                                 default=False,
                                 help='Adar null strain is used. [default: %default]'
                                 )
         sample_group.add_option('--replicate',
                                 metavar='',
+                                dest='replicate',
                                 action='store_false',
                                 default=False,
                                 help='Biological replicate is used [default: %default]'
@@ -156,7 +160,6 @@ class CommandLineParser(object):
                                       metavar='',
                                       dest='is_duplicated',
                                       action='store_true',
-                                      nargs=1,
                                       default=True,
                                       help='Remove duplicated reads [default: %default]'
                                       )
@@ -164,7 +167,6 @@ class CommandLineParser(object):
                                       metavar='',
                                       dest='is_deletion',
                                       action='store_true',
-                                      nargs=1,
                                       default=True,
                                       help='Remove deletion reads [default: %default]'
                                       )
@@ -297,7 +299,7 @@ class CommandLineParser(object):
         if opt.dry_run:
             print "### All options with values ###"
             for k, v in self.parser.values.__dict__.iteritems():
-                print k+':', v
+                print '[' + k + ']:', v
             die()
 
         #############################
@@ -345,7 +347,7 @@ class CommandLineParser(object):
             passed_params.update({'gtf': None})
 
         # --one_based
-        if opt.one_based is not None:
+        if opt.one_based is True:
             passed_params.update({'one_based': opt.one_based})
         elif opt.one_based is False:
             passed_params.update({'one_based': False})
@@ -353,14 +355,31 @@ class CommandLineParser(object):
         # --num-threads
         if opt.n_threads:
             passed_params.update({'n_threads': opt.n_threads})
-
+            
         ############################
         ### Check sample options ###
         ###########################
 
         # --strand
-        if opt.strand:
-            passed_params.update({'': opt.strand})
+        if opt.strand is True:
+            passed_params.update({'strand': opt.strand})
+        elif opt.strand is False:
+            passed_params.update({'strand': False})
+
+        # --ko-strain
+        if opt.ko_strain is True:
+            passed_params.update({'strand': opt.strand})
+        elif opt.ko_strain is False:
+            passed_params.update({'strand': False})
+
+        # --replicate
+        if opt.replicate is True:
+            passed_params.update({'replicate': opt.replicate})
+        elif opt.replicate is False:
+            passed_params.update({'replicate': opt.replicate})
+
+
+
             
     
         return passed_params
