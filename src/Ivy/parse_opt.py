@@ -296,29 +296,32 @@ class CommandLineParser(object):
             for k, v in self.parser.values.__dict__.iteritems():
                 print k+':', v
             die()
-            
-        # Check required options
+
+        ### Check input some files ###
         passed_params = {}
-        
-        if opt.fasta is None:
+        # fasta file
+        if not opt.fasta:
             self.parser.error('[-f] Reference fasta file is a required argument')
-        elif self._ok_file(opt.fasta) is True:
-            # everything fine
-            passed_params.update({'fasta': opt.fasta}) 
-        elif self._ok_file(opt.fasta) is False:
+        elif self._ok_file(opt.fasta):
+            passed_params.update({'fasta': opt.fasta})
+        elif not self._ok_file(opt.fasta):
             self.parser.error(opt.fasta + " is not found or writable file!")
-        else:
-            self.parser.error('[-f] Reference fasta file is a required argument')
             
-            
-        if opt.r_bams:
-            passed_params.update({'r_bams': opt.r_bams})
-        elif opt.r_bams is None:
+        # bam file
+        if not opt.r_bams:
             self.parser.error('[-r] RNA-seq bam file is a required argument')
+        elif self._ok_file(opt.r_bams):
+            passed_params.update({'r_bams': opt.r_bams})
+        elif not self._ok_file(opt.r_bams):
+            self.parser.error(opt.r_bams + " is not found or writable file!")
+        
+        # output filename
         if opt.outname:
             passed_params.update({'outname': opt.outname})
-        elif opt.outname is None:
-            self.parser.error('[-o] Output filename is a required argument')
+            #self.parser.error('[-o] Output filename is a required argument')
+        else:
+            default_filename = 'ivy_run.log'
+            passed_params.update({'outname': default_filename})
 
         # Check basic opts
         if opt.regions:
