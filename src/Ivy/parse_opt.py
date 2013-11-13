@@ -3,6 +3,7 @@ import os.path
 import logging
 import string
 import os.path
+import os
 import sys
 
 from Ivy.version import __version__
@@ -298,10 +299,18 @@ class CommandLineParser(object):
             
         # Check required options
         passed_params = {}
-        if opt.fasta:
-            passed_params.update({'fasta': opt.fasta})
-        elif opt.fasta is None:
+        
+        if opt.fasta is None:
             self.parser.error('[-f] Reference fasta file is a required argument')
+        elif self._ok_file(opt.fasta) is True:
+            # everything fine
+            passed_params.update({'fasta': opt.fasta}) 
+        elif self._ok_file(opt.fasta) is False:
+            self.parser.error(opt.fasta + " is not found or writable file!")
+        else:
+            self.parser.error('[-f] Reference fasta file is a required argument')
+            
+            
         if opt.r_bams:
             passed_params.update({'r_bams': opt.r_bams})
         elif opt.r_bams is None:
@@ -315,9 +324,16 @@ class CommandLineParser(object):
         if opt.regions:
             if self._is_region(opt.regions):
                 passed_params.update({'region':opt.regions})
+                print passed_params
                 die("OK")
         
         return passed_params
+
+    def _ok_file(self, filename):
+        if os.path.isfile(filename) and os.access(opt.fasta, os.R_OK):
+            return True
+        else:
+            return False
 
     def _is_region(self, regions):
         # TODO: needed to unittest!
