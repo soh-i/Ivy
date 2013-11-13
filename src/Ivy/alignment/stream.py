@@ -134,8 +134,8 @@ class AlignmentStream(object):
         
     def pileup_stream(self):
         for col in self.samfile.pileup(reference=self.chrom,
-                                       #start=self.start,
-                                       #end=self.end):
+                                       start=self.start,
+                                       end=self.end,
                                        ):
             
             bam_chrom = self.samfile.getrname(col.tid)
