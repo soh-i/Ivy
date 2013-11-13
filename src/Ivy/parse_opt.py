@@ -75,7 +75,7 @@ class CommandLineParser(object):
         self.parser.add_option('--one-based',
                                metavar='',
                                dest='one_based',
-                               action='store_true',
+                               action='store_false',
                                default=False,
                                help='Genomic coordinate'
                                )
@@ -110,14 +110,14 @@ class CommandLineParser(object):
                                 )
         sample_group.add_option('--ko-strain',
                                 metavar='',
+                                action='store_true',
                                 default=False,
-                                action='store_false',
                                 help='Adar null strain is used. [default: %default]'
                                 )
         sample_group.add_option('--replicate',
                                 metavar='',
-                                default=False,
                                 action='store_false',
+                                default=False,
                                 help='Biological replicate is used [default: %default]'
                                 )
         self.parser.add_option_group(sample_group)
@@ -155,7 +155,7 @@ class CommandLineParser(object):
         basic_filter_group.add_option('--rm-duplicated-read',
                                       metavar='',
                                       dest='is_duplicated',
-                                      action='store',
+                                      action='store_true',
                                       nargs=1,
                                       default=True,
                                       help='Remove duplicated reads [default: %default]'
@@ -163,7 +163,7 @@ class CommandLineParser(object):
         basic_filter_group.add_option('--rm-deletion-read',
                                       metavar='',
                                       dest='is_deletion',
-                                      action='store',
+                                      action='store_true',
                                       nargs=1,
                                       default=True,
                                       help='Remove deletion reads [default: %default]'
@@ -222,21 +222,21 @@ class CommandLineParser(object):
                                      metavar='',
                                      dest='baq_bias',
                                      action='store_true',
-                                     default=True,
+                                     default=False,
                                      help='Consider base call bias [default: %default]'
                                      )
         stat_filter_group.add_option('--strand-bias',
                                      metavar='',
                                      dest='strand_bias',
                                      action='store_true',
-                                     default=True,
+                                     default=False,
                                      help='Consider strand bias [default: %default]'
                                      )
         stat_filter_group.add_option('--positional-bias',
                                      metavar='',
                                      dest='pos_bias',
                                      action='store_true',
-                                     default=True,
+                                     default=False,
                                      help='Consider positional bias [default: %default]'
                                      )
         self.parser.add_option_group(stat_filter_group)
