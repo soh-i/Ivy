@@ -289,7 +289,10 @@ class CommandLineParser(object):
 
         # enable --dry-run or not
         if opt.dry_run:
-            die(msg=opt)
+            print "### All options with values ###"
+            for k, v in self.parser.values.__dict__.iteritems():
+                print k+':', v
+            die()
             
         # Check required options
         passed_params = {}
