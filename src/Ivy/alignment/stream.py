@@ -305,7 +305,6 @@ class AlignmentStream(object):
                 allele_ratio = float(0)
                 ag_ratio = float(0)
 
-            #if 
             yield {
                 'chrom': bam_chrom,
                 'pos': pos,
