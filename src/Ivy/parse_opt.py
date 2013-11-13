@@ -60,7 +60,9 @@ class CommandLineParser(object):
                                metavar='',
                                nargs=1,
                                type='string',
-                               help='Explore specify region [chr:start-end]'
+                               help='Explore specify region [chr:start-end]',
+                               # TODO:
+                               # if not set -l, explore all region, default value is "all"?
                                )
         self.parser.add_option('-G',
                                metavar='',
@@ -72,8 +74,8 @@ class CommandLineParser(object):
                                )
         self.parser.add_option('--one-based',
                                metavar='',
-                               action='store_true',
                                dest='one_based',
+                               action='store_true',
                                default=False,
                                help='Genomic coordinate'
                                )
@@ -94,7 +96,7 @@ class CommandLineParser(object):
                                )
         self.parser.add_option('--verbose',
                                metavar='',
-                               action='store_false',
+                               action='store_true',
                                help='Show verbously messages'
                                )
         
@@ -103,8 +105,7 @@ class CommandLineParser(object):
         sample_group = OptionGroup(self.parser, 'Sample options')
         sample_group.add_option('--strand',
                                 metavar='',
-                                default=False,
-                                action='store_false',
+                                action='store_true',
                                 help='Strand-specific seq. data is used. [default: %default]'
                                 )
         sample_group.add_option('--ko-strain',
@@ -299,9 +300,9 @@ class CommandLineParser(object):
                 print k+':', v
             die()
 
-        ##############################
-        ### Check input some files ###
-        ##############################
+        #############################
+        ### Check required params ###
+        #############################
         passed_params = {}
         
         # fasta file, -f
@@ -327,21 +328,40 @@ class CommandLineParser(object):
         else:
             default_filename = 'ivy_run.log'
             passed_params.update({'outname': default_filename})
-
+        
         ###########################
         ### Check basic options ###
         ###########################
-
+        
         # -l, regions
         if opt.regions:
             if len(self._is_region(opt.regions)):
                 passed_params.update({'region': self._is_region(opt.regions)})
 
-        # --one_based
-        if isinstance(opt.one_based, bool):
-            passed_params.update({'one_based': opt.one_based})
+        # gtf file, -G
+        if opt.gtf:
+            passed_params.update({'gtf': opt.gtf})
         else:
-            self.parser.error("expected boolean" + opt.one_based)
+            passed_params.update({'gtf': None})
+
+        # --one_based
+        if opt.one_based is not None:
+            passed_params.update({'one_based': opt.one_based})
+        elif opt.one_based is False:
+            passed_params.update({'one_based': False})
+
+        # --num-threads
+        if opt.n_threads:
+            passed_params.update({'n_threads': opt.n_threads})
+
+        ############################
+        ### Check sample options ###
+        ###########################
+
+        # --strand
+        if opt.strand:
+            passed_params.update({'': opt.strand})
+            
     
         return passed_params
 
