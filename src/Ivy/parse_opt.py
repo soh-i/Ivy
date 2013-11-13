@@ -313,7 +313,7 @@ class CommandLineParser(object):
 
         # Check basic opts
         if opt.regions:
-            die(opt.regions)
+            print opt.regions
             
             # chr21:3912-212
             (chrom, pos) = opt.regions.split(':')
@@ -325,7 +325,14 @@ class CommandLineParser(object):
                 # everything is fine
                 (start, end) = pos.split('-')
                 if start.isdigit() and end.isdigit():
-                    passed_params.update({'regions':opt.regions})
+                    if start < end:
+                        print start, end
+                        passed_params.update({'regions':opt.regions})
+                        die(passed_params)
+                    elif start > end:
+                        self.parser.error('end:' + end + ' is greater than ' + 'start:' + start)
+                    elif start == end:
+                        self.parser.error("start:" + start + ", end:" + end + " is same values")
                 else:
                     self.parser.error(opt.regions + 'in pos is not numetric (expected integer)')
             
