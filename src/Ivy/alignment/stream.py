@@ -105,7 +105,6 @@ def __resolve_chrom_name(bam, fa):
     bam_obj = pysam.Samfile(bam, 'rb')
     fa_obj = pysam.Fastafile(fa)
     
-    
 
 class AlignmentStream(object):
     def __init__(self, config):
@@ -115,11 +114,11 @@ class AlignmentStream(object):
         self.samfile = __bm
         self.fafile = __ft
         self.one_based = config['one_based']
-        (self.start, self.end) = self.__resolve_coords(config['start'], config['end'], self.one_based)
+        (self.start, self.end) = self.__resolve_coords(config['region']['start'], config['region']['end'], self.one_based)
 
-        if not config['chrom'].startswith('chr'):
-            self.chrom = 'chr' + config['chrom']
-        else: self.chrom = config['chrom']
+        if not config['region']['chrom'].startswith('chr'):
+            self.chrom = 'chr' + config['region']['chrom']
+        else: self.chrom = config['region']['chrom']
         
         debug = False
         if debug:
@@ -135,8 +134,8 @@ class AlignmentStream(object):
         
     def pileup_stream(self):
         for col in self.samfile.pileup(reference=self.chrom,
-                                       #start=self.start,
-                                       #end=self.end):
+                                       start=self.start,
+                                       end=self.end,
                                        ):
             
             bam_chrom = self.samfile.getrname(col.tid)

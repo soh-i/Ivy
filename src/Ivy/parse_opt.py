@@ -1,6 +1,10 @@
 from optparse import OptionParser, OptionGroup, HelpFormatter, IndentedHelpFormatter
 import os.path
 import logging
+import string
+import os.path
+import os
+import sys
 
 from Ivy.version import __version__
 import Ivy.utils
@@ -27,7 +31,7 @@ class CommandLineParser(object):
                                metavar='',
                                nargs=1,
                                type='string',
-                               help='set reference genome [fasta]'
+                               help='Reference genome [fasta]'
                                )
         self.parser.add_option('-r',
                                dest='r_bams',
@@ -54,9 +58,9 @@ class CommandLineParser(object):
                                dest='regions',
                                action='store',
                                metavar='',
-                               nargs=2,
+                               nargs=1,
                                type='string',
-                               help='Explore specify region [chr:start chr:end]'
+                               help='Explore specify region [chr:start-end]'
                                )
         self.parser.add_option('-G',
                                metavar='',
@@ -66,7 +70,14 @@ class CommandLineParser(object):
                                type='string',
                                help='GTF file',
                                )
-        self.parser.add_option('--num_threads', '-p',
+        self.parser.add_option('--one-based',
+                               metavar='',
+                               action='store_true',
+                               dest='one_based',
+                               default=False,
+                               help='Genomic coordinate'
+                               )
+        self.parser.add_option('--num-threads',
                                metavar='',
                                dest='n_threads',
                                action='store',
@@ -75,10 +86,15 @@ class CommandLineParser(object):
                                type='int',
                                help='Number of threads [default: %default]',
                                )
+        self.parser.add_option('--dry-run',
+                               metavar='',
+                               dest='dry_run',
+                               action='store_true',
+                               help='Dry run ivy'
+                               )
         self.parser.add_option('--verbose',
                                metavar='',
-                               dest='verbose',
-                               default=False,
+                               action='store_false',
                                help='Show verbously messages'
                                )
         
@@ -87,23 +103,20 @@ class CommandLineParser(object):
         sample_group = OptionGroup(self.parser, 'Sample options')
         sample_group.add_option('--strand',
                                 metavar='',
-                                action='store',
-                                nargs=1,
                                 default=False,
+                                action='store_false',
                                 help='Strand-specific seq. data is used. [default: %default]'
                                 )
-        sample_group.add_option('--ko_strain',
+        sample_group.add_option('--ko-strain',
                                 metavar='',
-                                action='store',
-                                nargs=1,
                                 default=False,
+                                action='store_false',
                                 help='Adar null strain is used. [default: %default]'
                                 )
         sample_group.add_option('--replicate',
                                 metavar='',
-                                action='store',
-                                nargs=1,
                                 default=False,
+                                action='store_false',
                                 help='Biological replicate is used [default: %default]'
                                 )
         self.parser.add_option_group(sample_group)
@@ -111,7 +124,7 @@ class CommandLineParser(object):
     def parse_basic_filt_opt(self):
         # basic filter options
         basic_filter_group = OptionGroup(self.parser, 'Basic filter options')
-        basic_filter_group.add_option('--min_ag_ratio',
+        basic_filter_group.add_option('--min-ag-ratio',
                                       metavar='',
                                       dest='ag_ratio',
                                       action='store',
@@ -120,7 +133,7 @@ class CommandLineParser(object):
                                       type='float',
                                       help='Min A-to-G edit base ratio [default: %default]'
                                       )
-        basic_filter_group.add_option('--min_rna_coverage',
+        basic_filter_group.add_option('--min-rna-coverage',
                                       metavar='',
                                       dest='min_rna_cov',
                                       action='store',
@@ -129,7 +142,7 @@ class CommandLineParser(object):
                                       type='int',
                                       help='Min RNA read coverage [default: %default]'
                                       )
-        basic_filter_group.add_option('--min_dna_coverage',
+        basic_filter_group.add_option('--min-dna-coverage',
                                       metavar='',
                                       dest='min_dna_cov',
                                       action='store',
@@ -154,7 +167,7 @@ class CommandLineParser(object):
                                       default=True,
                                       help='Remove deletion reads [default: %default]'
                                       )
-        basic_filter_group.add_option('--min_mapq',
+        basic_filter_group.add_option('--min-mapq',
                                       metavar='',
                                       dest='min_mapq',
                                       action='store',
@@ -163,7 +176,7 @@ class CommandLineParser(object):
                                       type='int',
                                       help='Min mapping quality [default: %default]'
                                       )
-        basic_filter_group.add_option('--num_allow_type',
+        basic_filter_group.add_option('--num-allow-type',
                                       metavar='',
                                       dest='num_type',
                                       action='store',
@@ -172,7 +185,7 @@ class CommandLineParser(object):
                                       type='int',
                                       help='Number of allowing base modification type [default: %default]'
                                       )
-        basic_filter_group.add_option('--min_baq_rna',
+        basic_filter_group.add_option('--min-baq-rna',
                                       metavar='',
                                       dest='min_baq_r',
                                       action='store',
@@ -181,7 +194,7 @@ class CommandLineParser(object):
                                       type='int',
                                       help='Min base call quality in RNA [default: %default]'
                                       )
-        basic_filter_group.add_option('--min_baq_dna',
+        basic_filter_group.add_option('--min-baq-dna',
                                       metavar='',
                                       dest='min_baq_d',
                                       action='store',
@@ -195,36 +208,33 @@ class CommandLineParser(object):
     def parse_stat_filt_opt(self):
         # statistical filters options
         stat_filter_group = OptionGroup(self.parser, 'Statistical filter options')
-        stat_filter_group.add_option('--sig_level',
+        stat_filter_group.add_option('--sig-level',
                                      metavar='',
                                      dest='sig_level',
                                      action='store',
-                                     nargs=1,
                                      default=0.05,
+                                     nargs=1,
                                      type='float',
                                      help='Significance level [default: %default]'
                                      )
-        stat_filter_group.add_option('--base_call_bias',
+        stat_filter_group.add_option('--base-call-bias',
                                      metavar='',
                                      dest='baq_bias',
-                                     action='store',
-                                     nargs=1,
+                                     action='store_true',
                                      default=True,
                                      help='Consider base call bias [default: %default]'
                                      )
-        stat_filter_group.add_option('--strand_bias',
+        stat_filter_group.add_option('--strand-bias',
                                      metavar='',
                                      dest='strand_bias',
-                                     action='store',
-                                     nargs=1,
+                                     action='store_true',
                                      default=True,
                                      help='Consider strand bias [default: %default]'
                                      )
-        stat_filter_group.add_option('--positional_bias',
+        stat_filter_group.add_option('--positional-bias',
                                      metavar='',
                                      dest='pos_bias',
-                                     action='store',
-                                     nargs=1,
+                                     action='store_true',
                                      default=True,
                                      help='Consider positional bias [default: %default]'
                                      )
@@ -233,23 +243,20 @@ class CommandLineParser(object):
     def parse_ext_filt_opt(self):
         # extended options
         ext_filter_group = OptionGroup(self.parser, 'Extended filter options')
-        ext_filter_group.add_option('--blat_collection',
+        ext_filter_group.add_option('--blat-collection',
                                     metavar='',
                                     dest='blat',
-                                    action='store',
-                                    nargs=1,
+                                    action='store_false',
                                     default=False,
                                     help='Reduce mis-alignment with Blat [default: %default]'
                                     )
         ext_filter_group.add_option('--snp',
                                     metavar='',
-                                    dest='snp',
+                                    dest='snp_file',
                                     action='store',
-                                    nargs=1,
-                                    default=False,
-                                    help='Exclude sites within SNP locations [default: %default]'
+                                    help='Exclude variation sites [vcf]'
                                     )
-        ext_filter_group.add_option('--ss_num',
+        ext_filter_group.add_option('--ss-num',
                                     metavar='',
                                     dest='ss_num',
                                     action='store',
@@ -258,7 +265,7 @@ class CommandLineParser(object):
                                     type='int',
                                     help='Exclude site around the splice sistes [default: %defaultbp]'
                                     )
-        ext_filter_group.add_option('--trim_n',
+        ext_filter_group.add_option('--trim-n',
                                     metavar='',
                                     dest='trim_n',
                                     action='store',
@@ -267,11 +274,10 @@ class CommandLineParser(object):
                                     type='int',
                                     help='Do not call Nbp in up/down read [default: %defaultbp]'
                                     )
-        ext_filter_group.add_option('--mask_repeat',
+        ext_filter_group.add_option('--mask-repeat',
                                     metavar='',
                                     dest='is_mask_rep',
-                                    action='store',
-                                    nargs=1,
+                                    action='store_false',
                                     default=False,
                                     help='Mask repeat sequence [default: %default]'
                                     )
@@ -282,24 +288,101 @@ class CommandLineParser(object):
         self.parse_ext_filt_opt()
         self.parse_sample_opt()
         self.parse_basic_filt_opt()
+        self.parse_stat_filt_opt()
         
         (opt, args) = self.parser.parse_args()
-        
-        # Checking for required options
+
+        # enable --dry-run or not
+        if opt.dry_run:
+            print "### All options with values ###"
+            for k, v in self.parser.values.__dict__.iteritems():
+                print k+':', v
+            die()
+
+        ###
+        ### Check input some files ###
+        ###
         passed_params = {}
-        if opt.fasta:
-            passed_params.update({'fasta': opt.fasta})
-        elif opt.fasta is None:
+        
+        # fasta file
+        if not opt.fasta:
             self.parser.error('[-f] Reference fasta file is a required argument')
-        if opt.r_bams:
-            passed_params.update({'r_bams': opt.r_bams})
-        elif opt.r_bams is None:
+        elif self._ok_file(opt.fasta):
+            passed_params.update({'fasta': opt.fasta})
+        elif not self._ok_file(opt.fasta):
+            self.parser.error(opt.fasta + " is not found or writable file!")
+            
+        # bam file
+        if not opt.r_bams:
             self.parser.error('[-r] RNA-seq bam file is a required argument')
+        elif self._ok_file(opt.r_bams):
+            passed_params.update({'r_bams': opt.r_bams})
+        elif not self._ok_file(opt.r_bams):
+            self.parser.error(opt.r_bams + " is not found or writable file!")
+        
+        # output filename
         if opt.outname:
             passed_params.update({'outname': opt.outname})
-        elif opt.outname is None:
-            self.parser.error('[-o] Output filename is a required argument')
+            #self.parser.error('[-o] Output filename is a required argument')
+        else:
+            default_filename = 'ivy_run.log'
+            passed_params.update({'outname': default_filename})
+
+        ###
+        ### Check basic options
+        ###
+
+        # -l, regions
+        if opt.regions:
+            if len(self._is_region(opt.regions)):
+                passed_params.update({'region': self._is_region(opt.regions)})
+
+        # --one_based
+        if isinstance(opt.one_based, bool):
+            passed_params.update({'one_based': opt.one_based})
+        else:
+            self.parser.error("expected boolean" + opt.one_based)
+    
         return passed_params
+
+    def _ok_file(self, filename):
+        if os.path.isfile(filename) and os.access(filename, os.R_OK):
+            return True
+        else:
+            return False
+
+    def _is_region(self, regions):
+        # TODO: needed to unittest!
+        try:
+            (chrom, pos) = regions.split(':')
+        except ValueError:
+            self.parser.error("[" + regions+ "]" + ' is lacked chromosome or position value')
+            
+        if not chrom:
+            self.parser.error(regions + 'is invalid chromosome name')
+            return False
+        elif not pos:
+            self.parser.error(regions + 'is invalid position')
+            return False
+        else:
+            try:
+                (start, end) = pos.split('-')
+            except ValueError:
+                self.parser.error("position must be \'start-end\'")
+                
+            if start.isdigit() and end.isdigit():
+                if start < end:
+                    # everything is fine
+                    return {'chrom': str(chrom), 'start': int(start), 'end': int(end)}
+                elif start > end:
+                    self.parser.error('end:' + end + ' is greater than ' + 'start:' + start)
+                    return False
+                elif start == end:
+                    self.parser.error("start:" + start + ", end:" + end + " is same values")
+                    return False
+            else:
+                self.parser.error(regions + ' in pos is not numetric (expected integer)')
+                return False
             
 def die(msg=''):
     raise SystemExit(msg)
