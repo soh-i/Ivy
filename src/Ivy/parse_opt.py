@@ -2,6 +2,8 @@ from optparse import OptionParser, OptionGroup, HelpFormatter, IndentedHelpForma
 import os.path
 import logging
 import string
+import os.path
+import sys
 
 from Ivy.version import __version__
 import Ivy.utils
@@ -328,6 +330,10 @@ class CommandLineParser(object):
                     self.parser.error(opt.regions + 'in pos is not numetric (expected integer)')
             
         return passed_params
+
+    def _is_region(self):
+        pass
+        
             
 def die(msg=''):
     raise SystemExit(msg)
