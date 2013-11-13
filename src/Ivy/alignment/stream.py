@@ -304,7 +304,7 @@ class AlignmentStream(object):
             except ZeroDivisionError:
                 allele_ratio = float(0)
                 ag_ratio = float(0)
-            
+
             yield {
                 'chrom': bam_chrom,
                 'pos': pos,

@@ -60,7 +60,9 @@ class CommandLineParser(object):
                                metavar='',
                                nargs=1,
                                type='string',
-                               help='Explore specify region [chr:start-end]'
+                               help='Explore specify region [chr:start-end]',
+                               # TODO:
+                               # if not set -l, explore all region, default value is "all"?
                                )
         self.parser.add_option('-G',
                                metavar='',
@@ -72,8 +74,8 @@ class CommandLineParser(object):
                                )
         self.parser.add_option('--one-based',
                                metavar='',
-                               action='store_true',
                                dest='one_based',
+                               action='store_false',
                                default=False,
                                help='Genomic coordinate'
                                )
@@ -94,7 +96,7 @@ class CommandLineParser(object):
                                )
         self.parser.add_option('--verbose',
                                metavar='',
-                               action='store_false',
+                               action='store_true',
                                help='Show verbously messages'
                                )
         
@@ -103,20 +105,23 @@ class CommandLineParser(object):
         sample_group = OptionGroup(self.parser, 'Sample options')
         sample_group.add_option('--strand',
                                 metavar='',
+                                dest='strand',
+                                action='store_true',
                                 default=False,
-                                action='store_false',
                                 help='Strand-specific seq. data is used. [default: %default]'
                                 )
         sample_group.add_option('--ko-strain',
                                 metavar='',
+                                dest='ko_strain',
+                                action='store_true',
                                 default=False,
-                                action='store_false',
                                 help='Adar null strain is used. [default: %default]'
                                 )
         sample_group.add_option('--replicate',
                                 metavar='',
-                                default=False,
+                                dest='replicate',
                                 action='store_false',
+                                default=False,
                                 help='Biological replicate is used [default: %default]'
                                 )
         self.parser.add_option_group(sample_group)
@@ -154,16 +159,14 @@ class CommandLineParser(object):
         basic_filter_group.add_option('--rm-duplicated-read',
                                       metavar='',
                                       dest='is_duplicated',
-                                      action='store',
-                                      nargs=1,
+                                      action='store_true',
                                       default=True,
                                       help='Remove duplicated reads [default: %default]'
                                       )
         basic_filter_group.add_option('--rm-deletion-read',
                                       metavar='',
                                       dest='is_deletion',
-                                      action='store',
-                                      nargs=1,
+                                      action='store_true',
                                       default=True,
                                       help='Remove deletion reads [default: %default]'
                                       )
@@ -221,21 +224,21 @@ class CommandLineParser(object):
                                      metavar='',
                                      dest='baq_bias',
                                      action='store_true',
-                                     default=True,
+                                     default=False,
                                      help='Consider base call bias [default: %default]'
                                      )
         stat_filter_group.add_option('--strand-bias',
                                      metavar='',
                                      dest='strand_bias',
                                      action='store_true',
-                                     default=True,
+                                     default=False,
                                      help='Consider strand bias [default: %default]'
                                      )
         stat_filter_group.add_option('--positional-bias',
                                      metavar='',
                                      dest='pos_bias',
                                      action='store_true',
-                                     default=True,
+                                     default=False,
                                      help='Consider positional bias [default: %default]'
                                      )
         self.parser.add_option_group(stat_filter_group)
@@ -296,15 +299,15 @@ class CommandLineParser(object):
         if opt.dry_run:
             print "### All options with values ###"
             for k, v in self.parser.values.__dict__.iteritems():
-                print k+':', v
+                print '[' + k + ']:', v
             die()
 
-        ###
-        ### Check input some files ###
-        ###
+        #############################
+        ### Check required params ###
+        #############################
         passed_params = {}
         
-        # fasta file
+        # fasta file, -f
         if not opt.fasta:
             self.parser.error('[-f] Reference fasta file is a required argument')
         elif self._ok_file(opt.fasta):
@@ -312,7 +315,7 @@ class CommandLineParser(object):
         elif not self._ok_file(opt.fasta):
             self.parser.error(opt.fasta + " is not found or writable file!")
             
-        # bam file
+        # RNA-seq bam file, r_bams
         if not opt.r_bams:
             self.parser.error('[-r] RNA-seq bam file is a required argument')
         elif self._ok_file(opt.r_bams):
@@ -320,29 +323,142 @@ class CommandLineParser(object):
         elif not self._ok_file(opt.r_bams):
             self.parser.error(opt.r_bams + " is not found or writable file!")
         
-        # output filename
+        # output filename, -o
         if opt.outname:
             passed_params.update({'outname': opt.outname})
             #self.parser.error('[-o] Output filename is a required argument')
         else:
             default_filename = 'ivy_run.log'
             passed_params.update({'outname': default_filename})
-
-        ###
-        ### Check basic options
-        ###
-
+        
+        ###########################
+        ### Check basic options ###
+        ###########################
         # -l, regions
         if opt.regions:
             if len(self._is_region(opt.regions)):
                 passed_params.update({'region': self._is_region(opt.regions)})
 
-        # --one_based
-        if isinstance(opt.one_based, bool):
-            passed_params.update({'one_based': opt.one_based})
+        # gtf file, -G
+        if opt.gtf:
+            passed_params.update({'gtf': opt.gtf})
         else:
-            self.parser.error("expected boolean" + opt.one_based)
-    
+            passed_params.update({'gtf': None})
+
+        # --one_based
+        if opt.one_based is True:
+            passed_params.update({'one_based': opt.one_based})
+        elif opt.one_based is False:
+            passed_params.update({'one_based': False})
+
+        # --num-threads
+        if opt.n_threads:
+            passed_params.update({'n_threads': opt.n_threads})
+
+        ############################
+        ### Check sample options ###
+        ###########################
+        # --strand
+        if opt.strand is True:
+            passed_params.update({'strand': opt.strand})
+        elif opt.strand is False:
+            passed_params.update({'strand': False})
+
+        # --ko-strain
+        if opt.ko_strain is True:
+            passed_params.update({'strand': opt.strand})
+        elif opt.ko_strain is False:
+            passed_params.update({'strand': False})
+
+        # --replicate
+        if opt.replicate is True:
+            passed_params.update({'replicate': opt.replicate})
+        elif opt.replicate is False:
+            passed_params.update({'replicate': opt.replicate})
+
+        ############################
+        ### Basic filter options ###
+        ############################
+        # --min-ag-ratio
+        if opt.ag_ratio:
+            passed_params.update({'ag_ratio': opt.ag_ratio})
+
+        # --min-rna-coverage
+        if opt.min_rna_cov:
+            passed_params.update({'min_rna_cov': opt.min_rna_cov})
+
+        # --min_dna_coverage
+        if opt.min_dna_cov:
+            passed_params.update({'min_dna_cov': opt.min_dna_cov})
+
+        # --rm-duplicated-read
+        if opt.is_duplicated:
+            passed_params.update({'is_duplicated': opt.is_duplicated})
+
+        # --rm-deletion-read
+        if opt.is_deletion:
+            passed_params.update({'is_deletion': opt.is_deletion})
+
+        # --min-mapq
+        if opt.min_mapq:
+            passed_params.update({'min_mapq': opt.min_mapq})
+
+        # --num-allow-type
+        if opt.num_type:
+            passed_params.update({'num_type': opt.num_type})
+
+        # --min-baq-rna
+        if opt.min_baq_r:
+            passed_params.update({'min_baq_rna': opt.min_baq_r})
+
+        # --min-baq-dna
+        if opt.min_baq_d:
+            passed_params.update({'min_baq_dba': opt.min_baq_d})
+
+        ##################################
+        ### Statistical filter options ###
+        ##################################
+        # --sig-level
+        if opt.sig_level:
+            passed_params.update({'sig_level': opt.sig_level})
+            
+        # base-call-bias
+        if opt.baq_bias:
+            passed_params.update({'baq_bias': opt.baq_bias})
+
+        # strand-bias
+        if opt.strand_bias:
+            passed_params.update({'strnad_bias': opt.strand_bias})
+        
+        # --potitional-bias
+        if opt.pos_bias:
+            passed_params.update({'has bias': opt.pos_bias})
+
+        ###########################
+        ### Ext. filter options ###
+        ###########################
+        # --blat-collection
+        if opt.blat:
+            passed_params.update({'blat': opt.blat})
+        elif opt.blat is False:
+            passed_params.update({'blat': False})
+
+        # --snp
+        if opt.snp_file:
+            passed_params.update({'snp_file': opt.snp})
+            
+        # --ss-num
+        if opt.ss_num:
+            passed_params.update({'ss_num': opt.ss_num})
+
+        # --trim-n
+        if opt.trim_n:
+            passed_params.update({'trim_n': opt.trim_n})
+
+        # --mask-repeat
+        if opt.is_mask_rep:
+            passed_params.update({'is_mask_rep': opt.is_mask_rep})
+ 
         return passed_params
 
     def _ok_file(self, filename):
