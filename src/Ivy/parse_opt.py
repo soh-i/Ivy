@@ -277,7 +277,7 @@ class CommandLineParser(object):
                                     )
         self.parser.add_option_group(ext_filter_group)
 
-    def parse(self):
+    def ivy_parse_options(self):
         self.parse_basic_opt()
         self.parse_ext_filt_opt()
         self.parse_sample_opt()
@@ -286,7 +286,7 @@ class CommandLineParser(object):
         (opt, args) = self.parser.parse_args()
         
         # Checking for required options
-        self.passed_params = {}
+        passed_params = {}
         if opt.fasta:
             passed_params.update({'fasta': opt.fasta})
         elif opt.fasta is None:
@@ -299,6 +299,7 @@ class CommandLineParser(object):
             passed_params.update({'outname': opt.outname})
         elif opt.outname is None:
             self.parser.error('[-o] Output filename is a required argument')
+        return passed_params
             
 def die(msg=''):
     raise SystemExit(msg)
