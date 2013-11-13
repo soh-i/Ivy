@@ -320,7 +320,12 @@ class CommandLineParser(object):
         return passed_params
 
     def _is_region(self, regions):
-        (chrom, pos) = regions.split(':')
+        # TODO: needed to unittest!
+        try:
+            (chrom, pos) = regions.split(':')
+        except ValueError:
+            self.parser.error("[" + regions+ "]" + ' is lacked chromosome or position value')
+            
         if not chrom:
             self.parser.error(regions + 'is invalid chromosome name')
             return False
@@ -328,10 +333,14 @@ class CommandLineParser(object):
             self.parser.error(regions + 'is invalid position')
             return False
         else:
-            # everything is fine
-            (start, end) = pos.split('-')
+            try:
+                (start, end) = pos.split('-')
+            except ValueError:
+                self.parser.error("position must be \'start-end\'")
+                
             if start.isdigit() and end.isdigit():
                 if start < end:
+                    # everything is fine
                     return True
                 elif start > end:
                     self.parser.error('end:' + end + ' is greater than ' + 'start:' + start)
@@ -340,7 +349,7 @@ class CommandLineParser(object):
                     self.parser.error("start:" + start + ", end:" + end + " is same values")
                     return False
             else:
-                self.parser.error(regions + 'in pos is not numetric (expected integer)')
+                self.parser.error(regions + ' in pos is not numetric (expected integer)')
                 return False
             
 def die(msg=''):
