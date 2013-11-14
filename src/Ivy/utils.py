@@ -43,6 +43,9 @@ class AttrDict(dict):
     def __repr__(self):
         return "%s=>(%s)" % (self.__class__.__name__, dict.__repr__(self._data))
 
+    def __len__(self):
+        return dict.__len__(self._data)
+
     def __getattr__(self, name):
         try:
             value = self._data[name]
@@ -82,7 +85,8 @@ class AttrDict(dict):
             raise TypeError("A Nested dict will only be replaced if it's empty")
         else:
             return other
-                                                    
+
+            
 if __name__ == '__main__':
     dic = {"fasta": "reference.fasta", "region": { "start": 993, "end": 9199} }
     aa = AttrDict(dic)
