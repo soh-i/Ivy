@@ -28,39 +28,68 @@ class Utils(object):
 
 
 class AttrDict(dict):
-    def __init__(self, init={}):
-        dict.__init__(self, init)
+    '''
+    How to use a dot . to access members of diction" in StackOverFlow
+    http://stackoverflow.com/a/12187277
+    '''
+    
+    def __init__(self, d=None, create=True):
+        if d is None:
+            d = {}
+        supr = super(AttrDict, self)
+        supr.__setattr__('_data', d)
+        supr.__setattr__('__create', create)
 
-    def __getstate__(self):
-        return self.__dict__.items()
+    def __repr__(self):
+        return "%s=>(%s)" % (self.__class__.__name__, dict.__repr__(self._data))
 
-    def __setstate__(self):
-        for key, val in items:
-            self.__dict__[key] = val
-
+    def __getattr__(self, name):
+        try:
+            value = self._data[name]
+        except KeyError:
+            if not super(AttrDict, self).__getattribute__('__create'):
+                raise
+            value = {}
+            self._data[name] = value
+                
+        if hasattr(value, 'items'):
+            create = super(AttrDict, self).__getattribute__('__create')
+            return AttrDict(value, create)
+        return value
+                
+    def __setattr__(self, name, value):
+        self._data[name] = value
+        
+    def __getitem__(self, key):
+        try:
+            value = self._data[key]
+        except KeyError:
+            if not super(AttrDict, self).__getattribute__('__create'):
+                raise
+            value = {}
+            self._data[key] = value
+                
+        if hasattr(value, 'items'):
+            create = super(AttrDict, self).__getattribute__('__create')
+            return AttrDict(value, create)
+        return value
+                    
     def __setitem__(self, key, value):
-        return super(AttrDict, self).__setitem__(key, value)
-
-    def __getitem__(self, name):
-        item = super(AttrDict, self).__getitem__(name)
-        if type(item) == dict:
-            return AttrDict(item)
+        self._data[key] = value
+        
+    def __iadd__(self, other):
+        if self._data:
+            raise TypeError("A Nested dict will only be replaced if it's empty")
         else:
-            return item
-
-    def __delimtem(self, name):
-        return super(AttrDict, self).__delitem__(name)
-
-    __getattr__ = __getitem__
-    __setattr__ = __setitem__
-
+            return other
+                                                    
 if __name__ == '__main__':
     dic = {"fasta": "reference.fasta", "region": { "start": 993, "end": 9199} }
     aa = AttrDict(dic)
-    print "orig:", aa.region.start
-    aa.region.start = 10000
-    print "mod:", aa.region.start
-    
+    print aa
+    print aa.fasta
+    aa.region.start = 7423480
+
     
 class ImutableDict(collections.Mapping):
     '''
