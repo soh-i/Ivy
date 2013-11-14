@@ -3,7 +3,7 @@ import collections
 import Ivy.version
 
 def die(msg=''):
-        raise SystemExit(msg)
+    raise SystemExit(msg)
 
 class Utils(object):
     '''
@@ -25,12 +25,76 @@ class Utils(object):
         """Returns the final component of a pathname"""
         i = p.rfind('/') + 1
         return p[i:]
+
+
+class AttrDict(dict):
+    '''
+    How to use a dot . to access members of diction" in StackOverFlow
+    http://stackoverflow.com/a/12187277
+    '''
     
-    @staticmethod
-    def version():
-        return Ivy.version.__version__
+    def __init__(self, d=None, create=True):
+        if d is None:
+            d = {}
+        supr = super(AttrDict, self)
+        supr.__setattr__('_data', d)
+        supr.__setattr__('__create', create)
+
+    def __repr__(self):
+        return "%s=>(%s)" % (self.__class__.__name__, dict.__repr__(self._data))
+
+    def __len__(self):
+        return dict.__len__(self._data)
+
+    def __getattr__(self, name):
+        try:
+            value = self._data[name]
+        except KeyError:
+            if not super(AttrDict, self).__getattribute__('__create'):
+                raise
+            value = {}
+            self._data[name] = value
+                
+        if hasattr(value, 'items'):
+            create = super(AttrDict, self).__getattribute__('__create')
+            return AttrDict(value, create)
+        return value
+                
+    def __setattr__(self, name, value):
+        self._data[name] = value
         
+    def __getitem__(self, key):
+        try:
+            value = self._data[key]
+        except KeyError:
+            if not super(AttrDict, self).__getattribute__('__create'):
+                raise
+            value = {}
+            self._data[key] = value
+                
+        if hasattr(value, 'items'):
+            create = super(AttrDict, self).__getattribute__('__create')
+            return AttrDict(value, create)
+        return value
+                    
+    def __setitem__(self, key, value):
+        self._data[key] = value
         
+    def __iadd__(self, other):
+        if self._data:
+            raise TypeError("A Nested dict will only be replaced if it's empty")
+        else:
+            return other
+
+            
+if __name__ == '__main__':
+    dic = {"fasta": "reference.fasta", "region": { "start": 993, "end": 9199} }
+    aa = AttrDict(dic)
+    print aa
+    print aa.fasta
+    aa.region.start = 7423480
+
+    
 class ImutableDict(collections.Mapping):
     '''
     ImutableDict class generates imutalbe dictionary
@@ -70,7 +134,7 @@ class ImutableDict(collections.Mapping):
     def __setitem__(self, key, value):
         raise TypeError, ('%s object does not support item assignment'
                           % (self.__class__.__name__))
-        
+
     def __repr__(self):
         args = [
             '{key}={value}'.format(key=key, value=value)
@@ -78,6 +142,7 @@ class ImutableDict(collections.Mapping):
             ]
         args_str = '(' + ', '.join(args) + ')'
         return self.__class__.__name__ + args_str
+        
         
     def replace(self, key, value):
         for old_key in self.__dict:
@@ -88,4 +153,3 @@ class ImutableDict(collections.Mapping):
             # Add new element into the original dic
             self.__dict = dict(self.__dict.items() + {key:value}.items())
         return self.__dict
-
