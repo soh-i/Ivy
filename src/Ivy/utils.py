@@ -2,6 +2,9 @@ import os.path
 import collections
 import Ivy.version
 
+def die(msg=''):
+        raise SystemExit(msg)
+
 class Utils(object):
     '''
     Utility class, for example, 
@@ -22,7 +25,7 @@ class Utils(object):
         """Returns the final component of a pathname"""
         i = p.rfind('/') + 1
         return p[i:]
-
+    
     @staticmethod
     def version():
         return Ivy.version.__version__
