@@ -1,18 +1,29 @@
-from stream import AlignmentStream
+from Ivy.alignment.stream import AlignmentStream
+from Ivy.annotation.writer import VCFWriteHeader
 
-class AlignmentFilter(object):
+__program__ = 'filter'
+__author__ = 'Soh Ishiguro <yukke@g-language.org>'
+__license__ = ''
+__status__ = 'development'
+
+
+class AlignmentReadFilter(AlignmentStream):
     def __init__(self):
-        
-        #self.edit_ratio = edit_ratio
-        #self.min_mismatch = min_mismatch
-        #self.coverage = coverage
-        #self.is_del = False
-        #self.is_unmapped = True
-        #self.is_duplicate = False
-        
-    def filter_with_stream(self):
-        alignment = Alignment()
-        for record in alignment:
-            if self.coverage > record['coverage'] \
-               and self.min_mismatch < record['mismatches']:
-                pass
+        AlignmentReadFilter.__init__(self)
+        pass
+
+class BasicReadFilter(object):
+    def __init__(self):
+        pass
+
+class StatReadFilter(object):
+    def __init__(self):
+        pass
+
+class ExtReadFilter(object):
+    def __init__(self):
+        pass
+
+    
+
+    
