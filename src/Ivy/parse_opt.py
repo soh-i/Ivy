@@ -7,9 +7,9 @@ import os
 import sys
 
 from Ivy.version import __version__
-import Ivy.utils
+from Ivy.utils import die
 
-__program__ = 'ivy'
+__program__ = 'opt_parse'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
@@ -512,5 +512,3 @@ class CommandLineParser(object):
         else:
             return False
             
-def die(msg=''):
-    raise SystemExit(msg)
