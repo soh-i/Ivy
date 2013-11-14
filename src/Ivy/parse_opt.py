@@ -8,6 +8,7 @@ import sys
 
 from Ivy.version import __version__
 from Ivy.utils import die
+from Ivy.utils import AttrDict
 
 __program__ = 'opt_parse'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -62,8 +63,6 @@ class CommandLineParser(object):
                                type='string',
                                default='All',
                                help='Explore specify region [chr:start-end]',
-                               # TODO:
-                               # if not set -l, explore all region, default value is "all"?
                                )
         self.parser.add_option('-G',
                                metavar='',
@@ -71,6 +70,7 @@ class CommandLineParser(object):
                                action='store',
                                nargs=1,
                                type='string',
+                               default=None,
                                help='GTF file',
                                )
         self.parser.add_option('--one-based',
@@ -307,12 +307,13 @@ class CommandLineParser(object):
         ### Check required params ###
         #############################
         passed_params = {}
+        attr_dic = AttrDict()
         
         # fasta file, -f
         if not opt.fasta:
             self.parser.error('[-f] Reference fasta file is a required argument')
         elif self._ok_file(opt.fasta):
-            passed_params.update({'fasta': opt.fasta})
+            attr_dic.fasta = opt.fasta
         elif not self._ok_file(opt.fasta):
             self.parser.error(opt.fasta + " is not found or writable file!")
             
@@ -320,17 +321,16 @@ class CommandLineParser(object):
         if not opt.r_bams:
             self.parser.error('[-r] RNA-seq bam file is a required argument')
         elif self._ok_file(opt.r_bams):
-            passed_params.update({'r_bams': opt.r_bams})
+            attr_dic.r_bams = opt.r_bams
         elif not self._ok_file(opt.r_bams):
             self.parser.error(opt.r_bams + " is not found or writable file!")
         
         # output filename, -o
         if opt.outname:
-            passed_params.update({'outname': opt.outname})
-            #self.parser.error('[-o] Output filename is a required argument')
+            attr_dic.outname = opt.outname
         else:
             default_filename = 'ivy_run.log'
-            passed_params.update({'outname': default_filename})
+            attr_dic.outname = default_filename
         
         ###########################
         ### Check basic options ###
@@ -338,29 +338,29 @@ class CommandLineParser(object):
         # -l, regions
         if opt.regions == 'All':
             # default value: all
-            passed_params.update({'region': opt.regions})
+            attr_dic.region = opt.regions
         elif self._is_region(opt.regions) is not None:
             # specified region: e.g. chr1:1-1000
-            passed_params.update({'region': self._is_region(opt.regions)})
+            attr_dic.region = self._is_region(opt.regions)
         else:
             # error
             self.parser.error("Error: faild to set region")
 
         # gtf file, -G
         if opt.gtf:
-            passed_params.update({'gtf': opt.gtf})
+            attr_dic.gtf = opt.gtf
         else:
-            passed_params.update({'gtf': None})
+            attr_dic.gtf = opt.gtf
 
         # --one_based
         if opt.one_based is True:
-            passed_params.update({'one_based': opt.one_based})
-        elif opt.one_based is False:
-            passed_params.update({'one_based': False})
+            attr_dic.one_based = opt.one_based
+        elif not opt.one_based:
+            attr_dic.one_based = opt.one_based
 
         # --num-threads
         if opt.n_threads:
-            passed_params.update({'n_threads': opt.n_threads})
+            attr_dic.n_threads = opt.n_threads
 
         ############################
         ### Check sample options ###
@@ -466,7 +466,8 @@ class CommandLineParser(object):
         if opt.is_mask_rep:
             passed_params.update({'is_mask_rep': opt.is_mask_rep})
  
-        return passed_params
+        #return passed_params
+        return attr_dic
 
     def _ok_file(self, filename):
         if os.path.isfile(filename) and os.access(filename, os.R_OK):
