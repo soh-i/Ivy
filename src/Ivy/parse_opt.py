@@ -306,8 +306,8 @@ class CommandLineParser(object):
         #############################
         ### Check required params ###
         #############################
-        passed_params = {}
-        attr_dic = AttrDict()
+        # create modified dict that access by attribute
+        passed_params  = AttrDict()
         
         # fasta file, -f
         if not opt.fasta:
@@ -498,14 +498,16 @@ class CommandLineParser(object):
                     self.parser.error("position must be \'start-end\'")
                 
                 if start.isdigit() and end.isdigit():
-                    if start < end:
+                    int_s = int(start)
+                    int_e = int(end)
+                    if int_s < int_e:
                         # everything is fine
-                        return {'chrom': str(chrom), 'start': int(start), 'end': int(end)}
-                    elif start > end:
-                        self.parser.error('end:' + end + ' is greater than ' + 'start:' + start)
+                        return {'chrom': str(chrom), 'start': int_s, 'end': int_e}
+                    elif int_s > int_e:
+                        self.parser.error('end:' + int_e + ' is greater than ' + 'start:' + int_e)
                         return False
-                    elif start == end:
-                        self.parser.error("start:" + start + ", end:" + end + " is same values")
+                    elif int_s == int_e:
+                        self.parser.error("start:" + int_s + ", end:" + int_e + " is same values")
                         return False
                 else:
                     self.parser.error(regions + ' in pos is not numetric (expected integer)')
