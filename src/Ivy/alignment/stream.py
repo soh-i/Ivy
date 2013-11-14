@@ -122,7 +122,10 @@ class AlignmentStream(object):
             self.end = None
             self.chrom = None
         elif config['region']['chrom'] and  config['region']['start'] and config['region']['end']:
-            (self.start, self.end) = self.__resolve_coords(config['region']['start'], config['region']['end'], self.one_based)
+            (self.start, self.end) = self.__resolve_coords(
+                config['region']['start'],
+                config['region']['end'],
+                self.one_based)
             if not config['region']['chrom'].startswith('chr'):
                 self.chrom = 'chr' + config['region']['chrom']
             else: self.chrom = config['region']['chrom']

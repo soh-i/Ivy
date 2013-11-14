@@ -344,7 +344,7 @@ class CommandLineParser(object):
             passed_params.update({'region': self._is_region(opt.regions)})
         else:
             # error
-            self.parser.error("faild to set region")
+            self.parser.error("Error: faild to set region")
 
         # gtf file, -G
         if opt.gtf:
