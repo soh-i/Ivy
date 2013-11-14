@@ -2,8 +2,8 @@ from Ivy.version import __version__
 from Ivy.alignment.stream import (
     AlignmentConfig,
     AlignmentStream,
-    AlignmentPreparation,
     )
+from Ivy.alignment.prepare import  AlignmentPreparation
 from Ivy.parse_opt import CommandLineParser
 import logging
 import pprint
@@ -23,11 +23,15 @@ class Ivy(CommandLineParser):
         CommandLineParser.__init__(self)
         params = self.ivy_parse_options()
         align_conf = AlignmentConfig(params)
-        print align_conf.cl_params
+        #print align_conf.cl_params
 
         stream = AlignmentStream(align_conf.cl_params)
         pp = pprint.PrettyPrinter(indent=6)
         for rna in stream.pileup_stream():
-            pp.pprint(rna)
-            #raise SystemExit()
+            #pp.pprint(rna)
+
+            if rna['mismatches'] > 10:
+                print "%s\t%s\t%s\t%s" % (rna['chrom'], rna["pos"], rna['ref'], rna['alt'])
+            
+                #raise SystemExit()
             
