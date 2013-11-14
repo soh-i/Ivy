@@ -313,7 +313,7 @@ class CommandLineParser(object):
         if not opt.fasta:
             self.parser.error('[-f] Reference fasta file is a required argument')
         elif self._ok_file(opt.fasta):
-            attr_dic.fasta = opt.fasta
+            passed_params.fasta = opt.fasta
         elif not self._ok_file(opt.fasta):
             self.parser.error(opt.fasta + " is not found or writable file!")
             
@@ -321,16 +321,16 @@ class CommandLineParser(object):
         if not opt.r_bams:
             self.parser.error('[-r] RNA-seq bam file is a required argument')
         elif self._ok_file(opt.r_bams):
-            attr_dic.r_bams = opt.r_bams
+            passed_params.r_bams = opt.r_bams
         elif not self._ok_file(opt.r_bams):
             self.parser.error(opt.r_bams + " is not found or writable file!")
         
         # output filename, -o
         if opt.outname:
-            attr_dic.outname = opt.outname
+            passed_params.outname = opt.outname
         else:
             default_filename = 'ivy_run.log'
-            attr_dic.outname = default_filename
+            passed_params.outname = default_filename
         
         ###########################
         ### Check basic options ###
@@ -338,136 +338,135 @@ class CommandLineParser(object):
         # -l, regions
         if opt.regions == 'All':
             # default value: all
-            attr_dic.region = opt.regions
+            passed_params.region = opt.regions
         elif self._is_region(opt.regions) is not None:
             # specified region: e.g. chr1:1-1000
-            attr_dic.region = self._is_region(opt.regions)
+            passed_params.region = self._is_region(opt.regions)
         else:
             # error
             self.parser.error("Error: faild to set region")
 
         # gtf file, -G
         if opt.gtf:
-            attr_dic.gtf = opt.gtf
+            passed_params.gtf = opt.gtf
         else:
-            attr_dic.gtf = opt.gtf
+            passed_params.gtf = opt.gtf
 
         # --one_based
         if opt.one_based is True:
-            attr_dic.one_based = opt.one_based
+            passed_params.one_based = opt.one_based
         elif not opt.one_based:
-            attr_dic.one_based = opt.one_based
+            passed_params.one_based = opt.one_based
 
         # --num-threads
         if opt.n_threads:
-            attr_dic.n_threads = opt.n_threads
+            passed_params.n_threads = opt.n_threads
 
         ############################
         ### Check sample options ###
         ###########################
         # --strand
         if opt.strand is True:
-            passed_params.update({'strand': opt.strand})
+            passed_params.strand = opt.strand
         elif opt.strand is False:
-            passed_params.update({'strand': False})
+            passed_params.strand = False
 
         # --ko-strain
         if opt.ko_strain is True:
-            passed_params.update({'strand': opt.strand})
+            passed_params.ko_strain = opt.ko_strain
         elif opt.ko_strain is False:
-            passed_params.update({'strand': False})
-
+            passed_params.ko_strain = False
+            
         # --replicate
         if opt.replicate is True:
-            passed_params.update({'replicate': opt.replicate})
+            passed_params.replicate = opt.replicate
         elif opt.replicate is False:
-            passed_params.update({'replicate': opt.replicate})
+            passed_params.replicate = opt.replicate
 
         ############################
         ### Basic filter options ###
         ############################
         # --min-ag-ratio
         if opt.ag_ratio:
-            passed_params.update({'ag_ratio': opt.ag_ratio})
+            passed_params.ag_ratio = opt.ag_ratio
 
         # --min-rna-coverage
         if opt.min_rna_cov:
-            passed_params.update({'min_rna_cov': opt.min_rna_cov})
+            passed_params.min_rna_cov = opt.min_rna_cov
 
         # --min_dna_coverage
         if opt.min_dna_cov:
-            passed_params.update({'min_dna_cov': opt.min_dna_cov})
+            passed_params.min_dna_cov = opt.min_dna_cov
 
         # --rm-duplicated-read
         if opt.is_duplicated:
-            passed_params.update({'is_duplicated': opt.is_duplicated})
+            passed_params.is_duplicated = opt.is_duplicated
 
         # --rm-deletion-read
         if opt.is_deletion:
-            passed_params.update({'is_deletion': opt.is_deletion})
+            passed_params.is_deletion = opt.is_deletion
 
         # --min-mapq
         if opt.min_mapq:
-            passed_params.update({'min_mapq': opt.min_mapq})
+            passed_params.min_mapq = opt.min_mapq
 
         # --num-allow-type
         if opt.num_type:
-            passed_params.update({'num_type': opt.num_type})
+            passed_params.num_type = opt.num_type
 
         # --min-baq-rna
         if opt.min_baq_r:
-            passed_params.update({'min_baq_rna': opt.min_baq_r})
+            passed_params.min_baq_rna = opt.min_baq_r
 
         # --min-baq-dna
         if opt.min_baq_d:
-            passed_params.update({'min_baq_dba': opt.min_baq_d})
+            passed_params.min_baq_dba = opt.min_baq_d
 
         ##################################
         ### Statistical filter options ###
         ##################################
         # --sig-level
         if opt.sig_level:
-            passed_params.update({'sig_level': opt.sig_level})
+            passed_params.sig_level = opt.sig_level
             
         # base-call-bias
         if opt.baq_bias:
-            passed_params.update({'baq_bias': opt.baq_bias})
+            passed_params.baq_bias = opt.baq_bias
 
         # strand-bias
         if opt.strand_bias:
-            passed_params.update({'strnad_bias': opt.strand_bias})
+            passed_params.strnad_bias = opt.strand_bias
         
         # --potitional-bias
         if opt.pos_bias:
-            passed_params.update({'has bias': opt.pos_bias})
+            passed_params.pos_bias = opt.pos_bias
 
         ###########################
         ### Ext. filter options ###
         ###########################
         # --blat-collection
         if opt.blat:
-            passed_params.update({'blat': opt.blat})
+            passed_params.is_blat = opt.blat
         elif opt.blat is False:
-            passed_params.update({'blat': False})
+            passed_params.is_blat = False
 
         # --snp
         if opt.snp_file:
-            passed_params.update({'snp_file': opt.snp})
+            passed_params.snp_file = opt.snp
             
         # --ss-num
         if opt.ss_num:
-            passed_params.update({'ss_num': opt.ss_num})
+            passed_params.ss_num = opt.ss_num
 
         # --trim-n
         if opt.trim_n:
-            passed_params.update({'trim_n': opt.trim_n})
+            passed_params.trim_n = opt.trim_n
 
         # --mask-repeat
         if opt.is_mask_rep:
-            passed_params.update({'is_mask_rep': opt.is_mask_rep})
+            passed_params.is_mask_rep = opt.is_mask_rep
  
-        #return passed_params
-        return attr_dic
+        return passed_params
 
     def _ok_file(self, filename):
         if os.path.isfile(filename) and os.access(filename, os.R_OK):
