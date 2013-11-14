@@ -25,10 +25,6 @@ class Utils(object):
         """Returns the final component of a pathname"""
         i = p.rfind('/') + 1
         return p[i:]
-    
-    @staticmethod
-    def version():
-        return Ivy.version.__version__
         
         
 class ImutableDict(collections.Mapping):
