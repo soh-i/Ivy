@@ -60,6 +60,7 @@ class CommandLineParser(object):
                                metavar='',
                                nargs=1,
                                type='string',
+                               default='All',
                                help='Explore specify region [chr:start-end]',
                                # TODO:
                                # if not set -l, explore all region, default value is "all"?
@@ -335,9 +336,15 @@ class CommandLineParser(object):
         ### Check basic options ###
         ###########################
         # -l, regions
-        if opt.regions:
-            if len(self._is_region(opt.regions)):
-                passed_params.update({'region': self._is_region(opt.regions)})
+        if opt.regions == 'All':
+            # default value: all
+            passed_params.update({'region': opt.regions})
+        elif self._is_region(opt.regions) is not None:
+            # specified region: e.g. chr1:1-1000
+            passed_params.update({'region': self._is_region(opt.regions)})
+        else:
+            # error
+            self.parser.error("faild to set region")
 
         # gtf file, -G
         if opt.gtf:
@@ -469,36 +476,41 @@ class CommandLineParser(object):
 
     def _is_region(self, regions):
         # TODO: needed to unittest!
-        try:
-            (chrom, pos) = regions.split(':')
-        except ValueError:
-            self.parser.error("[" + regions+ "]" + ' is lacked chromosome or position value')
-            
-        if not chrom:
-            self.parser.error(regions + 'is invalid chromosome name')
-            return False
-        elif not pos:
-            self.parser.error(regions + 'is invalid position')
-            return False
-        else:
+        if regions == 'All':
+            return True
+        elif regions:
             try:
-                (start, end) = pos.split('-')
+                (chrom, pos) = regions.split(':')
             except ValueError:
-                self.parser.error("position must be \'start-end\'")
-                
-            if start.isdigit() and end.isdigit():
-                if start < end:
-                    # everything is fine
-                    return {'chrom': str(chrom), 'start': int(start), 'end': int(end)}
-                elif start > end:
-                    self.parser.error('end:' + end + ' is greater than ' + 'start:' + start)
-                    return False
-                elif start == end:
-                    self.parser.error("start:" + start + ", end:" + end + " is same values")
-                    return False
-            else:
-                self.parser.error(regions + ' in pos is not numetric (expected integer)')
+                self.parser.error("[" + regions+ "]" + ' is lacked chromosome or position value')
+            
+            if not chrom:
+                self.parser.error(regions + 'is invalid chromosome name')
                 return False
+            elif not pos:
+                self.parser.error(regions + 'is invalid position')
+                return False
+            else:
+                try:
+                    (start, end) = pos.split('-')
+                except ValueError:
+                    self.parser.error("position must be \'start-end\'")
+                
+                if start.isdigit() and end.isdigit():
+                    if start < end:
+                        # everything is fine
+                        return {'chrom': str(chrom), 'start': int(start), 'end': int(end)}
+                    elif start > end:
+                        self.parser.error('end:' + end + ' is greater than ' + 'start:' + start)
+                        return False
+                    elif start == end:
+                        self.parser.error("start:" + start + ", end:" + end + " is same values")
+                        return False
+                else:
+                    self.parser.error(regions + ' in pos is not numetric (expected integer)')
+                    return False
+        else:
+            return False
             
 def die(msg=''):
     raise SystemExit(msg)
