@@ -56,27 +56,28 @@ def __resolve_chrom_name(bam, fa):
 
 class AlignmentStream(object):
     def __init__(self, config):
-        __bm = pysam.Samfile(config['r_bams'], 'rb', check_header=True, check_sq=True)
-        __ft = pysam.Fastafile(config['fasta'])
+        __bm = pysam.Samfile(config.r_bams, 'rb', check_header=True, check_sq=True)
+        __ft = pysam.Fastafile(config.fasta)
         
         self.samfile = __bm
         self.fafile = __ft
-        self.one_based = config['one_based']
+        self.one_based = config.one_based
 
         # Resolve to explore specified region or not
-        if config['region'] == 'All':
+        if config.region == 'All':
             # explore all region
             self.start = None
             self.end = None
             self.chrom = None
-        elif config['region']['chrom'] and  config['region']['start'] and config['region']['end']:
+            
+        elif config.region.chrom and config.region.start and config.region.end:
             (self.start, self.end) = self.__resolve_coords(
-                config['region']['start'],
-                config['region']['end'],
+                config.region.start,
+                config.region.end,
                 self.one_based)
-            if not config['region']['chrom'].startswith('chr'):
-                self.chrom = 'chr' + config['region']['chrom']
-            else: self.chrom = config['region']['chrom']
+            if not config.region.chrom.startswith('chr'):
+                self.chrom = 'chr' + config.region.chrom
+            else: self.chrom = config.region.chrom
         else:
             raise ValueError("Error: chr/start/end is invalid")
         

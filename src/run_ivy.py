@@ -17,15 +17,17 @@ __status__ = 'development'
 class Ivy(CommandLineParser):
     def __init__(self):
         logging.basicConfig(level=logging.ERROR, format="%(asctime)s %(message)s")
-        logging.error('Job started')
+        logging.error('[Ivy] Job started')
         
     def run(self):
         CommandLineParser.__init__(self)
         params = self.ivy_parse_options()
-        align_conf = AlignmentConfig(params)
+        #align_conf = AlignmentConfig(params)
         #print align_conf.cl_params
 
-        stream = AlignmentStream(align_conf.cl_params)
+        raise SystemExit(params)
+        stream = AlignmentStream(params)
+        
         pp = pprint.PrettyPrinter(indent=6)
         for rna in stream.pileup_stream():
             #pp.pprint(rna)

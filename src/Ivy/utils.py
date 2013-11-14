@@ -88,11 +88,12 @@ class AttrDict(dict):
 
             
 if __name__ == '__main__':
-    dic = {"fasta": "reference.fasta", "region": { "start": 993, "end": 9199} }
+    #dic = {"fasta": "reference.fasta", "region": { "start": 993, "end": 9199} }
+    dic = {}
     aa = AttrDict(dic)
-    print aa
-    print aa.fasta
     aa.region.start = 7423480
+    aa.fasta = "hoge.fa"
+    print aa
 
     
 class ImutableDict(collections.Mapping):

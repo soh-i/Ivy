@@ -8,6 +8,7 @@ import sys
 
 from Ivy.version import __version__
 from Ivy.utils import die
+from Ivy.utils import AttrDict
 
 __program__ = 'opt_parse'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -62,8 +63,6 @@ class CommandLineParser(object):
                                type='string',
                                default='All',
                                help='Explore specify region [chr:start-end]',
-                               # TODO:
-                               # if not set -l, explore all region, default value is "all"?
                                )
         self.parser.add_option('-G',
                                metavar='',
@@ -71,6 +70,7 @@ class CommandLineParser(object):
                                action='store',
                                nargs=1,
                                type='string',
+                               default=None,
                                help='GTF file',
                                )
         self.parser.add_option('--one-based',
@@ -306,13 +306,14 @@ class CommandLineParser(object):
         #############################
         ### Check required params ###
         #############################
-        passed_params = {}
+        # create modified dict that access by attribute
+        passed_params  = AttrDict()
         
         # fasta file, -f
         if not opt.fasta:
             self.parser.error('[-f] Reference fasta file is a required argument')
         elif self._ok_file(opt.fasta):
-            passed_params.update({'fasta': opt.fasta})
+            passed_params.fasta = opt.fasta
         elif not self._ok_file(opt.fasta):
             self.parser.error(opt.fasta + " is not found or writable file!")
             
@@ -320,17 +321,16 @@ class CommandLineParser(object):
         if not opt.r_bams:
             self.parser.error('[-r] RNA-seq bam file is a required argument')
         elif self._ok_file(opt.r_bams):
-            passed_params.update({'r_bams': opt.r_bams})
+            passed_params.r_bams = opt.r_bams
         elif not self._ok_file(opt.r_bams):
             self.parser.error(opt.r_bams + " is not found or writable file!")
         
         # output filename, -o
         if opt.outname:
-            passed_params.update({'outname': opt.outname})
-            #self.parser.error('[-o] Output filename is a required argument')
+            passed_params.outname = opt.outname
         else:
             default_filename = 'ivy_run.log'
-            passed_params.update({'outname': default_filename})
+            passed_params.outname = default_filename
         
         ###########################
         ### Check basic options ###
@@ -338,133 +338,133 @@ class CommandLineParser(object):
         # -l, regions
         if opt.regions == 'All':
             # default value: all
-            passed_params.update({'region': opt.regions})
+            passed_params.region = opt.regions
         elif self._is_region(opt.regions) is not None:
             # specified region: e.g. chr1:1-1000
-            passed_params.update({'region': self._is_region(opt.regions)})
+            passed_params.region = self._is_region(opt.regions)
         else:
             # error
             self.parser.error("Error: faild to set region")
 
         # gtf file, -G
         if opt.gtf:
-            passed_params.update({'gtf': opt.gtf})
+            passed_params.gtf = opt.gtf
         else:
-            passed_params.update({'gtf': None})
+            passed_params.gtf = opt.gtf
 
         # --one_based
         if opt.one_based is True:
-            passed_params.update({'one_based': opt.one_based})
-        elif opt.one_based is False:
-            passed_params.update({'one_based': False})
+            passed_params.one_based = opt.one_based
+        elif not opt.one_based:
+            passed_params.one_based = opt.one_based
 
         # --num-threads
         if opt.n_threads:
-            passed_params.update({'n_threads': opt.n_threads})
+            passed_params.n_threads = opt.n_threads
 
         ############################
         ### Check sample options ###
         ###########################
         # --strand
         if opt.strand is True:
-            passed_params.update({'strand': opt.strand})
+            passed_params.strand = opt.strand
         elif opt.strand is False:
-            passed_params.update({'strand': False})
+            passed_params.strand = False
 
         # --ko-strain
         if opt.ko_strain is True:
-            passed_params.update({'strand': opt.strand})
+            passed_params.ko_strain = opt.ko_strain
         elif opt.ko_strain is False:
-            passed_params.update({'strand': False})
-
+            passed_params.ko_strain = False
+            
         # --replicate
         if opt.replicate is True:
-            passed_params.update({'replicate': opt.replicate})
+            passed_params.replicate = opt.replicate
         elif opt.replicate is False:
-            passed_params.update({'replicate': opt.replicate})
+            passed_params.replicate = opt.replicate
 
         ############################
         ### Basic filter options ###
         ############################
         # --min-ag-ratio
         if opt.ag_ratio:
-            passed_params.update({'ag_ratio': opt.ag_ratio})
+            passed_params.ag_ratio = opt.ag_ratio
 
         # --min-rna-coverage
         if opt.min_rna_cov:
-            passed_params.update({'min_rna_cov': opt.min_rna_cov})
+            passed_params.min_rna_cov = opt.min_rna_cov
 
         # --min_dna_coverage
         if opt.min_dna_cov:
-            passed_params.update({'min_dna_cov': opt.min_dna_cov})
+            passed_params.min_dna_cov = opt.min_dna_cov
 
         # --rm-duplicated-read
         if opt.is_duplicated:
-            passed_params.update({'is_duplicated': opt.is_duplicated})
+            passed_params.is_duplicated = opt.is_duplicated
 
         # --rm-deletion-read
         if opt.is_deletion:
-            passed_params.update({'is_deletion': opt.is_deletion})
+            passed_params.is_deletion = opt.is_deletion
 
         # --min-mapq
         if opt.min_mapq:
-            passed_params.update({'min_mapq': opt.min_mapq})
+            passed_params.min_mapq = opt.min_mapq
 
         # --num-allow-type
         if opt.num_type:
-            passed_params.update({'num_type': opt.num_type})
+            passed_params.num_type = opt.num_type
 
         # --min-baq-rna
         if opt.min_baq_r:
-            passed_params.update({'min_baq_rna': opt.min_baq_r})
+            passed_params.min_baq_rna = opt.min_baq_r
 
         # --min-baq-dna
         if opt.min_baq_d:
-            passed_params.update({'min_baq_dba': opt.min_baq_d})
+            passed_params.min_baq_dba = opt.min_baq_d
 
         ##################################
         ### Statistical filter options ###
         ##################################
         # --sig-level
         if opt.sig_level:
-            passed_params.update({'sig_level': opt.sig_level})
+            passed_params.sig_level = opt.sig_level
             
         # base-call-bias
         if opt.baq_bias:
-            passed_params.update({'baq_bias': opt.baq_bias})
+            passed_params.baq_bias = opt.baq_bias
 
         # strand-bias
         if opt.strand_bias:
-            passed_params.update({'strnad_bias': opt.strand_bias})
+            passed_params.strnad_bias = opt.strand_bias
         
         # --potitional-bias
         if opt.pos_bias:
-            passed_params.update({'has bias': opt.pos_bias})
+            passed_params.pos_bias = opt.pos_bias
 
         ###########################
         ### Ext. filter options ###
         ###########################
         # --blat-collection
         if opt.blat:
-            passed_params.update({'blat': opt.blat})
+            passed_params.is_blat = opt.blat
         elif opt.blat is False:
-            passed_params.update({'blat': False})
+            passed_params.is_blat = False
 
         # --snp
         if opt.snp_file:
-            passed_params.update({'snp_file': opt.snp})
+            passed_params.snp_file = opt.snp
             
         # --ss-num
         if opt.ss_num:
-            passed_params.update({'ss_num': opt.ss_num})
+            passed_params.ss_num = opt.ss_num
 
         # --trim-n
         if opt.trim_n:
-            passed_params.update({'trim_n': opt.trim_n})
+            passed_params.trim_n = opt.trim_n
 
         # --mask-repeat
         if opt.is_mask_rep:
-            passed_params.update({'is_mask_rep': opt.is_mask_rep})
+            passed_params.is_mask_rep = opt.is_mask_rep
  
         return passed_params
 
@@ -497,14 +497,16 @@ class CommandLineParser(object):
                     self.parser.error("position must be \'start-end\'")
                 
                 if start.isdigit() and end.isdigit():
-                    if start < end:
+                    int_s = int(start)
+                    int_e = int(end)
+                    if int_s < int_e:
                         # everything is fine
-                        return {'chrom': str(chrom), 'start': int(start), 'end': int(end)}
-                    elif start > end:
-                        self.parser.error('end:' + end + ' is greater than ' + 'start:' + start)
+                        return {'chrom': str(chrom), 'start': int_s, 'end': int_e}
+                    elif int_s > int_e:
+                        self.parser.error('end:' + int_e + ' is greater than ' + 'start:' + int_e)
                         return False
-                    elif start == end:
-                        self.parser.error("start:" + start + ", end:" + end + " is same values")
+                    elif int_s == int_e:
+                        self.parser.error("start:" + int_s + ", end:" + int_e + " is same values")
                         return False
                 else:
                     self.parser.error(regions + ' in pos is not numetric (expected integer)')
