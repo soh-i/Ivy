@@ -29,5 +29,5 @@ class Ivy(CommandLineParser):
         pp = pprint.PrettyPrinter(indent=6)
         for rna in stream.pileup_stream():
             pp.pprint(rna)
-            raise SystemExit()
+            #raise SystemExit()
             
