@@ -81,9 +81,6 @@ class ImutableDict(collections.Mapping):
         self.__dict = dict(dic)
         self.hash = None
 
-    def __getstate__(self):
-        return self.__dict__.items()
-
     def __getitem__(self, key):
         return self.__dict[key]
 
