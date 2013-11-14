@@ -2,16 +2,21 @@ from Ivy.alignment.stream import AlignmentStream
 from Ivy.annotation.writer import VCFWriteHeader
 
 class AlignmentReadFilter(AlignmentStream):
-    pass
+    def __init__(self):
+        AlignmentReadFilter.__init__(self)
+        pass
 
 class BasicReadFilter(object):
-    pass
+    def __init__(self):
+        pass
 
 class StatReadFilter(object):
-    pass
+    def __init__(self):
+        pass
 
 class ExtReadFilter(object):
-    pass
+    def __init__(self):
+        pass
 
     
 
