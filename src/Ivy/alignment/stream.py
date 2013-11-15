@@ -12,8 +12,8 @@ __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
 
-        
-def _resolve_chrom_name(bam, fa):
+
+def _is_same_chromosome_name(bam=bam, fa=fa):
     __bam = pysam.Samfile(os.path.abspath(bam), 'rb')
     __fa = pysam.Fastafile(os.path.abspath(fa))
     bam_references = __bam.references
@@ -37,13 +37,14 @@ def _parse_faidx(filename):
             fasta_chrom_name.append(data[0])
     return fasta_chrom_name
 
+    
 if __name__ == '__main__':
     print _resolve_chrom_name("../data/testREDItools/dna.bam", "../data/testREDItools/reference.fa")
     
 
-
 class AlignmentStream(object):
     def __init__(self, config):
+        self.config = config
         __bm = pysam.Samfile(config.r_bams, 'rb', check_header=True, check_sq=True)
         __ft = pysam.Fastafile(config.fasta)
         
