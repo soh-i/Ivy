@@ -13,7 +13,7 @@ __license__ = ''
 __status__ = 'development'
 
 
-def _is_same_chromosome_name(bam=bam, fa=fa):
+def _is_same_chromosome_name(bam=None, fa=None):
     __bam = pysam.Samfile(os.path.abspath(bam), 'rb')
     __fa = pysam.Fastafile(os.path.abspath(fa))
     bam_references = __bam.references
@@ -39,34 +39,38 @@ def _parse_faidx(filename):
 
     
 if __name__ == '__main__':
-    print _resolve_chrom_name("../data/testREDItools/dna.bam", "../data/testREDItools/reference.fa")
+    print _is_same_chromosome_name(bam="../data/testREDItools/dna.bam", fa="../data/testREDItools/reference.fa")
     
 
 class AlignmentStream(object):
-    def __init__(self, config):
-        self.config = config
-        __bm = pysam.Samfile(config.r_bams, 'rb', check_header=True, check_sq=True)
-        __ft = pysam.Fastafile(config.fasta)
+    def __init__(self, __config):
+        self.config = __config
+        
+        #Todo: To non-writable object
+        self.__original_config = __config
+        
+        __bm = pysam.Samfile(self.config.r_bams, 'rb', check_header=True, check_sq=True)
+        __ft = pysam.Fastafile(self.config.fasta)
         
         self.samfile = __bm
         self.fafile = __ft
-        self.one_based = config.one_based
+        self.one_based = self.config.one_based
 
         # Resolve to explore specified region or not
-        if config.region == 'All':
+        if self.config.region == 'All':
             # explore all region
-            self.start = None
-            self.end = None
-            self.chrom = None
+            self.config.start = None
+            self.config.end = None
+            self.config.chrom = None
             
-        elif config.region.chrom and config.region.start and config.region.end:
+        elif self.config.region.chrom and self.config.region.start and self.config.region.end:
             (self.start, self.end) = self.__resolve_coords(
-                config.region.start,
-                config.region.end,
-                self.one_based)
-            if not config.region.chrom.startswith('chr'):
-                self.chrom = 'chr' + config.region.chrom
-            else: self.chrom = config.region.chrom
+                self.config.region.start,
+                self.config.region.end,
+                self.config.one_based)
+            if not self.config.region.chrom.startswith('chr'):
+                self.config.chrom = 'chr' + self.config.region.chrom
+            else: self.config.chrom = self.config.region.chrom
         else:
             raise ValueError("chrom or pos of start/end is not set")
             
@@ -86,19 +90,19 @@ class AlignmentStream(object):
             print "filename: %s" % self.fafile.filename
                            
 
-        if _resolve_chrom_name(config.r_bams, config.fasta):
+        if _is_same_chromosome_name(bam=self.config.r_bams, fa=self.config.fasta):
             pass
         else:
             raise RuntimeError("valid chrom name")
 
     def pileup_stream(self):
-        for col in self.samfile.pileup(reference=self.chrom,
-                                       start=self.start,
-                                       end=self.end,
+        for col in self.samfile.pileup(reference=self.config.chrom,
+                                       start=self.config.start,
+                                       end=self.config.end,
                                        ):
             
             bam_chrom = self.samfile.getrname(col.tid)
-            if self.one_based:
+            if self.config.one_based:
                 pos = col.pos + 1
             else:
                 pos = col.pos
