@@ -79,6 +79,9 @@ class AlignmentStream(object):
                 self.chrom = 'chr' + config.region.chrom
             else: self.chrom = config.region.chrom
         else:
+            #self.start = None
+            #self.end = None
+            #self.chrom = None
             raise ValueError("Error: chr/start/end is invalid")
         
         debug = False
@@ -155,7 +158,7 @@ class AlignmentStream(object):
 
             if not ref:
                 # TODO: resolve difference name in fasta and bam
-                raise ValueError('No seq. content within [chr:%s, start:%s, end:%s]' % \
+                raise ValueError('No seq. content within [chr:%s, start:%s, end:%s], maybe different name of fasta and bam' % \
                                  (self.chrom, self.start, self.end))
 
             # array in read object per base types
