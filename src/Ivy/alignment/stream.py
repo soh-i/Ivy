@@ -4,8 +4,8 @@ import os.path
 import string
 import re
 import pysam
-from Ivy.utils import ImutableDict
 from Ivy.utils import die
+from Ivy.parse_opt import CommandLineParser
 
 __program__ = 'stream'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -13,37 +13,11 @@ __license__ = ''
 __status__ = 'development'
 
 
-def _is_same_chromosome_name(bam=None, fa=None):
-    __bam = pysam.Samfile(os.path.abspath(bam), 'rb')
-    __fa = pysam.Fastafile(os.path.abspath(fa))
-    bam_references = __bam.references
-    fa_filename = __fa.filename
-    fa_dx_filename = fa_filename + '.fai'
-    
-    if os.path.isfile(fa_dx_filename):
-        for bam_chr in bam_references:
-            if any([fai_chr == bam_chr for fai_chr in _parse_faidx(fa_dx_filename)]):
-                return True
-            else:
-                return False
-    else:
-        raise RuntimeError("%s of faidx file is not found" % (fa_dx_filename))
+class AlignmentStream(CommandLineParser):
+    def __init__(self):
+        CommandLineParser.__init__(self)
+        __config = self.ivy_parse_options()
         
-def _parse_faidx(filename):
-    fasta_chrom_name = []
-    with open(filename, 'r') as fh:
-        for row in fh:
-            data = row.split('\t')
-            fasta_chrom_name.append(data[0])
-    return fasta_chrom_name
-
-    
-if __name__ == '__main__':
-    print _is_same_chromosome_name(bam="../data/testREDItools/dna.bam", fa="../data/testREDItools/reference.fa")
-    
-
-class AlignmentStream(object):
-    def __init__(self, __config):
         self.config = __config
         
         #Todo: To non-writable object
@@ -349,9 +323,45 @@ class AlignmentStream(object):
         else:
             # allele is not found
             return '.'
-                        
+            
+   
+class AlignmentStreamMerger(object):
+    def __init__(self, rna, dna):
+        self.rna = rna
+        self.dna = dna
+
+    def merge_streaming(self):
+        dna_stream = AlignmentStream(conf)
+        rna_stream = AlignmentStream(conf)
+
+
+def _is_same_chromosome_name(bam=None, fa=None):
+    __bam = pysam.Samfile(os.path.abspath(bam), 'rb')
+    __fa = pysam.Fastafile(os.path.abspath(fa))
+    bam_references = __bam.references
+    fa_filename = __fa.filename
+    fa_dx_filename = fa_filename + '.fai'
+    
+    if os.path.isfile(fa_dx_filename):
+        for bam_chr in bam_references:
+            if any([fai_chr == bam_chr for fai_chr in _parse_faidx(fa_dx_filename)]):
+                return True
+            else:
+                return False
+    else:
+        raise RuntimeError("%s of faidx file is not found" % (fa_dx_filename))
+        
+def _parse_faidx(filename):
+    fasta_chrom_name = []
+    with open(filename, 'r') as fh:
+        for row in fh:
+            data = row.split('\t')
+            fasta_chrom_name.append(data[0])
+    return fasta_chrom_name
+
+    
 if __name__ == '__main__':
-    pass
+    print _is_same_chromosome_name(bam="../data/testREDItools/dna.bam", fa="../data/testREDItools/reference.fa")
 
     #conf = AlignmentConfig()
     #a = ['A', 'T', 'C', 'G']
@@ -377,17 +387,4 @@ if __name__ == '__main__':
     ## 
     ###print d, 'r:G',
     ##print define_allele(d, ref='G')
-    ## 
-    ## 
-    #   
-       
-class AlignmentStreamMerger(object):
-    def __init__(self, rna, dna):
-        self.rna = rna
-        self.dna = dna
-
-    def merge_streaming(self):
-        dna_stream = AlignmentStream(conf)
-        rna_stream = AlignmentStream(conf)
-
-
+    
