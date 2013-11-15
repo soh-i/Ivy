@@ -48,34 +48,35 @@ class AlignmentConfig(object):
     def config_varidator(self):
         # TODO: to varidate each params/values
         pass
-
         
-def __resolve_chrom_name(bam, fa):
-    __bam = pysam.Samfile(bam, 'rb')
-    __fa = pysam.Fastafile(fa)
-    bam_references = __bam.references
-    fa_filename = __fa.filename
-    fa_dx_filename = fa_filename + '.fai'
-    
-    if os.path.isfile(fa_dx_filename):
-        for fai_chr in __parse_faidx(fa_dx_filename):
-            for bam_chr in bam_references:
-                if fai_chr == bam_chr:
-                    continue
-                else:
-                    return False
-    else:
-        raise RuntimeError("%s of faidx file is not found" % (fa_dx_filename)
-
-def __parse_faidx(filename):
-    fasta_chrom_name = []
-    with open(filename, 'w') as fh:
-        for row in fh:
-            data = row.split('\t')
-            fasta_chrom_name.append(data[0])
-    return fasta_chrom_name
-
-    
+#def _resolve_chrom_name(bam, fa):
+#    __bam = pysam.Samfile(os.path.abspath(bam), 'rb')
+#    __fa = pysam.Fastafile(os.path.abspath(fa))
+#    bam_references = __bam.references
+#    fa_filename = __fa.filename
+#    fa_dx_filename = fa_filename + '.fai'
+#    print fa_dx_filename
+#    
+#    if os.path.isfile(fa_dx_filename):
+#        for fai_chr in __parse_faidx(fa_dx_filename):
+#            for bam_chr in bam_references:
+#                if fai_chr == bam_chr:
+#                    continue
+#                else:
+#                    return False
+#        return True
+#    else:
+#        raise RuntimeError("%s of faidx file is not found" % (fa_dx_filename))
+#                           
+#def __parse_faidx(filename):
+#    fasta_chrom_name = []
+#    with open(filename, 'r') as fh:
+#        for row in fh:
+#            data = row.split('\t')
+#            fasta_chrom_name.append(data[0])
+#    return fasta_chrom_name
+# 
+#    
 class AlignmentStream(object):
     def __init__(self, config):
         __bm = pysam.Samfile(config.r_bams, 'rb', check_header=True, check_sq=True)
@@ -103,7 +104,7 @@ class AlignmentStream(object):
         else:
             raise ValueError("chrom or pos of start/end is not set")
         
-        debug = True
+        debug = False
         if debug:
             # info. for loaded samfiel
             print "### info. for samfile object from given Bam header @SQ ###"
@@ -117,9 +118,13 @@ class AlignmentStream(object):
             # info. for fasta
             print "### info. for fasfile object ###"
             print "filename: %s" % self.fafile.filename
-            
-            die()
-        
+                           
+
+        #if _resolve_chrom_name(config.r_bams, config.fasta):
+        #    print "OK"
+        #else:
+        #    die("Faild")
+
     def pileup_stream(self):
         for col in self.samfile.pileup(reference=self.chrom,
                                        start=self.start,
@@ -160,7 +165,7 @@ class AlignmentStream(object):
             #del_reads = [_ for _ in reads if not _.is_del]
             #del_prop_reads = [_ for _ in reads if not _.is_del]
 
-            # Has insertion alone
+            # Has insertion alonep
             # TODO: fixt to print pysam object directory
             ins_reads = [_ for _ in reads if _.is_del > 0]
             ins_prop_reads = [_ for _ in reads if _.is_del > 0]
@@ -180,6 +185,7 @@ class AlignmentStream(object):
             filt_mismatches = [_ for _ in filt_reads if _.alignment.seq[_.qpos] != ref]
             filt_matches = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == ref]
 
+            print self.chrom, self.start, self.end
             if not ref:
                 # TODO: resolve difference name in fasta and bam
                 raise ValueError('No seq. content within [chr:%s, start:%s, end:%s], maybe different name of fasta and bam' % \
@@ -373,7 +379,9 @@ class AlignmentStream(object):
             return '.'
                         
 if __name__ == '__main__':
-    conf = AlignmentConfig()
+    pass
+
+    #conf = AlignmentConfig()
     #a = ['A', 'T', 'C', 'G']
     #b = ['C', 'G', 'G', 'G', 'A', 'A', 'A']
     #c = ['A', 'T', 'C', 'G']
