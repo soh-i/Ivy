@@ -75,8 +75,8 @@ class AlignmentConfig(object):
 #            data = row.split('\t')
 #            fasta_chrom_name.append(data[0])
 #    return fasta_chrom_name
-# 
-#    
+
+
 class AlignmentStream(object):
     def __init__(self, config):
         __bm = pysam.Samfile(config.r_bams, 'rb', check_header=True, check_sq=True)
@@ -104,6 +104,7 @@ class AlignmentStream(object):
         else:
             raise ValueError("chrom or pos of start/end is not set")
         
+        
         debug = False
         if debug:
             # info. for loaded samfiel
@@ -123,7 +124,6 @@ class AlignmentStream(object):
         #if _resolve_chrom_name(config.r_bams, config.fasta):
         #    print "OK"
         #else:
-        #    die("Faild")
 
     def pileup_stream(self):
         for col in self.samfile.pileup(reference=self.chrom,
@@ -136,9 +136,11 @@ class AlignmentStream(object):
                 pos = col.pos + 1
             else:
                 pos = col.pos
-            
+                
+            #print self.fafile.fetch(reference=21, start=int(col.pos), end=int(col.pos)+1)
             ref = self.fafile.fetch(reference=bam_chrom, start=col.pos,
                                     end=col.pos+1).upper()
+            
             reads = col.pileups
             
             # Raw reads (no filterings through)
@@ -185,7 +187,7 @@ class AlignmentStream(object):
             filt_mismatches = [_ for _ in filt_reads if _.alignment.seq[_.qpos] != ref]
             filt_matches = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == ref]
 
-            print self.chrom, self.start, self.end
+            #print self.chrom, self.start, self.end
             if not ref:
                 # TODO: resolve difference name in fasta and bam
                 raise ValueError('No seq. content within [chr:%s, start:%s, end:%s], maybe different name of fasta and bam' % \
