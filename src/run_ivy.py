@@ -1,6 +1,5 @@
 from Ivy.version import __version__
 from Ivy.alignment.stream import (
-    AlignmentConfig,
     AlignmentStream,
     )
 from Ivy.alignment.prepare import  AlignmentPreparation
