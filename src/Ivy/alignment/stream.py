@@ -53,9 +53,23 @@ class AlignmentConfig(object):
 def __resolve_chrom_name(bam, fa):
     __bam = pysam.Samfile(bam, 'rb')
     __fa = pysam.Fastafile(fa)
-    print __bam.nreferences
+    bam_references = __bam.references
+    fa_filename = __fa.filename
+    fa_dx_filename = fa_filename + '.fai'
+    if os.path.isfile(fa_dx_filename):
+        pass
 
 
+def __parse_faidx(filename):
+    fasta_chrom_name = []
+    with open(filename, 'w') as fh:
+        for row in fh:
+            data = row.split('\t')
+            fasta_chrom_name.append(data[0])
+    return fasta_chrom_name
+
+    
+    
 class AlignmentStream(object):
     def __init__(self, config):
         __bm = pysam.Samfile(config.r_bams, 'rb', check_header=True, check_sq=True)
@@ -81,10 +95,7 @@ class AlignmentStream(object):
                 self.chrom = 'chr' + config.region.chrom
             else: self.chrom = config.region.chrom
         else:
-            #self.start = None
-            #self.end = None
-            #self.chrom = None
-            raise ValueError("Error: chr/start/end is invalid")
+            raise ValueError("chrom or pos of start/end is not set")
         
         debug = True
         if debug:
@@ -100,6 +111,7 @@ class AlignmentStream(object):
             # info. for fasta
             print "### info. for fasfile object ###"
             print "filename: %s" % self.fafile.filename
+            
             die()
         
     def pileup_stream(self):
