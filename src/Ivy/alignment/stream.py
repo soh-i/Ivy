@@ -5,6 +5,7 @@ import string
 import re
 import pysam
 from Ivy.utils import ImutableDict
+from Ivy.utils import die
 
 __program__ = 'stream'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -50,9 +51,10 @@ class AlignmentConfig(object):
 
         
 def __resolve_chrom_name(bam, fa):
-    bam_obj = pysam.Samfile(bam, 'rb')
-    fa_obj = pysam.Fastafile(fa)
-    
+    __bam = pysam.Samfile(bam, 'rb')
+    __fa = pysam.Fastafile(fa)
+    print __bam.nreferences
+
 
 class AlignmentStream(object):
     def __init__(self, config):
@@ -84,17 +86,21 @@ class AlignmentStream(object):
             #self.chrom = None
             raise ValueError("Error: chr/start/end is invalid")
         
-        debug = False
+        debug = True
         if debug:
-            # info. for loaded samfile
-            print self.samfile.filename
-            print self.samfile.lengths
-            print self.samfile.mapped
-            print self.samfile.nreferences
-            print self.samfile.references
-            print self.samfile.unmapped
+            # info. for loaded samfiel
+            print "### info. for samfile object from given Bam header @SQ ###"
+            print "Sam file: %s" % self.samfile.filename
+            print "lengths: %s" % [_ for _ in self.samfile.lengths]
+            print "mapped %d: " % self.samfile.mapped
+            print "N_references: %s" % self.samfile.nreferences
+            print "references: %s" % [_ for _ in self.samfile.references]
+            print "unmapped: %s" % self.samfile.unmapped
+            
             # info. for fasta
-            print self.fafile.filename
+            print "### info. for fasfile object ###"
+            print "filename: %s" % self.fafile.filename
+            die()
         
     def pileup_stream(self):
         for col in self.samfile.pileup(reference=self.chrom,
