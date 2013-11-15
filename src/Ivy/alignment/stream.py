@@ -56,9 +56,16 @@ def __resolve_chrom_name(bam, fa):
     bam_references = __bam.references
     fa_filename = __fa.filename
     fa_dx_filename = fa_filename + '.fai'
+    
     if os.path.isfile(fa_dx_filename):
-        pass
-
+        for fai_chr in __parse_faidx(fa_dx_filename):
+            for bam_chr in bam_references:
+                if fai_chr == bam_chr:
+                    continue
+                else:
+                    return False
+    else:
+        raise RuntimeError("%s of faidx file is not found" % (fa_dx_filename)
 
 def __parse_faidx(filename):
     fasta_chrom_name = []
@@ -68,7 +75,6 @@ def __parse_faidx(filename):
             fasta_chrom_name.append(data[0])
     return fasta_chrom_name
 
-    
     
 class AlignmentStream(object):
     def __init__(self, config):
