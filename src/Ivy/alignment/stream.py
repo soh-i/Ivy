@@ -12,69 +12,32 @@ __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
 
-
-class AlignmentConfig(object):
-    def __init__(self, params_from_cl):
-        #self.params = self.__set_default()
         
-        if isinstance(params_from_cl, dict):
-            self.cl_params = ImutableDict(params_from_cl)
-        else:
-            raise ValueError, ('Dict is only acceptable as command-line argument')
-        
-    #def __set_default(self):
-    #   __params = {
-    #       'is_duplicate': False,
-    #       'is_unmapped': False,
-    #       'is_deletion': False,
-    #       'is_proper_pair': True,
-    #       'is_qcfail': False,
-    #       'is_secondary': True,
-    #       'mapq': 25,
-    #       'mate_is_reverse': True,
-    #       'mate_is_unmapped': False,
-    #       'base_qual': 25,
-    #       'edit_ratio': 0.1,
-    #       'edit_base_c': 10,
-    #       'mutation_type_c': 1
-    #   }
-    #   self.__imutable_conf = ImutableDict(__params)
-    #   return self.__imutable_conf
-       
-    def logger(self):
-        # TODO: logging for used params with value
-        pass
-
-    def config_varidator(self):
-        # TODO: to varidate each params/values
-        pass
-        
-#def _resolve_chrom_name(bam, fa):
-#    __bam = pysam.Samfile(os.path.abspath(bam), 'rb')
-#    __fa = pysam.Fastafile(os.path.abspath(fa))
-#    bam_references = __bam.references
-#    fa_filename = __fa.filename
-#    fa_dx_filename = fa_filename + '.fai'
-#    print fa_dx_filename
-#    
-#    if os.path.isfile(fa_dx_filename):
-#        for fai_chr in __parse_faidx(fa_dx_filename):
-#            for bam_chr in bam_references:
-#                if fai_chr == bam_chr:
-#                    continue
-#                else:
-#                    return False
-#        return True
-#    else:
-#        raise RuntimeError("%s of faidx file is not found" % (fa_dx_filename))
-#                           
-#def __parse_faidx(filename):
-#    fasta_chrom_name = []
-#    with open(filename, 'r') as fh:
-#        for row in fh:
-#            data = row.split('\t')
-#            fasta_chrom_name.append(data[0])
-#    return fasta_chrom_name
+def _resolve_chrom_name(bam, fa):
+    __bam = pysam.Samfile(os.path.abspath(bam), 'rb')
+    __fa = pysam.Fastafile(os.path.abspath(fa))
+    bam_references = __bam.references
+    fa_filename = __fa.filename
+    fa_dx_filename = fa_filename + '.fai'
+    
+    if os.path.isfile(fa_dx_filename):
+        for fai_chr in __parse_faidx(fa_dx_filename):
+            for bam_chr in bam_references:
+                if fai_chr == bam_chr:
+                    continue
+                else:
+                    return False
+        return True
+    else:
+        raise RuntimeError("%s of faidx file is not found" % (fa_dx_filename))
+                           
+def __parse_faidx(filename):
+    fasta_chrom_name = []
+    with open(filename, 'r') as fh:
+        for row in fh:
+            data = row.split('\t')
+            fasta_chrom_name.append(data[0])
+    return fasta_chrom_name
 
 
 class AlignmentStream(object):
@@ -103,8 +66,7 @@ class AlignmentStream(object):
             else: self.chrom = config.region.chrom
         else:
             raise ValueError("chrom or pos of start/end is not set")
-        
-        
+            
         debug = False
         if debug:
             # info. for loaded samfiel
@@ -121,9 +83,10 @@ class AlignmentStream(object):
             print "filename: %s" % self.fafile.filename
                            
 
-        #if _resolve_chrom_name(config.r_bams, config.fasta):
-        #    print "OK"
-        #else:
+        if _resolve_chrom_name(config.r_bams, config.fasta):
+            print "OK"
+        else:
+            die("Faild")
 
     def pileup_stream(self):
         for col in self.samfile.pileup(reference=self.chrom,
