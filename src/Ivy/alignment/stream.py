@@ -21,23 +21,25 @@ def _resolve_chrom_name(bam, fa):
     fa_dx_filename = fa_filename + '.fai'
     
     if os.path.isfile(fa_dx_filename):
-        for fai_chr in __parse_faidx(fa_dx_filename):
-            for bam_chr in bam_references:
-                if fai_chr == bam_chr:
-                    continue
-                else:
-                    return False
-        return True
+        for bam_chr in bam_references:
+            if any([fai_chr == bam_chr for fai_chr in _parse_faidx(fa_dx_filename)]):
+                return True
+            else:
+                return False
     else:
         raise RuntimeError("%s of faidx file is not found" % (fa_dx_filename))
-                           
-def __parse_faidx(filename):
+        
+def _parse_faidx(filename):
     fasta_chrom_name = []
     with open(filename, 'r') as fh:
         for row in fh:
             data = row.split('\t')
             fasta_chrom_name.append(data[0])
     return fasta_chrom_name
+
+if __name__ == '__main__':
+    print _resolve_chrom_name("../data/testREDItools/dna.bam", "../data/testREDItools/reference.fa")
+    
 
 
 class AlignmentStream(object):
@@ -84,9 +86,9 @@ class AlignmentStream(object):
                            
 
         if _resolve_chrom_name(config.r_bams, config.fasta):
-            print "OK"
+            pass
         else:
-            die("Faild")
+            raise RuntimeError("valid chrom name")
 
     def pileup_stream(self):
         for col in self.samfile.pileup(reference=self.chrom,
