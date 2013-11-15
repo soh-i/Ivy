@@ -25,7 +25,7 @@ class Ivy(CommandLineParser):
         #align_conf = AlignmentConfig(params)
         #print align_conf.cl_params
 
-        raise SystemExit(params)
+        #raise SystemExit(params)
         stream = AlignmentStream(params)
         
         pp = pprint.PrettyPrinter(indent=6)
