@@ -12,17 +12,9 @@ __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
 
-
-class AlignmentStream(CommandLineParser):
-    def __init__(self):
-        CommandLineParser.__init__(self)
-        __config = self.ivy_parse_options()
-        
-        self.config = __config
-        
-        #Todo: To non-writable object
-        self.__original_config = __config
-        
+class AlignmentStream(object):
+    def __init__(self, params):
+        self.config = params
         __bm = pysam.Samfile(self.config.r_bams, 'rb', check_header=True, check_sq=True)
         __ft = pysam.Fastafile(self.config.fasta)
         
@@ -68,7 +60,7 @@ class AlignmentStream(CommandLineParser):
             pass
         else:
             raise RuntimeError("valid chrom name")
-
+            
     def pileup_stream(self):
         for col in self.samfile.pileup(reference=self.config.chrom,
                                        start=self.config.start,
@@ -361,7 +353,9 @@ def _parse_faidx(filename):
 
     
 if __name__ == '__main__':
-    print _is_same_chromosome_name(bam="../data/testREDItools/dna.bam", fa="../data/testREDItools/reference.fa")
+    #print _is_same_chromosome_name(bam="../data/testREDItools/dna.bam", fa="../data/testREDItools/reference.fa")
+    test = AlignmentStream()
+    print dir(test)
 
     #conf = AlignmentConfig()
     #a = ['A', 'T', 'C', 'G']

@@ -9,8 +9,8 @@ __status__ = 'development'
 
 class AlignmentReadFilter(AlignmentStream):
     def __init__(self):
-        AlignmentReadFilter.__init__(self)
-        pass
+        super(self.__class__, self).__init__(self)
+        #AlignmentStream.__init__(self, self.config.)
 
 class BasicReadFilter(object):
     def __init__(self):
@@ -24,6 +24,9 @@ class ExtReadFilter(object):
     def __init__(self):
         pass
 
-    
+
+if __name__ == '__main__':
+    ar_filter = AlignmentReadFilter()
+
 
     
