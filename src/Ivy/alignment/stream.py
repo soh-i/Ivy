@@ -4,109 +4,79 @@ import os.path
 import string
 import re
 import pysam
-from Ivy.utils import ImutableDict
+from Ivy.utils import die
+from Ivy.parse_opt import CommandLineParser
 
 __program__ = 'stream'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
 
-
-class AlignmentConfig(object):
-    def __init__(self, params_from_cl):
-        #self.params = self.__set_default()
-        
-        if isinstance(params_from_cl, dict):
-            self.cl_params = ImutableDict(params_from_cl)
-        else:
-            raise ValueError, ('Dict is only acceptable as command-line argument')
-        
-    #def __set_default(self):
-    #   __params = {
-    #       'is_duplicate': False,
-    #       'is_unmapped': False,
-    #       'is_deletion': False,
-    #       'is_proper_pair': True,
-    #       'is_qcfail': False,
-    #       'is_secondary': True,
-    #       'mapq': 25,
-    #       'mate_is_reverse': True,
-    #       'mate_is_unmapped': False,
-    #       'base_qual': 25,
-    #       'edit_ratio': 0.1,
-    #       'edit_base_c': 10,
-    #       'mutation_type_c': 1
-    #   }
-    #   self.__imutable_conf = ImutableDict(__params)
-    #   return self.__imutable_conf
-       
-    def logger(self):
-        # TODO: logging for used params with value
-        pass
-
-    def config_varidator(self):
-        # TODO: to varidate each params/values
-        pass
-
-        
-def __resolve_chrom_name(bam, fa):
-    bam_obj = pysam.Samfile(bam, 'rb')
-    fa_obj = pysam.Fastafile(fa)
-    
-
 class AlignmentStream(object):
-    def __init__(self, config):
-        __bm = pysam.Samfile(config.r_bams, 'rb', check_header=True, check_sq=True)
-        __ft = pysam.Fastafile(config.fasta)
+    def __init__(self, params):
+        self.config = params
+        __bm = pysam.Samfile(self.config.r_bams, 'rb', check_header=True, check_sq=True)
+        __ft = pysam.Fastafile(self.config.fasta)
         
         self.samfile = __bm
         self.fafile = __ft
-        self.one_based = config.one_based
+        self.one_based = self.config.one_based
 
         # Resolve to explore specified region or not
-        if config.region == 'All':
+        if self.config.region == 'All':
             # explore all region
-            self.start = None
-            self.end = None
-            self.chrom = None
+            self.config.start = None
+            self.config.end = None
+            self.config.chrom = None
             
-        elif config.region.chrom and config.region.start and config.region.end:
+        elif self.config.region.chrom and self.config.region.start and self.config.region.end:
             (self.start, self.end) = self.__resolve_coords(
-                config.region.start,
-                config.region.end,
-                self.one_based)
-            if not config.region.chrom.startswith('chr'):
-                self.chrom = 'chr' + config.region.chrom
-            else: self.chrom = config.region.chrom
+                self.config.region.start,
+                self.config.region.end,
+                self.config.one_based)
+            if not self.config.region.chrom.startswith('chr'):
+                self.config.chrom = 'chr' + self.config.region.chrom
+            else: self.config.chrom = self.config.region.chrom
         else:
-            raise ValueError("Error: chr/start/end is invalid")
-        
+            raise ValueError("chrom or pos of start/end is not set")
+            
         debug = False
         if debug:
-            # info. for loaded samfile
-            print self.samfile.filename
-            print self.samfile.lengths
-            print self.samfile.mapped
-            print self.samfile.nreferences
-            print self.samfile.references
-            print self.samfile.unmapped
+            # info. for loaded samfiel
+            print "### info. for samfile object from given Bam header @SQ ###"
+            print "Sam file: %s" % self.samfile.filename
+            print "lengths: %s" % [_ for _ in self.samfile.lengths]
+            print "mapped %d: " % self.samfile.mapped
+            print "N_references: %s" % self.samfile.nreferences
+            print "references: %s" % [_ for _ in self.samfile.references]
+            print "unmapped: %s" % self.samfile.unmapped
+            
             # info. for fasta
-            print self.fafile.filename
-        
+            print "### info. for fasfile object ###"
+            print "filename: %s" % self.fafile.filename
+                           
+
+        if _is_same_chromosome_name(bam=self.config.r_bams, fa=self.config.fasta):
+            pass
+        else:
+            raise RuntimeError("valid chrom name")
+            
     def pileup_stream(self):
-        for col in self.samfile.pileup(reference=self.chrom,
-                                       start=self.start,
-                                       end=self.end,
+        for col in self.samfile.pileup(reference=self.config.chrom,
+                                       start=self.config.start,
+                                       end=self.config.end,
                                        ):
             
             bam_chrom = self.samfile.getrname(col.tid)
-            if self.one_based:
+            if self.config.one_based:
                 pos = col.pos + 1
             else:
                 pos = col.pos
-            
+                
+            #print self.fafile.fetch(reference=21, start=int(col.pos), end=int(col.pos)+1)
             ref = self.fafile.fetch(reference=bam_chrom, start=col.pos,
                                     end=col.pos+1).upper()
+            
             reads = col.pileups
             
             # Raw reads (no filterings through)
@@ -133,7 +103,7 @@ class AlignmentStream(object):
             #del_reads = [_ for _ in reads if not _.is_del]
             #del_prop_reads = [_ for _ in reads if not _.is_del]
 
-            # Has insertion alone
+            # Has insertion alonep
             # TODO: fixt to print pysam object directory
             ins_reads = [_ for _ in reads if _.is_del > 0]
             ins_prop_reads = [_ for _ in reads if _.is_del > 0]
@@ -153,9 +123,10 @@ class AlignmentStream(object):
             filt_mismatches = [_ for _ in filt_reads if _.alignment.seq[_.qpos] != ref]
             filt_matches = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == ref]
 
+            #print self.chrom, self.start, self.end
             if not ref:
                 # TODO: resolve difference name in fasta and bam
-                raise ValueError('No seq. content within [chr:%s, start:%s, end:%s]' % \
+                raise ValueError('No seq. content within [chr:%s, start:%s, end:%s], maybe different name of fasta and bam' % \
                                  (self.chrom, self.start, self.end))
 
             # array in read object per base types
@@ -344,9 +315,49 @@ class AlignmentStream(object):
         else:
             # allele is not found
             return '.'
-                        
+            
+   
+class AlignmentStreamMerger(object):
+    def __init__(self, rna, dna):
+        self.rna = rna
+        self.dna = dna
+
+    def merge_streaming(self):
+        dna_stream = AlignmentStream(conf)
+        rna_stream = AlignmentStream(conf)
+
+
+def _is_same_chromosome_name(bam=None, fa=None):
+    __bam = pysam.Samfile(os.path.abspath(bam), 'rb')
+    __fa = pysam.Fastafile(os.path.abspath(fa))
+    bam_references = __bam.references
+    fa_filename = __fa.filename
+    fa_dx_filename = fa_filename + '.fai'
+    
+    if os.path.isfile(fa_dx_filename):
+        for bam_chr in bam_references:
+            if any([fai_chr == bam_chr for fai_chr in _parse_faidx(fa_dx_filename)]):
+                return True
+            else:
+                return False
+    else:
+        raise RuntimeError("%s of faidx file is not found" % (fa_dx_filename))
+        
+def _parse_faidx(filename):
+    fasta_chrom_name = []
+    with open(filename, 'r') as fh:
+        for row in fh:
+            data = row.split('\t')
+            fasta_chrom_name.append(data[0])
+    return fasta_chrom_name
+
+    
 if __name__ == '__main__':
-    conf = AlignmentConfig()
+    #print _is_same_chromosome_name(bam="../data/testREDItools/dna.bam", fa="../data/testREDItools/reference.fa")
+    test = AlignmentStream()
+    print dir(test)
+
+    #conf = AlignmentConfig()
     #a = ['A', 'T', 'C', 'G']
     #b = ['C', 'G', 'G', 'G', 'A', 'A', 'A']
     #c = ['A', 'T', 'C', 'G']
@@ -370,17 +381,4 @@ if __name__ == '__main__':
     ## 
     ###print d, 'r:G',
     ##print define_allele(d, ref='G')
-    ## 
-    ## 
-    #   
-       
-class AlignmentStreamMerger(object):
-    def __init__(self, rna, dna):
-        self.rna = rna
-        self.dna = dna
-
-    def merge_streaming(self):
-        dna_stream = AlignmentStream(conf)
-        rna_stream = AlignmentStream(conf)
-
-
+    

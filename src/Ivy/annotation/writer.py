@@ -1,5 +1,5 @@
 import sys
-from Ivy.alignment.stream import AlignmentConfig
+from Ivy.parse_opt import CommandLineParser
 
 class VCFWriterException(Exception):
     pass
