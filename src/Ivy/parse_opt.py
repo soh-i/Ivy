@@ -411,16 +411,16 @@ class CommandLineParser(object):
             passed_params.basic_filter.min_dna_cov = opt.min_dna_cov
 
         # --rm-duplicated-read
-        if opt.is_duplicated is not None:
+        if opt.rm_duplicated is not None:
             passed_params.basic_filter.rm_duplicated = opt.rm_duplicated
 
         # --rm-deletion-read
-        if opt.is_deletion is not None:
+        if opt.rm_deletion is not None:
             passed_params.basic_filter.rm_deletion = opt.rm_deletion
 
         # --rm-insertion-read
         if opt.rm_insertion is not None:
-            passed_reads.basic_filter.rm_insertion = opt.rm_insertion
+            passed_params.basic_filter.rm_insertion = opt.rm_insertion
 
         # --min-mapq
         if opt.min_mapq:
