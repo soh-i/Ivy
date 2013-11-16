@@ -404,11 +404,11 @@ class CommandLineParser(object):
             passed_params.basic_filter.min_dna_cov = opt.min_dna_cov
 
         # --rm-duplicated-read
-        if opt.is_duplicated:
+        if opt.is_duplicated is not None:
             passed_params.basic_filter.is_duplicated = opt.is_duplicated
 
         # --rm-deletion-read
-        if opt.is_deletion:
+        if opt.is_deletion is not None:
             passed_params.basic_filter.is_deletion = opt.is_deletion
 
         # --min-mapq
@@ -431,7 +431,7 @@ class CommandLineParser(object):
         ### Statistical filter options ###
         ##################################
         # --sig-level
-        if opt.sig_level:
+        if opt.sig_level is not None:
             passed_params.stat_filter.sig_level = opt.sig_level
             
         # base-call-bias
