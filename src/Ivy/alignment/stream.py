@@ -27,12 +27,14 @@ class AlignmentStream(object):
         self.fafile = __ft
         self.one_based = self.params.one_based
 
-        # Resolve to explore specified region or not
+        ### Resolve to explore specified region or not
         # explore all region, set None
-        if self.params.region == 'All':
-            self.params.start = None
-            self.params.end = None
-            self.params.chrom = None
+        #die(self.params)
+        if self.params.region.all_flag == 'All':
+            print "ALL"
+            #self.params.region.start = 1
+            #self.params.region.end =1
+            #self.params.region.chrom = 1
 
         # explore specified region
         elif self.params.region.chrom and self.params.region.start and self.params.region.end:
@@ -41,14 +43,15 @@ class AlignmentStream(object):
                 self.params.region.end,
                 self.params.one_based)
             if not self.params.region.chrom.startswith('chr'):
-                self.params.chrom = 'chr' + self.params.region.chrom
-            else: self.params.chrom = self.params.region.chrom
+                self.params.region.chrom = 'chr' + self.params.region.chrom
+            else: self.params.region.chrom = self.params.region.chrom
         else:
-            raise ValueError("chrom or pos of start/end is not set")
+            #raise ValueError("chrom or pos of start/end is not set")
+            pass
 
         debug = False
         if debug:
-            # info. for loaded samfiel
+            # info. for loaded samfile
             print "### info. for samfile object from given Bam header @SQ ###"
             print "Sam file: %s" % self.samfile.filename
             print "lengths: %s" % [_ for _ in self.samfile.lengths]
@@ -64,10 +67,14 @@ class AlignmentStream(object):
         if _is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
             pass
         else:
-            raise RuntimeError("valid chrom name")
+            raise RuntimeError("invalid chrom name")
             
     def pileup_stream(self):
-        for col in self.samfile.pileup(reference=self.params.chrom,
+        print self.params.region.chrom
+        print self.params.region.start
+        print self.params.region.end
+        
+        for col in self.samfile.pileup(reference=self.params.region.chrom,
                                        start=self.params.region.start,
                                        end=self.params.region.end
                                        ):
