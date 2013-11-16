@@ -15,38 +15,37 @@ __status__ = 'development'
 class AlignmentStream(object):
     def __init__(self, __params):
         if hasattr(__params, 'AttrDict'):
-            self.config = __params
+            self.params = __params
         else:
             raise TypeError("Given param %s is %s class, not 'AttrDic' class" %
                             (__params, __params.__class__.__name__))
 
-        __bm = pysam.Samfile(self.config.r_bams, 'rb', check_header=True, check_sq=True)
-        __ft = pysam.Fastafile(self.config.fasta)
+        __bm = pysam.Samfile(self.params.r_bams, 'rb', check_header=True, check_sq=True)
+        __ft = pysam.Fastafile(self.params.fasta)
         
         self.samfile = __bm
         self.fafile = __ft
-        self.one_based = self.config.one_based
+        self.one_based = self.params.one_based
 
         # Resolve to explore specified region or not
         # explore all region, set None
-        if self.config.region == 'All':
-            self.config.start = None
-            self.config.end = None
-            self.config.chrom = None
-            
+        if self.params.region == 'All':
+            self.params.start = None
+            self.params.end = None
+            self.params.chrom = None
+
         # explore specified region
-        elif self.config.region.chrom and self.config.region.start and self.config.region.end:
-            (self.start, self.end) = self.__resolve_coords(
-                self.config.region.start,
-                self.config.region.end,
-                self.config.one_based)
-            if not self.config.region.chrom.startswith('chr'):
-                self.config.chrom = 'chr' + self.config.region.chrom
-            else: self.config.chrom = self.config.region.chrom
+        elif self.params.region.chrom and self.params.region.start and self.params.region.end:
+            (self.params.region.start, self.params.region.end) = self.__resolve_coords(
+                self.params.region.start,
+                self.params.region.end,
+                self.params.one_based)
+            if not self.params.region.chrom.startswith('chr'):
+                self.params.chrom = 'chr' + self.params.region.chrom
+            else: self.params.chrom = self.params.region.chrom
         else:
             raise ValueError("chrom or pos of start/end is not set")
 
-            
         debug = False
         if debug:
             # info. for loaded samfiel
@@ -61,24 +60,20 @@ class AlignmentStream(object):
             # info. for fasta
             print "### info. for fasfile object ###"
             print "filename: %s" % self.fafile.filename
-                           
 
-        if _is_same_chromosome_name(bam=self.config.r_bams, fa=self.config.fasta):
+        if _is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
             pass
         else:
             raise RuntimeError("valid chrom name")
             
     def pileup_stream(self):
-        #print type(self.start), self.end
-        #print dir(self.config.__init__())
-        
-        for col in self.samfile.pileup(reference=self.config.chrom,
-                                       start=self.start,
-                                       end=self.end,
+        for col in self.samfile.pileup(reference=self.params.chrom,
+                                       start=self.params.region.start,
+                                       end=self.params.region.end
                                        ):
             
             bam_chrom = self.samfile.getrname(col.tid)
-            if self.config.one_based:
+            if self.params.one_based:
                 pos = col.pos + 1
             else:
                 pos = col.pos
@@ -86,6 +81,7 @@ class AlignmentStream(object):
             #print self.fafile.fetch(reference=21, start=int(col.pos), end=int(col.pos)+1)
             ref = self.fafile.fetch(reference=bam_chrom, start=col.pos,
                                     end=col.pos+1).upper()
+
             
             reads = col.pileups
             
