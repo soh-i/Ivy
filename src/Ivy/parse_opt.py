@@ -337,11 +337,16 @@ class CommandLineParser(object):
         ###########################
         # -l, regions
         if opt.regions == 'All':
-            # default value: all
-            passed_params.region = opt.regions
+            # default value: all, all_flag is 1
+            passed_params.region.all_flag = 1
+            passed_params.region.chrom = None
+            passed_params.region.start = None
+            passed_params.region.end = None
+            
         elif self._is_region(opt.regions) is not None:
-            # specified region: e.g. chr1:1-1000
+            # specified region: e.g. chr1:1-1000, all_flag is 0
             passed_params.region = self._is_region(opt.regions)
+            passed_params.region.all_flag = 0
         else:
             # error
             self.parser.error("Error: faild to set region")
@@ -502,7 +507,10 @@ class CommandLineParser(object):
                     if int_s < int_e:
                         # everything is fine
                         return {
-                            'chrom': str(chrom), 'start': int(int_s), 'end': int(int_e)}
+                            'chrom': str(chrom),
+                            'start': int(int_s),
+                            'end': int(int_e),
+                        }
                     elif int_s > int_e:
                         self.parser.error('end:' + int_e + ' is greater than ' + 'start:' + int_e)
                         return False
