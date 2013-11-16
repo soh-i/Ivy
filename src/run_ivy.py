@@ -19,7 +19,7 @@ class Ivy(object):
         pp = pprint.PrettyPrinter(indent=6)
         parse = CommandLineParser()
         params = parse.ivy_parse_options()
-        stream = AlignmentStream(params)
+        stream = AlignmentStream({1:1})
                 
         for rna in stream.pileup_stream():
             if rna['mismatches'] > 10:
