@@ -5,16 +5,23 @@ import string
 import re
 import pysam
 from Ivy.utils import die
-from Ivy.parse_opt import CommandLineParser
 
 __program__ = 'stream'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
 
+
 class AlignmentStream(object):
-    def __init__(self, params):
-        self.config = params
+    def __init__(self, __params):
+        if hasattr(__params, 'AttrDict'):
+            # OK
+            pass
+        else:
+            raise TypeError("Given param %s is %s class, not 'AttrDic' class" %
+                            (__params, __params.__class__.__name__))
+            
+        self.config = __params
         __bm = pysam.Samfile(self.config.r_bams, 'rb', check_header=True, check_sq=True)
         __ft = pysam.Fastafile(self.config.fasta)
         
@@ -23,12 +30,13 @@ class AlignmentStream(object):
         self.one_based = self.config.one_based
 
         # Resolve to explore specified region or not
+        # explore all region, set None
         if self.config.region == 'All':
-            # explore all region
             self.config.start = None
             self.config.end = None
             self.config.chrom = None
             
+        # explore specified region
         elif self.config.region.chrom and self.config.region.start and self.config.region.end:
             (self.start, self.end) = self.__resolve_coords(
                 self.config.region.start,

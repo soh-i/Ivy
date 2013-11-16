@@ -501,7 +501,8 @@ class CommandLineParser(object):
                     int_e = int(end)
                     if int_s < int_e:
                         # everything is fine
-                        return {'chrom': str(chrom), 'start': int_s, 'end': int_e}
+                        return {
+                            'chrom': str(chrom), 'start': int(int_s), 'end': int(int_e)}
                     elif int_s > int_e:
                         self.parser.error('end:' + int_e + ' is greater than ' + 'start:' + int_e)
                         return False
