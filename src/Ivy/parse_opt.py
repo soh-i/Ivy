@@ -296,10 +296,10 @@ class CommandLineParser(object):
 
     def ivy_parse_options(self):
         self.parse_basic_opt()
-        self.parse_ext_filt_opt()
-        self.parse_sample_opt()
         self.parse_basic_filt_opt()
         self.parse_stat_filt_opt()
+        self.parse_sample_opt()
+        self.parse_ext_filt_opt()
         
         (opt, args) = self.parser.parse_args()
 
