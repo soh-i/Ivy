@@ -15,13 +15,11 @@ __status__ = 'development'
 class AlignmentStream(object):
     def __init__(self, __params):
         if hasattr(__params, 'AttrDict'):
-            # OK
-            pass
+            self.config = __params
         else:
             raise TypeError("Given param %s is %s class, not 'AttrDic' class" %
                             (__params, __params.__class__.__name__))
-            
-        self.config = __params
+
         __bm = pysam.Samfile(self.config.r_bams, 'rb', check_header=True, check_sq=True)
         __ft = pysam.Fastafile(self.config.fasta)
         
@@ -47,6 +45,7 @@ class AlignmentStream(object):
             else: self.config.chrom = self.config.region.chrom
         else:
             raise ValueError("chrom or pos of start/end is not set")
+
             
         debug = False
         if debug:
@@ -70,9 +69,12 @@ class AlignmentStream(object):
             raise RuntimeError("valid chrom name")
             
     def pileup_stream(self):
+        #print type(self.start), self.end
+        #print dir(self.config.__init__())
+        
         for col in self.samfile.pileup(reference=self.config.chrom,
-                                       start=self.config.start,
-                                       end=self.config.end,
+                                       start=self.start,
+                                       end=self.end,
                                        ):
             
             bam_chrom = self.samfile.getrname(col.tid)
@@ -284,7 +286,7 @@ class AlignmentStream(object):
                 end = end -1
             else:
                 None
-        return start, end
+        return int(start), int(end)
 
     def average_baq(self, string):
         return [ord(s)-33 for s in string]
