@@ -4,7 +4,8 @@ import os.path
 import string
 import re
 import pysam
-from Ivy.utils import die
+from Ivy.utils import die, AttrDict
+import pprint
 
 __program__ = 'stream'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -16,6 +17,7 @@ class AlignmentStream(object):
     def __init__(self, __params):
         if hasattr(__params, 'AttrDict'):
             self.params = __params
+            AttrDict.show(self.params)
         else:
             raise TypeError("Given param %s is %s class, not 'AttrDic' class" %
                             (__params, __params.__class__.__name__))
@@ -85,27 +87,37 @@ class AlignmentStream(object):
             ref = self.fafile.fetch(reference=bam_chrom, start=col.pos,
                                     end=col.pos+1).upper()
             
+            #####################################
             ### Loading alignment with params ###
+            #####################################
+            
             # proper reads alone
             reads = col.pileups
             filt_reads = []
-            self.params.basic_filter.is_insertion = True
+            self.params.basic_filter.rm_insertion = True
             
-            if (not self.params.basic_filter.is_duplicated
-
-                and not self.params.basic_filter.is_deletion
-                and not self.params.basic_filter.is_insertion):
+            if (not self.params.basic_filter.rm_duplicated
+                and self.params.basic_filter.rm_deletion
+                and self.params.basic_filter.rm_insertion):
                 
                 #die(self.params)
                 for _ in col.pileups:
-                    if _.alignment.is_proper_pair \
-                       and not _.alignment.is_secondary:
-                        #and not _.alignment.is_qcfail \
-                            #and not _.alignment.is_duplicate \
-                            #and not _.alignment.is_unmapped \
-                            #and not _.is_del:
+                    if (_.alignment.is_proper_pair
+                        and not _.alignment.is_secondary
+                        and not _.alignment.is_qcfail
+                        and not _.alignment.is_duplicate
+                        and not _.alignment.is_unmapped
+                        and not _.is_del):
+                        
                         filt_reads.append(_)
                         
+                passed_reads = [_ for _ in col.pileups
+                                if (_.alignment.is_proper_pair
+                                    and not _.alignment.is_qcfail
+                                    and not _.alignment.is_duplicate
+                                    and not _.alignment.is_unmapped
+                                    and not _.is_del)]
+                
             # duplicated reads alone
             elif self.params.basic_filter.is_duplicated:
                 pass
@@ -396,9 +408,7 @@ def _resolve_chrom_name(bam_chr=None, fa_chr=None):
 
     
 if __name__ == '__main__':
-    #print _is_same_chromosome_name(bam="../data/testREDItools/dna.bam", fa="../data/testREDItools/reference.fa")
-    test = AlignmentStream()
-    print dir(test)
+    pass
 
     #conf = AlignmentConfig()
     #a = ['A', 'T', 'C', 'G']
