@@ -159,17 +159,24 @@ class CommandLineParser(object):
                                       )
         basic_filter_group.add_option('--rm-duplicated-read',
                                       metavar='',
-                                      dest='is_duplicated',
+                                      dest='rm_duplicated',
                                       action='store_true',
                                       default=True,
                                       help='Remove duplicated reads [default: %default]'
                                       )
         basic_filter_group.add_option('--rm-deletion-read',
                                       metavar='',
-                                      dest='is_deletion',
+                                      dest='rm_deletion',
                                       action='store_true',
                                       default=True,
                                       help='Remove deletion reads [default: %default]'
+                                      )
+        basic_filter_group.add_option('--rm-insertion-read',
+                                      metavar='',
+                                      dest='rm_insertion',
+                                      action='store_true',
+                                      default=True,
+                                      help='Remove insertion reads [default: %default]'
                                       )
         basic_filter_group.add_option('--min-mapq',
                                       metavar='',
@@ -405,11 +412,15 @@ class CommandLineParser(object):
 
         # --rm-duplicated-read
         if opt.is_duplicated is not None:
-            passed_params.basic_filter.is_duplicated = opt.is_duplicated
+            passed_params.basic_filter.rm_duplicated = opt.rm_duplicated
 
         # --rm-deletion-read
         if opt.is_deletion is not None:
-            passed_params.basic_filter.is_deletion = opt.is_deletion
+            passed_params.basic_filter.rm_deletion = opt.rm_deletion
+
+        # --rm-insertion-read
+        if opt.rm_insertion is not None:
+            passed_reads.basic_filter.rm_insertion = opt.rm_insertion
 
         # --min-mapq
         if opt.min_mapq:
