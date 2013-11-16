@@ -76,7 +76,7 @@ class CommandLineParser(object):
         self.parser.add_option('--one-based',
                                metavar='',
                                dest='one_based',
-                               action='store_false',
+                               action='store_true',
                                default=False,
                                help='Genomic coordinate'
                                )
@@ -121,7 +121,7 @@ class CommandLineParser(object):
         sample_group.add_option('--replicate',
                                 metavar='',
                                 dest='replicate',
-                                action='store_false',
+                                action='store_true',
                                 default=False,
                                 help='Biological replicate is used [default: %default]'
                                 )
@@ -250,7 +250,7 @@ class CommandLineParser(object):
         ext_filter_group.add_option('--blat-collection',
                                     metavar='',
                                     dest='blat',
-                                    action='store_false',
+                                    action='store_true',
                                     default=False,
                                     help='Reduce mis-alignment with Blat [default: %default]'
                                     )
@@ -281,7 +281,7 @@ class CommandLineParser(object):
         ext_filter_group.add_option('--mask-repeat',
                                     metavar='',
                                     dest='is_mask_rep',
-                                    action='store_false',
+                                    action='store_true',
                                     default=False,
                                     help='Mask repeat sequence [default: %default]'
                                     )
