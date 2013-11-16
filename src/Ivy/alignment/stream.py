@@ -28,27 +28,29 @@ class AlignmentStream(object):
         self.one_based = self.params.one_based
 
         ### Resolve to explore specified region or not
-        # explore all region, set None
-        #die(self.params)
-        if self.params.region.all_flag == 'All':
-            print "ALL"
-            #self.params.region.start = 1
-            #self.params.region.end =1
-            #self.params.region.chrom = 1
+        # explore all region if all_flag == 1
+        if self.params.region.all_flag == 1:
+            self.params.region.start = None
+            self.params.region.end = None
+            self.params.region.chrom = None
 
-        # explore specified region
-        elif self.params.region.chrom and self.params.region.start and self.params.region.end:
-            (self.params.region.start, self.params.region.end) = self.__resolve_coords(
-                self.params.region.start,
-                self.params.region.end,
-                self.params.one_based)
-            if not self.params.region.chrom.startswith('chr'):
-                self.params.region.chrom = 'chr' + self.params.region.chrom
-            else: self.params.region.chrom = self.params.region.chrom
-        else:
-            #raise ValueError("chrom or pos of start/end is not set")
-            pass
-
+        # explore specified region if all_flag == 0
+        elif self.params.region.all_flag == 0:
+            if (self.params.region.chrom
+                and self.params.region.start and self.params.region.end):
+                (self.params.region.start, self.params.region.end) = \
+                self.__resolve_coords(
+                    self.params.region.start,
+                    self.params.region.end,
+                    self.params.one_based)
+                
+                if not self.params.region.chrom.startswith('chr'):
+                    self.params.region.chrom = 'chr' + self.params.region.chrom
+                else: self.params.region.chrom = self.params.region.chrom
+            else:
+                # explore all region if self.params.region.* is None
+                pass
+                
         debug = False
         if debug:
             # info. for loaded samfile
@@ -70,33 +72,64 @@ class AlignmentStream(object):
             raise RuntimeError("invalid chrom name")
             
     def pileup_stream(self):
-        print self.params.region.chrom
-        print self.params.region.start
-        print self.params.region.end
-        
         for col in self.samfile.pileup(reference=self.params.region.chrom,
                                        start=self.params.region.start,
                                        end=self.params.region.end
                                        ):
-            
             bam_chrom = self.samfile.getrname(col.tid)
             if self.params.one_based:
                 pos = col.pos + 1
             else:
                 pos = col.pos
                 
-            #print self.fafile.fetch(reference=21, start=int(col.pos), end=int(col.pos)+1)
             ref = self.fafile.fetch(reference=bam_chrom, start=col.pos,
                                     end=col.pos+1).upper()
-
             
+            ### Loading alignment with params ###
+            # proper reads alone
             reads = col.pileups
+            filt_reads = []
+            self.params.basic_filter.is_insertion = True
             
-            # Raw reads (no filterings through)
-            #raw_reads = [_ for _ in reads]
-            #raw_mismatches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] != ref]
-            #raw_matches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] == ref]
-            # 
+            if (not self.params.basic_filter.is_duplicated
+
+                and not self.params.basic_filter.is_deletion
+                and not self.params.basic_filter.is_insertion):
+                
+                #die(self.params)
+                for _ in col.pileups:
+                    if _.alignment.is_proper_pair \
+                       and not _.alignment.is_secondary:
+                        #and not _.alignment.is_qcfail \
+                            #and not _.alignment.is_duplicate \
+                            #and not _.alignment.is_unmapped \
+                            #and not _.is_del:
+                        filt_reads.append(_)
+                        
+            # duplicated reads alone
+            elif self.params.basic_filter.is_duplicated:
+                pass
+                
+            # deletions reads alone
+            elif self.params.basic_filter.is_deletion:
+                del_reads = [_ for _ in reads if _.is_del < 0]
+                del_prop_reads = [_ for _ in reads if _.is_del < 0]
+
+            # insertion reads alone
+            elif self.params.basic_filter.is_insertion:
+                ins_reads = [_ for _ in reads if _.is_del > 0]
+                ins_prop_reads = [_ for _ in reads if _.is_del > 0]
+
+            # row reads
+            elif (self.params.basic_filter.is_duplicated
+                  and self.params.basic_filter.is_deletion
+                  and self.params.basic_filter.is_insertion):
+            
+                raw_reads = [_ for _ in reads]
+                raw_mismatches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] != ref]
+                raw_matches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] == ref]
+            
+
             ## Has proper_pair and without deletion
             #prop_nodel_reads = [_ for _ in reads if not _.is_del and _.alignment.is_proper_pair]
             #prop_nodel_mismatchs = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] != ref]
@@ -111,19 +144,8 @@ class AlignmentStream(object):
             #prop_reads = [_ for _ in reads if _.alignment.is_proper_pair]
             #prop_mismatches =  [_ for _ in prop_reads if _.alignment.seq[_.qpos] != ref]
             #prop_matches =  [_ for _ in prop_reads if _.alignment.seq[_.qpos] == ref]
-            # 
-            ## Has deletions alone
-            #del_reads = [_ for _ in reads if not _.is_del]
-            #del_prop_reads = [_ for _ in reads if not _.is_del]
-
-            # Has insertion alonep
-            # TODO: fixt to print pysam object directory
-            ins_reads = [_ for _ in reads if _.is_del > 0]
-            ins_prop_reads = [_ for _ in reads if _.is_del > 0]
-            del_reads = [_ for _ in reads if _.is_del < 0]
-            del_prop_reads = [_ for _ in reads if _.is_del < 0]
+            #
             
-            filt_reads = []
             for _ in col.pileups:
                 if _.alignment.is_proper_pair \
                    and not _.alignment.is_secondary:
@@ -363,6 +385,14 @@ def _parse_faidx(filename):
             data = row.split('\t')
             fasta_chrom_name.append(data[0])
     return fasta_chrom_name
+
+def _resolve_chrom_name(bam_chr=None, fa_chr=None):
+    raise NotImplementedError()
+    
+    if not fa_chr.startswith('chr'):
+        return 'chr' + fa_chr
+    else:
+        return fa_chr
 
     
 if __name__ == '__main__':
