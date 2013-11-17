@@ -1,4 +1,5 @@
 import os.path
+import pprint
 import collections
 import Ivy.version
 
@@ -42,6 +43,11 @@ class AttrDict(dict):
 
     def __repr__(self):
         return "%s=>(%s)" % (self.__class__.__name__, dict.__repr__(self._data))
+
+    @staticmethod
+    def show(self):
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(self._data)
 
     def __len__(self):
         return dict.__len__(self._data)

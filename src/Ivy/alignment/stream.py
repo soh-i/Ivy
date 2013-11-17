@@ -4,7 +4,8 @@ import os.path
 import string
 import re
 import pysam
-from Ivy.utils import die
+from Ivy.utils import die, AttrDict
+import pprint
 
 __program__ = 'stream'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -15,42 +16,46 @@ __status__ = 'development'
 class AlignmentStream(object):
     def __init__(self, __params):
         if hasattr(__params, 'AttrDict'):
-            # OK
-            pass
+            self.params = __params
+            #AttrDict.show(self.params)
         else:
             raise TypeError("Given param %s is %s class, not 'AttrDic' class" %
                             (__params, __params.__class__.__name__))
-            
-        self.config = __params
-        __bm = pysam.Samfile(self.config.r_bams, 'rb', check_header=True, check_sq=True)
-        __ft = pysam.Fastafile(self.config.fasta)
+
+        __bm = pysam.Samfile(self.params.r_bams, 'rb', check_header=True, check_sq=True)
+        __ft = pysam.Fastafile(self.params.fasta)
         
         self.samfile = __bm
         self.fafile = __ft
-        self.one_based = self.config.one_based
+        self.one_based = self.params.one_based
 
-        # Resolve to explore specified region or not
-        # explore all region, set None
-        if self.config.region == 'All':
-            self.config.start = None
-            self.config.end = None
-            self.config.chrom = None
-            
-        # explore specified region
-        elif self.config.region.chrom and self.config.region.start and self.config.region.end:
-            (self.start, self.end) = self.__resolve_coords(
-                self.config.region.start,
-                self.config.region.end,
-                self.config.one_based)
-            if not self.config.region.chrom.startswith('chr'):
-                self.config.chrom = 'chr' + self.config.region.chrom
-            else: self.config.chrom = self.config.region.chrom
-        else:
-            raise ValueError("chrom or pos of start/end is not set")
-            
+        ### Resolve to explore specified region or not
+        # explore all region if all_flag == 1
+        if self.params.region.all_flag == 1:
+            self.params.region.start = None
+            self.params.region.end = None
+            self.params.region.chrom = None
+
+        # explore specified region if all_flag == 0
+        elif self.params.region.all_flag == 0:
+            if (self.params.region.chrom
+                and self.params.region.start and self.params.region.end):
+                (self.params.region.start, self.params.region.end) = \
+                self.__resolve_coords(
+                    self.params.region.start,
+                    self.params.region.end,
+                    self.params.one_based)
+                
+                if not self.params.region.chrom.startswith('chr'):
+                    self.params.region.chrom = 'chr' + self.params.region.chrom
+                else: self.params.region.chrom = self.params.region.chrom
+            else:
+                # explore all region if self.params.region.* is None
+                pass
+                
         debug = False
         if debug:
-            # info. for loaded samfiel
+            # info. for loaded samfile
             print "### info. for samfile object from given Bam header @SQ ###"
             print "Sam file: %s" % self.samfile.filename
             print "lengths: %s" % [_ for _ in self.samfile.lengths]
@@ -62,36 +67,81 @@ class AlignmentStream(object):
             # info. for fasta
             print "### info. for fasfile object ###"
             print "filename: %s" % self.fafile.filename
-                           
 
-        if _is_same_chromosome_name(bam=self.config.r_bams, fa=self.config.fasta):
+        if _is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
             pass
         else:
-            raise RuntimeError("valid chrom name")
+            raise RuntimeError("invalid chrom name")
             
     def pileup_stream(self):
-        for col in self.samfile.pileup(reference=self.config.chrom,
-                                       start=self.config.start,
-                                       end=self.config.end,
+        for col in self.samfile.pileup(reference=self.params.region.chrom,
+                                       start=self.params.region.start,
+                                       end=self.params.region.end
                                        ):
-            
             bam_chrom = self.samfile.getrname(col.tid)
-            if self.config.one_based:
+            if self.params.one_based:
                 pos = col.pos + 1
             else:
                 pos = col.pos
                 
-            #print self.fafile.fetch(reference=21, start=int(col.pos), end=int(col.pos)+1)
             ref = self.fafile.fetch(reference=bam_chrom, start=col.pos,
                                     end=col.pos+1).upper()
             
-            reads = col.pileups
+            #####################################
+            ### Loading alignment with params ###
+            #####################################
             
-            # Raw reads (no filterings through)
-            #raw_reads = [_ for _ in reads]
-            #raw_mismatches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] != ref]
-            #raw_matches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] == ref]
-            # 
+            # proper reads alone
+            reads = col.pileups
+            filt_reads = []
+            self.params.basic_filter.rm_insertion = True
+            
+            if (not self.params.basic_filter.rm_duplicated
+                and self.params.basic_filter.rm_deletion
+                and self.params.basic_filter.rm_insertion):
+                
+                #die(self.params)
+                for _ in col.pileups:
+                    if (_.alignment.is_proper_pair
+                        and not _.alignment.is_secondary
+                        and not _.alignment.is_qcfail
+                        and not _.alignment.is_duplicate
+                        and not _.alignment.is_unmapped
+                        and not _.is_del):
+                        
+                        filt_reads.append(_)
+                        
+                passed_reads = [_ for _ in col.pileups
+                                if (_.alignment.is_proper_pair
+                                    and not _.alignment.is_qcfail
+                                    and not _.alignment.is_duplicate
+                                    and not _.alignment.is_unmapped
+                                    and not _.is_del)]
+                
+            # duplicated reads alone
+            elif self.params.basic_filter.is_duplicated:
+                pass
+                
+            # deletions reads alone
+            elif self.params.basic_filter.is_deletion:
+                del_reads = [_ for _ in reads if _.is_del < 0]
+                del_prop_reads = [_ for _ in reads if _.is_del < 0]
+
+            # insertion reads alone
+            elif self.params.basic_filter.is_insertion:
+                ins_reads = [_ for _ in reads if _.is_del > 0]
+                ins_prop_reads = [_ for _ in reads if _.is_del > 0]
+
+            # row reads
+            elif (self.params.basic_filter.is_duplicated
+                  and self.params.basic_filter.is_deletion
+                  and self.params.basic_filter.is_insertion):
+            
+                raw_reads = [_ for _ in reads]
+                raw_mismatches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] != ref]
+                raw_matches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] == ref]
+            
+
             ## Has proper_pair and without deletion
             #prop_nodel_reads = [_ for _ in reads if not _.is_del and _.alignment.is_proper_pair]
             #prop_nodel_mismatchs = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] != ref]
@@ -106,19 +156,8 @@ class AlignmentStream(object):
             #prop_reads = [_ for _ in reads if _.alignment.is_proper_pair]
             #prop_mismatches =  [_ for _ in prop_reads if _.alignment.seq[_.qpos] != ref]
             #prop_matches =  [_ for _ in prop_reads if _.alignment.seq[_.qpos] == ref]
-            # 
-            ## Has deletions alone
-            #del_reads = [_ for _ in reads if not _.is_del]
-            #del_prop_reads = [_ for _ in reads if not _.is_del]
-
-            # Has insertion alonep
-            # TODO: fixt to print pysam object directory
-            ins_reads = [_ for _ in reads if _.is_del > 0]
-            ins_prop_reads = [_ for _ in reads if _.is_del > 0]
-            del_reads = [_ for _ in reads if _.is_del < 0]
-            del_prop_reads = [_ for _ in reads if _.is_del < 0]
+            #
             
-            filt_reads = []
             for _ in col.pileups:
                 if _.alignment.is_proper_pair \
                    and not _.alignment.is_secondary:
@@ -245,34 +284,43 @@ class AlignmentStream(object):
                 allele_ratio = float(0)
                 ag_ratio = float(0)
 
-            yield {
-                'chrom': bam_chrom,
-                'pos': pos,
-                'ref': ref,
-                'alt': alt,
-                'coverage': len(filt_reads),
-                'mismatches': len(filt_mismatches),
-                'matches': len(filt_matches),
-                'cov': coverage,
-                'mismach_ratio': allele_ratio,
-                'ag_ratio': ag_ratio,
-                'types': mutation_type,
-                'Ac': len(A),
-                'Tc': len(T),
-                'Cc': len(C),
-                'Gc': len(G),
-                'Nc': len(N),
-                'Gr': (G_r),
-                'Gf': (G_f),
-                'Cr': (C_r),
-                'Cf': (C_f),
-                'Tf': (T_f),
-                'Tr': (T_r),
-                'Af': (A_f),
-                'Ar': (A_r),
-                'Nr': (N_r),
-                'Nf': (N_f),
-            }
+                
+            ###############################
+            ### Basic filtering options ###
+            ###############################
+
+            # --min-rna-cov
+            if (len(filt_reads) > self.params.basic_filter.min_rna_cov
+                and allele_ratio > self.params.basic_filter.ag_ratio):
+                
+                yield {
+                    'chrom': bam_chrom,
+                    'pos': pos,
+                    'ref': ref,
+                    'alt': alt,
+                    'coverage': len(filt_reads),
+                    'mismatches': len(filt_mismatches),
+                    'matches': len(filt_matches),
+                    'cov': coverage,
+                    'mismatch_ratio': allele_ratio,
+                    'ag_ratio': ag_ratio,
+                    'types': mutation_type,
+                    'Ac': len(A),
+                    'Tc': len(T),
+                    'Cc': len(C),
+                    'Gc': len(G),
+                    'Nc': len(N),
+                    'Gr': (G_r),
+                    'Gf': (G_f),
+                    'Cr': (C_r),
+                    'Cf': (C_f),
+                    'Tf': (T_f),
+                    'Tr': (T_r),
+                    'Af': (A_f),
+                    'Ar': (A_r),
+                    'Nr': (N_r),
+                    'Nf': (N_f),
+                }
     
     def __resolve_coords(self, start, end, is_one_based):
         if is_one_based:
@@ -284,7 +332,7 @@ class AlignmentStream(object):
                 end = end -1
             else:
                 None
-        return start, end
+        return int(start), int(end)
 
     def average_baq(self, string):
         return [ord(s)-33 for s in string]
@@ -359,11 +407,17 @@ def _parse_faidx(filename):
             fasta_chrom_name.append(data[0])
     return fasta_chrom_name
 
+def _resolve_chrom_name(bam_chr=None, fa_chr=None):
+    raise NotImplementedError()
+    
+    if not fa_chr.startswith('chr'):
+        return 'chr' + fa_chr
+    else:
+        return fa_chr
+
     
 if __name__ == '__main__':
-    #print _is_same_chromosome_name(bam="../data/testREDItools/dna.bam", fa="../data/testREDItools/reference.fa")
-    test = AlignmentStream()
-    print dir(test)
+    pass
 
     #conf = AlignmentConfig()
     #a = ['A', 'T', 'C', 'G']

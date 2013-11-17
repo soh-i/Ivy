@@ -76,7 +76,7 @@ class CommandLineParser(object):
         self.parser.add_option('--one-based',
                                metavar='',
                                dest='one_based',
-                               action='store_false',
+                               action='store_true',
                                default=False,
                                help='Genomic coordinate'
                                )
@@ -121,7 +121,7 @@ class CommandLineParser(object):
         sample_group.add_option('--replicate',
                                 metavar='',
                                 dest='replicate',
-                                action='store_false',
+                                action='store_true',
                                 default=False,
                                 help='Biological replicate is used [default: %default]'
                                 )
@@ -159,17 +159,24 @@ class CommandLineParser(object):
                                       )
         basic_filter_group.add_option('--rm-duplicated-read',
                                       metavar='',
-                                      dest='is_duplicated',
+                                      dest='rm_duplicated',
                                       action='store_true',
                                       default=True,
                                       help='Remove duplicated reads [default: %default]'
                                       )
         basic_filter_group.add_option('--rm-deletion-read',
                                       metavar='',
-                                      dest='is_deletion',
+                                      dest='rm_deletion',
                                       action='store_true',
                                       default=True,
                                       help='Remove deletion reads [default: %default]'
+                                      )
+        basic_filter_group.add_option('--rm-insertion-read',
+                                      metavar='',
+                                      dest='rm_insertion',
+                                      action='store_true',
+                                      default=True,
+                                      help='Remove insertion reads [default: %default]'
                                       )
         basic_filter_group.add_option('--min-mapq',
                                       metavar='',
@@ -250,7 +257,7 @@ class CommandLineParser(object):
         ext_filter_group.add_option('--blat-collection',
                                     metavar='',
                                     dest='blat',
-                                    action='store_false',
+                                    action='store_true',
                                     default=False,
                                     help='Reduce mis-alignment with Blat [default: %default]'
                                     )
@@ -281,7 +288,7 @@ class CommandLineParser(object):
         ext_filter_group.add_option('--mask-repeat',
                                     metavar='',
                                     dest='is_mask_rep',
-                                    action='store_false',
+                                    action='store_true',
                                     default=False,
                                     help='Mask repeat sequence [default: %default]'
                                     )
@@ -289,10 +296,10 @@ class CommandLineParser(object):
 
     def ivy_parse_options(self):
         self.parse_basic_opt()
-        self.parse_ext_filt_opt()
-        self.parse_sample_opt()
         self.parse_basic_filt_opt()
         self.parse_stat_filt_opt()
+        self.parse_sample_opt()
+        self.parse_ext_filt_opt()
         
         (opt, args) = self.parser.parse_args()
 
@@ -337,11 +344,16 @@ class CommandLineParser(object):
         ###########################
         # -l, regions
         if opt.regions == 'All':
-            # default value: all
-            passed_params.region = opt.regions
+            # default value: all, all_flag is 1
+            passed_params.region.all_flag = 1
+            #passed_params.region.chrom = None
+            #passed_params.region.start = None
+            #passed_params.region.end = None
+            
         elif self._is_region(opt.regions) is not None:
-            # specified region: e.g. chr1:1-1000
+            # specified region: e.g. chr1:1-1000, all_flag is 0
             passed_params.region = self._is_region(opt.regions)
+            passed_params.region.all_flag = 0
         else:
             # error
             self.parser.error("Error: faild to set region")
@@ -367,104 +379,108 @@ class CommandLineParser(object):
         ###########################
         # --strand
         if opt.strand is True:
-            passed_params.strand = opt.strand
+            passed_params.sample_filter.strand = opt.strand
         elif opt.strand is False:
-            passed_params.strand = False
+            passed_params.sample_filter.strand = False
 
         # --ko-strain
         if opt.ko_strain is True:
-            passed_params.ko_strain = opt.ko_strain
+            passed_params.sample_filter.ko_strain = opt.ko_strain
         elif opt.ko_strain is False:
-            passed_params.ko_strain = False
+            passed_params.sample_filter.ko_strain = False
             
         # --replicate
         if opt.replicate is True:
-            passed_params.replicate = opt.replicate
+            passed_params.sample_filter.replicate = opt.replicate
         elif opt.replicate is False:
-            passed_params.replicate = opt.replicate
+            passed_params.sample_filter.replicate = opt.replicate
 
         ############################
         ### Basic filter options ###
         ############################
         # --min-ag-ratio
         if opt.ag_ratio:
-            passed_params.ag_ratio = opt.ag_ratio
+            passed_params.basic_filter.ag_ratio = opt.ag_ratio
 
         # --min-rna-coverage
         if opt.min_rna_cov:
-            passed_params.min_rna_cov = opt.min_rna_cov
+            passed_params.basic_filter.min_rna_cov = opt.min_rna_cov
 
         # --min_dna_coverage
         if opt.min_dna_cov:
-            passed_params.min_dna_cov = opt.min_dna_cov
+            passed_params.basic_filter.min_dna_cov = opt.min_dna_cov
 
         # --rm-duplicated-read
-        if opt.is_duplicated:
-            passed_params.is_duplicated = opt.is_duplicated
+        if opt.rm_duplicated is not None:
+            passed_params.basic_filter.rm_duplicated = opt.rm_duplicated
 
         # --rm-deletion-read
-        if opt.is_deletion:
-            passed_params.is_deletion = opt.is_deletion
+        if opt.rm_deletion is not None:
+            passed_params.basic_filter.rm_deletion = opt.rm_deletion
+
+        # --rm-insertion-read
+        if opt.rm_insertion is not None:
+            passed_params.basic_filter.rm_insertion = opt.rm_insertion
 
         # --min-mapq
         if opt.min_mapq:
-            passed_params.min_mapq = opt.min_mapq
+            passed_params.basic_filter.min_mapq = opt.min_mapq
 
         # --num-allow-type
         if opt.num_type:
-            passed_params.num_type = opt.num_type
+            passed_params.basic_filter.num_type = opt.num_type
 
         # --min-baq-rna
         if opt.min_baq_r:
-            passed_params.min_baq_rna = opt.min_baq_r
+            passed_params.basic_filter.min_baq_rna = opt.min_baq_r
 
         # --min-baq-dna
         if opt.min_baq_d:
-            passed_params.min_baq_dba = opt.min_baq_d
+            passed_params.basic_filter.min_baq_dba = opt.min_baq_d
 
         ##################################
         ### Statistical filter options ###
         ##################################
         # --sig-level
-        if opt.sig_level:
-            passed_params.sig_level = opt.sig_level
+        if opt.sig_level is not None:
+            passed_params.stat_filter.sig_level = opt.sig_level
             
         # base-call-bias
-        if opt.baq_bias:
-            passed_params.baq_bias = opt.baq_bias
+        if opt.baq_bias is not None:
+            passed_params.stat_filter.baq_bias = opt.baq_bias
 
         # strand-bias
-        if opt.strand_bias:
-            passed_params.strnad_bias = opt.strand_bias
+        if opt.strand_bias is not None:
+            passed_params.stat_filter.strnad_bias = opt.strand_bias
         
         # --potitional-bias
-        if opt.pos_bias:
-            passed_params.pos_bias = opt.pos_bias
+        if opt.pos_bias is not None:
+            passed_params.stat_filter.pos_bias = opt.pos_bias
 
         ###########################
         ### Ext. filter options ###
         ###########################
         # --blat-collection
         if opt.blat:
-            passed_params.is_blat = opt.blat
+            passed_params.ext_filter.is_blat = opt.blat
         elif opt.blat is False:
-            passed_params.is_blat = False
+            passed_params.ext_filter.is_blat = False
 
         # --snp
         if opt.snp_file:
-            passed_params.snp_file = opt.snp
+            passed_params.ext_filter.snp_file = opt.snp
             
         # --ss-num
         if opt.ss_num:
-            passed_params.ss_num = opt.ss_num
+            passed_params.ext_filter.ss_num = opt.ss_num
 
         # --trim-n
         if opt.trim_n:
-            passed_params.trim_n = opt.trim_n
+            passed_params.ext_filter.trim_n = opt.trim_n
 
         # --mask-repeat
         if opt.is_mask_rep:
-            passed_params.is_mask_rep = opt.is_mask_rep
+            passed_params.ext_filter.is_mask_rep = opt.is_mask_rep
  
         return passed_params
 
@@ -502,7 +518,10 @@ class CommandLineParser(object):
                     if int_s < int_e:
                         # everything is fine
                         return {
-                            'chrom': str(chrom), 'start': int(int_s), 'end': int(int_e)}
+                            'chrom': str(chrom),
+                            'start': int(int_s),
+                            'end': int(int_e),
+                        }
                     elif int_s > int_e:
                         self.parser.error('end:' + int_e + ' is greater than ' + 'start:' + int_e)
                         return False
