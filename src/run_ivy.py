@@ -22,4 +22,10 @@ class Ivy(object):
         stream = AlignmentStream(params)
                 
         for rna in stream.pileup_stream():
-            print "%s\t%d\t%s\t%s\t%d\t%f" % (rna['chrom'], rna["pos"], rna['ref'], rna['alt'], rna['coverage'], rna['mismatch_ratio'])
+            print '{chrom}\t{pos:d}\t{ref:s}\t{alt:s}\t{coverage:d}\t{mismatch_ratio:0.4f}'.format(
+                chrom=rna['chrom'],
+                pos=rna['pos'],
+                ref=rna['ref'],
+                alt=rna['alt'],
+                coverage=rna['coverage'],
+                mismatch_ratio=rna['mismatch_ratio'])
