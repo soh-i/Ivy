@@ -17,7 +17,7 @@ class AlignmentStream(object):
     def __init__(self, __params):
         if hasattr(__params, 'AttrDict'):
             self.params = __params
-            AttrDict.show(self.params)
+            #AttrDict.show(self.params)
         else:
             raise TypeError("Given param %s is %s class, not 'AttrDic' class" %
                             (__params, __params.__class__.__name__))
@@ -284,34 +284,43 @@ class AlignmentStream(object):
                 allele_ratio = float(0)
                 ag_ratio = float(0)
 
-            yield {
-                'chrom': bam_chrom,
-                'pos': pos,
-                'ref': ref,
-                'alt': alt,
-                'coverage': len(filt_reads),
-                'mismatches': len(filt_mismatches),
-                'matches': len(filt_matches),
-                'cov': coverage,
-                'mismach_ratio': allele_ratio,
-                'ag_ratio': ag_ratio,
-                'types': mutation_type,
-                'Ac': len(A),
-                'Tc': len(T),
-                'Cc': len(C),
-                'Gc': len(G),
-                'Nc': len(N),
-                'Gr': (G_r),
-                'Gf': (G_f),
-                'Cr': (C_r),
-                'Cf': (C_f),
-                'Tf': (T_f),
-                'Tr': (T_r),
-                'Af': (A_f),
-                'Ar': (A_r),
-                'Nr': (N_r),
-                'Nf': (N_f),
-            }
+                
+            ###############################
+            ### Basic filtering options ###
+            ###############################
+
+            # --min-rna-cov
+            if (len(filt_reads) > self.params.basic_filter.min_rna_cov
+                and allele_ratio > self.params.basic_filter.ag_ratio):
+                
+                yield {
+                    'chrom': bam_chrom,
+                    'pos': pos,
+                    'ref': ref,
+                    'alt': alt,
+                    'coverage': len(filt_reads),
+                    'mismatches': len(filt_mismatches),
+                    'matches': len(filt_matches),
+                    'cov': coverage,
+                    'mismatch_ratio': allele_ratio,
+                    'ag_ratio': ag_ratio,
+                    'types': mutation_type,
+                    'Ac': len(A),
+                    'Tc': len(T),
+                    'Cc': len(C),
+                    'Gc': len(G),
+                    'Nc': len(N),
+                    'Gr': (G_r),
+                    'Gf': (G_f),
+                    'Cr': (C_r),
+                    'Cf': (C_f),
+                    'Tf': (T_f),
+                    'Tr': (T_r),
+                    'Af': (A_f),
+                    'Ar': (A_r),
+                    'Nr': (N_r),
+                    'Nf': (N_f),
+                }
     
     def __resolve_coords(self, start, end, is_one_based):
         if is_one_based:
