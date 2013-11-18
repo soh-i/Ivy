@@ -9,6 +9,7 @@ import logging
 import string
 import os.path
 import os
+
 import sys
 
 from Ivy.version import __version__
@@ -28,10 +29,9 @@ class CommandLineParser(object):
         fmt = IndentedHelpFormatter(indent_increment=2, max_help_position=60, width=120, short_first=1)
         self.parser = OptionParser(usage=usage, formatter=fmt, version=__version__, description=desc)
         #self.parse()
-
-        logging.basicConfig(level=logging.DEBUG)
+        log_fmt = '%(asctime)s|%(name)s|%(levelname)s|%(message)s'
+        logging.basicConfig(level=logging.DEBUG, format=log_fmt)
         self.logger = logging.getLogger(type(self).__name__)
-        self.logger.debug("This is debug message")
         
     def parse_basic_opt(self):
         # basic options
@@ -107,7 +107,9 @@ class CommandLineParser(object):
         self.parser.add_option('--verbose',
                                metavar='',
                                action='store_true',
-                               help='Show verbously messages'
+                               dest='is_verbose',
+                               default=False,
+                               help='Show verbosely logging messages'
                                )
         
     def parse_sample_opt(self):
@@ -491,8 +493,12 @@ class CommandLineParser(object):
         if opt.is_mask_rep:
             passed_params.ext_filter.is_mask_rep = opt.is_mask_rep
 
-        return passed_params
+        # for debug log
+        if opt.is_verbose:
+            self.logger.debug("Finished to parsed command-line options")
 
+        return passed_params
+        
     def _ok_file(self, filename):
         if os.path.isfile(filename) and os.access(filename, os.R_OK):
             return True
@@ -535,7 +541,8 @@ class CommandLineParser(object):
                         self.parser.error('end:' + int_e + ' is greater than ' + 'start:' + int_e)
                         return False
                     elif int_s == int_e:
-                        self.parser.error("start:" + int_s + ", end:" + int_e + " is same values")
+                        #self.parser.error("start:" + int_s + ", end:" + int_e + " is same values")
+                        self.parser.error('start=>{start:d} end=>{end:d} is same value'.format(start=int_s, end=int_e))
                         return False
                 else:
                     self.parser.error(regions + ' in pos is not numetric (expected integer)')
