@@ -4,8 +4,14 @@ import os.path
 import string
 import re
 import pysam
-from Ivy.utils import die, AttrDict
 import pprint
+import logging
+
+from Ivy.utils import (
+    die,
+    AttrDict,
+    IvyLogger,
+    )
 
 __program__ = 'stream'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -15,6 +21,10 @@ __status__ = 'development'
 
 class AlignmentStream(object):
     def __init__(self, __params):
+        ig = IvyLogger()
+        self.logger = logging.getLogger(type(self).__name__)
+        
+        
         if hasattr(__params, 'AttrDict'):
             self.params = __params
             #AttrDict.show(self.params)
@@ -74,6 +84,7 @@ class AlignmentStream(object):
             raise RuntimeError("invalid chrom name")
             
     def pileup_stream(self):
+        self.logger.debug("Start pileup bam file...")
         for col in self.samfile.pileup(reference=self.params.region.chrom,
                                        start=self.params.region.start,
                                        end=self.params.region.end
