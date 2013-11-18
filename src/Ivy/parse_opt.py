@@ -385,6 +385,10 @@ class CommandLineParser(object):
         if opt.n_threads:
             passed_params.n_threads = opt.n_threads
 
+        # --verbose
+        if opt.is_verbose:
+            passed_params.verbose = opt.is_verbose
+
         ############################
         ### Check sample options ###
         ###########################
