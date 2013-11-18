@@ -495,7 +495,7 @@ class CommandLineParser(object):
 
         # for debug log
         if opt.is_verbose:
-            self.logger.debug("Finished to parsed command-line options")
+            self.logger.debug("Parsed command-line options")
 
         return passed_params
         
@@ -513,8 +513,8 @@ class CommandLineParser(object):
             try:
                 (chrom, pos) = regions.split(':')
             except ValueError:
-                self.parser.error("[" + regions+ "]" + ' is lacked chromosome or position value')
-            
+                self.parser.error('\'{regions:s}\' has invalid chromosome or position value'.format(regions=regions))
+                            
             if not chrom:
                 self.parser.error(regions + 'is invalid chromosome name')
                 return False
@@ -538,14 +538,13 @@ class CommandLineParser(object):
                             'end': int(int_e),
                         }
                     elif int_s > int_e:
-                        self.parser.error('end:' + int_e + ' is greater than ' + 'start:' + int_e)
+                        self.parser.error('Given region of \'{end:d}\' is greater than \'{start:d}\''.format(end=int_e, start=int_s))
                         return False
                     elif int_s == int_e:
-                        #self.parser.error("start:" + int_s + ", end:" + int_e + " is same values")
-                        self.parser.error('start=>{start:d} end=>{end:d} is same value'.format(start=int_s, end=int_e))
+                        self.parser.error('Given start=>{start:d} end=>{end:d} positions is same value'.format(start=int_s, end=int_e))
                         return False
                 else:
-                    self.parser.error(regions + ' in pos is not numetric (expected integer)')
+                    self.parser.error('Given \'{region:s}\' is not numetric (expected integer)'.format(region=regions))
                     return False
         else:
             return False
