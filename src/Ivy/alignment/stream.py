@@ -6,28 +6,22 @@ import re
 import pysam
 import pprint
 import logging
-
-from Ivy.utils import (
-    die,
-    AttrDict,
-    IvyLogger,
-    )
+from Ivy.utils import die, AttrDict, IvyLogger
 
 __program__ = 'stream'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
 
+DEBUG = False
 
 class AlignmentStream(object):
     def __init__(self, __params):
         ig = IvyLogger()
         self.logger = logging.getLogger(type(self).__name__)
         
-        
         if hasattr(__params, 'AttrDict'):
             self.params = __params
-            #AttrDict.show(self.params)
         else:
             raise TypeError("Given param {prm:s} is {cls:s} class, not 'AttrDic' class"
                             .format(prm=__params, cls=__params.__class__.__name__))
@@ -62,9 +56,13 @@ class AlignmentStream(object):
             else:
                 # explore all region if self.params.region.* is None
                 pass
-                
-        debug = False
-        if debug:
+        if _is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
+            pass
+        else:
+            raise RuntimeError("invalid chrom name")
+
+        if self.params.verbose: self.logger.debug(AttrDict.show(self.params))
+        if DEBUG:
             # info. for loaded samfile
             print "### info. for samfile object from given Bam header @SQ ###"
             print "Sam file: %s" % self.samfile.filename
@@ -73,18 +71,13 @@ class AlignmentStream(object):
             print "N_references: %s" % self.samfile.nreferences
             print "references: %s" % [_ for _ in self.samfile.references]
             print "unmapped: %s" % self.samfile.unmapped
-            
             # info. for fasta
             print "### info. for fasfile object ###"
             print "filename: %s" % self.fafile.filename
-
-        if _is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
-            pass
-        else:
-            raise RuntimeError("invalid chrom name")
             
     def pileup_stream(self):
-        self.logger.debug("Start pileup bam file...")
+        if self.params.verbose: self.logger.debug("Start pileup bam file...")
+            
         for col in self.samfile.pileup(reference=self.params.region.chrom,
                                        start=self.params.region.start,
                                        end=self.params.region.end
@@ -95,7 +88,8 @@ class AlignmentStream(object):
             else:
                 pos = col.pos
                 
-            ref = self.fafile.fetch(reference=bam_chrom, start=col.pos,
+            ref = self.fafile.fetch(reference=bam_chrom,
+                                    start=col.pos,
                                     end=col.pos+1).upper()
             
             #####################################
