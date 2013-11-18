@@ -96,7 +96,7 @@ class AlignmentStream(object):
             ### Loading alignment with params ###
             #####################################
             
-            # proper reads alone
+            # filter all params
             passed_reads = []
             if (self.params.basic_filter.rm_duplicated
                 and self.params.basic_filter.rm_deletion
@@ -107,18 +107,26 @@ class AlignmentStream(object):
                                     and not _.alignment.is_duplicate
                                     and not _.alignment.is_unmapped
                                     and not _.is_del)]
-
+                
                 passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
                 passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
 
+            # allow duplicated reads alone
+            elif (not self.params.basic_filter.rm_duplicated
+                  and self.params.basic_filter.rm_deletion
+                  and self.params.basic_filter.rm_insertion):
+                passed_reads = [_ for _ in col.pileups
+                                if (_.alignment.is_proper_pair
+                                    and not _.alignment.is_qcfail
+                                    and not _.alignment.is_unmapped
+                                    and not _.is_del)]
                 
-            ## duplicated reads alone
-            #elif self.params.basic_filter.is_duplicated:
-            #    
-            #    passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref]
-            #    passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref]
-            # 
-            #    
+                passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
+                passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
+
+
+                
+
             ## deletions reads alone
             #elif self.params.basic_filter.is_deletion:
             #    del_reads = [_ for _ in reads if _.is_del < 0]
