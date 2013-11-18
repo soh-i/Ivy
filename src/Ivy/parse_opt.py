@@ -1,15 +1,9 @@
-from optparse import (
-    OptionParser,
-    OptionGroup,
-    HelpFormatter,
-    IndentedHelpFormatter,
-    )
+from optparse import OptionParser, OptionGroup, HelpFormatter, IndentedHelpFormatter
 import os.path
 import logging
 import string
 import os.path
 import os
-
 import sys
 
 from Ivy.version import __version__
@@ -26,8 +20,14 @@ class CommandLineParser(object):
     def __init__(self):
         desc = 'software package for identification of RNA editing sites based on massively parallel sequencing data'
         usage = 'usage: %prog [options]'
-        fmt = IndentedHelpFormatter(indent_increment=2, max_help_position=60, width=120, short_first=1)
-        self.parser = OptionParser(usage=usage, formatter=fmt, version=__version__, description=desc)
+        fmt = IndentedHelpFormatter(indent_increment=2,
+                                    max_help_position=60,
+                                    width=120,
+                                    short_first=1)
+        self.parser = OptionParser(usage=usage,
+                                   formatter=fmt,
+                                   version=__version__,
+                                   description=desc)
         #self.parse()
         log_fmt = '%(asctime)s|%(name)s|%(levelname)s|%(message)s'
         logging.basicConfig(level=logging.DEBUG, format=log_fmt)
@@ -513,7 +513,8 @@ class CommandLineParser(object):
             try:
                 (chrom, pos) = regions.split(':')
             except ValueError:
-                self.parser.error('\'{regions:s}\' has invalid chromosome or position value'.format(regions=regions))
+                self.parser.error('\'{regions:s}\' has invalid chromosome or position value'
+                                  .format(regions=regions))
                             
             if not chrom:
                 self.parser.error(regions + 'is invalid chromosome name')
@@ -538,13 +539,16 @@ class CommandLineParser(object):
                             'end': int(int_e),
                         }
                     elif int_s > int_e:
-                        self.parser.error('Given region of \'{end:d}\' is greater than \'{start:d}\''.format(end=int_e, start=int_s))
+                        self.parser.error('Given region of \'{end:d}\' is greater than \'{start:d}\''
+                                          .format(end=int_e, start=int_s))
                         return False
                     elif int_s == int_e:
-                        self.parser.error('Given start=>{start:d} end=>{end:d} positions is same value'.format(start=int_s, end=int_e))
+                        self.parser.error('Given start=>{start:d} end=>{end:d} positions is same value'
+                                          .format(start=int_s, end=int_e))
                         return False
                 else:
-                    self.parser.error('Given \'{region:s}\' is not numetric (expected integer)'.format(region=regions))
+                    self.parser.error('Given \'{region:s}\' is not numetric (expected integer)'
+                        .format(region=regions))
                     return False
         else:
             return False
