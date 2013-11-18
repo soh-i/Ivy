@@ -8,7 +8,8 @@ import sys
 
 from Ivy.version import __version__
 from Ivy.utils import die
-from Ivy.utils import AttrDict
+from Ivy.utils import AttrDict, IvyLogger
+import logging
 
 __program__ = 'opt_parse'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -28,10 +29,9 @@ class CommandLineParser(object):
                                    formatter=fmt,
                                    version=__version__,
                                    description=desc)
-        #self.parse()
-        log_fmt = '%(asctime)s|%(name)s|%(levelname)s|%(message)s'
-        logging.basicConfig(level=logging.DEBUG, format=log_fmt)
+        lg = IvyLogger()
         self.logger = logging.getLogger(type(self).__name__)
+        
         
     def parse_basic_opt(self):
         # basic options
