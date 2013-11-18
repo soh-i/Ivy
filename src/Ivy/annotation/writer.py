@@ -35,19 +35,25 @@ class VCFWriteHeader(object):
             
     def __params_section(self):
         params = ''
+        # basic filter group
         for _ in self.__spec.basic_filter._data:
             params += '##PARAMS=' + ','.join([
                 '<ID={id},Value={val},Filter_class={filt}>\n'.format(
                     id=_, val=self.__spec.basic_filter._data[_], filt='basic_filter')])
+
+        # ext filter group
         for _ in self.__spec.ext_filter._data:
             params += '##PARAMS=' + ','.join([
                 '<ID={id},Value={val},Filter_class={filt}>\n'.format(
                     id=_, val=self.__spec.ext_filter._data[_], filt='ext_filter')])
+
+        # stat filter group
         for _ in self.__spec.stat_filter._data:
             params += '##PARAMS=' + ','.join([
                 '<ID={id},Value={val},Filter_class={filt}>\n'.format(
                     id=_, val=self.__spec.stat_filter._data[_], filt='stat_filter')])
             
+        # sample filter group
         for _ in self.__spec.sample_filter._data:
             params += '##PARAMS=' + ','.join([
                 '<ID={id},Value={val},Filter_class={filt}>\n'.format(
@@ -69,5 +75,6 @@ class VCFWriteHeader(object):
         return info_h
     
     def __header_name(self):
-        return "{0}\t{1}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\n".format("#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT")
+        return "{0}\t{1}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\n".format(
+            "#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT")
 
