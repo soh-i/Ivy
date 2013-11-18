@@ -179,14 +179,14 @@ class CommandLineParser(object):
                                       metavar='',
                                       dest='rm_deletion',
                                       action='store_true',
-                                      default=True,
+                                      default=False,
                                       help='Remove deletion reads [default: %default]'
                                       )
         basic_filter_group.add_option('--rm-insertion-read',
                                       metavar='',
                                       dest='rm_insertion',
                                       action='store_true',
-                                      default=True,
+                                      default=False,
                                       help='Remove insertion reads [default: %default]'
                                       )
         basic_filter_group.add_option('--min-mapq',
