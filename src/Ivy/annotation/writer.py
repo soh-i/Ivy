@@ -15,7 +15,9 @@ class VCFWriteHeader(object):
         }
         __params._vcf_meta = _info
         self.__spec = __params
-        AttrDict.show(self.__spec)
+        #AttrDict.show(self.__spec)
+        self.__spec._vcf_meta.filename = self.__spec.fasta
+        self.__spec._vcf_meta.bam = self.__spec.r_bams
         
     def make_vcf_header(self):
         sys.stdout.write(self.__spec_section())
@@ -38,34 +40,29 @@ class VCFWriteHeader(object):
         # basic filter group
         for _ in self.__spec.basic_filter._data:
             params += '##PARAMS=' + ','.join([
-                '<ID={id},Value={val},Filter_class={filt}>\n'.format(
+                '<ID={id},Value={val},Class={filt}>\n'.format(
                     id=_, val=self.__spec.basic_filter._data[_], filt='basic_filter')])
 
         # ext filter group
         for _ in self.__spec.ext_filter._data:
             params += '##PARAMS=' + ','.join([
-                '<ID={id},Value={val},Filter_class={filt}>\n'.format(
+                '<ID={id},Value={val},Class={filt}>\n'.format(
                     id=_, val=self.__spec.ext_filter._data[_], filt='ext_filter')])
 
         # stat filter group
         for _ in self.__spec.stat_filter._data:
             params += '##PARAMS=' + ','.join([
-                '<ID={id},Value={val},Filter_class={filt}>\n'.format(
+                '<ID={id},Value={val},Class={filt}>\n'.format(
                     id=_, val=self.__spec.stat_filter._data[_], filt='stat_filter')])
             
         # sample filter group
         for _ in self.__spec.sample_filter._data:
             params += '##PARAMS=' + ','.join([
-                '<ID={id},Value={val},Filter_class={filt}>\n'.format(
+                '<ID={id},Value={val},Class={filt}>\n'.format(
                     id=_, val=self.__spec.sample_filter._data[_], filt='sample_filter')])
-             
         return params
 
     def __info_section(self, id, number, value, desc):
-        '''
-        info_section(id, number, value, desc)->str, return INFO header
-        e.g. ##INFO
-        '''
         prefix = '##INFO='
         info_h = ''
         info_h += ','.join([prefix+ '<ID='+ id.upper(),
