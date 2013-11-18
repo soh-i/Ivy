@@ -8,7 +8,8 @@ import sys
 
 from Ivy.version import __version__
 from Ivy.utils import die
-from Ivy.utils import AttrDict
+from Ivy.utils import AttrDict, IvyLogger
+import logging
 
 __program__ = 'opt_parse'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -20,9 +21,17 @@ class CommandLineParser(object):
     def __init__(self):
         desc = 'software package for identification of RNA editing sites based on massively parallel sequencing data'
         usage = 'usage: %prog [options]'
-        fmt = IndentedHelpFormatter(indent_increment=2, max_help_position=60, width=120, short_first=1)
-        self.parser = OptionParser(usage=usage, formatter=fmt, version=__version__, description=desc)
-        #self.parse()
+        fmt = IndentedHelpFormatter(indent_increment=2,
+                                    max_help_position=60,
+                                    width=120,
+                                    short_first=1)
+        self.parser = OptionParser(usage=usage,
+                                   formatter=fmt,
+                                   version=__version__,
+                                   description=desc)
+        lg = IvyLogger()
+        self.logger = logging.getLogger(type(self).__name__)
+        
         
     def parse_basic_opt(self):
         # basic options
@@ -98,7 +107,9 @@ class CommandLineParser(object):
         self.parser.add_option('--verbose',
                                metavar='',
                                action='store_true',
-                               help='Show verbously messages'
+                               dest='is_verbose',
+                               default=False,
+                               help='Show verbosely logging messages'
                                )
         
     def parse_sample_opt(self):
@@ -161,21 +172,21 @@ class CommandLineParser(object):
                                       metavar='',
                                       dest='rm_duplicated',
                                       action='store_true',
-                                      default=True,
+                                      default=False,
                                       help='Remove duplicated reads [default: %default]'
                                       )
         basic_filter_group.add_option('--rm-deletion-read',
                                       metavar='',
                                       dest='rm_deletion',
                                       action='store_true',
-                                      default=True,
+                                      default=False,
                                       help='Remove deletion reads [default: %default]'
                                       )
         basic_filter_group.add_option('--rm-insertion-read',
                                       metavar='',
                                       dest='rm_insertion',
                                       action='store_true',
-                                      default=True,
+                                      default=False,
                                       help='Remove insertion reads [default: %default]'
                                       )
         basic_filter_group.add_option('--min-mapq',
@@ -374,6 +385,10 @@ class CommandLineParser(object):
         if opt.n_threads:
             passed_params.n_threads = opt.n_threads
 
+        # --verbose
+        if opt.is_verbose:
+            passed_params.verbose = opt.is_verbose
+
         ############################
         ### Check sample options ###
         ###########################
@@ -481,9 +496,13 @@ class CommandLineParser(object):
         # --mask-repeat
         if opt.is_mask_rep:
             passed_params.ext_filter.is_mask_rep = opt.is_mask_rep
- 
-        return passed_params
 
+        # for debug log
+        if opt.is_verbose:
+            self.logger.debug("Parsed command-line options")
+
+        return passed_params
+        
     def _ok_file(self, filename):
         if os.path.isfile(filename) and os.access(filename, os.R_OK):
             return True
@@ -498,8 +517,9 @@ class CommandLineParser(object):
             try:
                 (chrom, pos) = regions.split(':')
             except ValueError:
-                self.parser.error("[" + regions+ "]" + ' is lacked chromosome or position value')
-            
+                self.parser.error('\'{regions:s}\' has invalid chromosome or position value'
+                                  .format(regions=regions))
+                            
             if not chrom:
                 self.parser.error(regions + 'is invalid chromosome name')
                 return False
@@ -523,13 +543,16 @@ class CommandLineParser(object):
                             'end': int(int_e),
                         }
                     elif int_s > int_e:
-                        self.parser.error('end:' + int_e + ' is greater than ' + 'start:' + int_e)
+                        self.parser.error('Given region of \'{end:d}\' is greater than \'{start:d}\''
+                                          .format(end=int_e, start=int_s))
                         return False
                     elif int_s == int_e:
-                        self.parser.error("start:" + int_s + ", end:" + int_e + " is same values")
+                        self.parser.error('Given start=>{start:d} end=>{end:d} positions is same value'
+                                          .format(start=int_s, end=int_e))
                         return False
                 else:
-                    self.parser.error(regions + ' in pos is not numetric (expected integer)')
+                    self.parser.error('Given \'{region:s}\' is not numetric (expected integer)'
+                        .format(region=regions))
                     return False
         else:
             return False

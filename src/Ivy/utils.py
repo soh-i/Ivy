@@ -1,10 +1,17 @@
 import os.path
 import pprint
 import collections
+import logging
 import Ivy.version
 
 def die(msg=''):
     raise SystemExit(msg)
+
+class IvyLogger(object):
+    def __init__(self):
+        self.log_fmt = '%(asctime)s|%(name)s|%(levelname)s|%(message)s'
+        logging.basicConfig(level=logging.DEBUG, format=self.log_fmt)
+        self.logger = None
 
 class Utils(object):
     '''
