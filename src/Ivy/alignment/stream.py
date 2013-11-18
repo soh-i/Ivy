@@ -61,7 +61,9 @@ class AlignmentStream(object):
         else:
             raise RuntimeError("invalid chrom name")
 
-        if self.params.verbose: self.logger.debug(AttrDict.show(self.params))
+        if self.params.verbose:
+            self.logger.debug(AttrDict.show(self.params))
+            
         if DEBUG:
             # info. for loaded samfile
             print "### info. for samfile object from given Bam header @SQ ###"
@@ -91,12 +93,12 @@ class AlignmentStream(object):
             ref_base= self.fafile.fetch(reference=bam_chrom,
                                     start=col.pos,
                                     end=col.pos+1).upper()
-            
+
             #####################################
             ### Loading alignment with params ###
             #####################################
             
-            # filter all params
+            # filter reads with all params
             passed_reads = []
             if (self.params.basic_filter.rm_duplicated
                 and self.params.basic_filter.rm_deletion
@@ -111,7 +113,7 @@ class AlignmentStream(object):
                 passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
                 passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
 
-            # allow duplicated reads alone
+            # allow duplicated containing reads
             elif (not self.params.basic_filter.rm_duplicated
                   and self.params.basic_filter.rm_deletion
                   and self.params.basic_filter.rm_insertion):
@@ -124,63 +126,31 @@ class AlignmentStream(object):
                 passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
                 passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
 
-
+            # allow deletions containing reads
+            elif (not self.params.basic_filter.rm_deletion
+                  and self.params.basic_filter.rm_insertion
+                  and self.params.basic_filter.rm_duplicated):
+                passed_reads = [_ for _ in col.pileups
+                                if (_.alignment.is_proper_pair
+                                    and not _.alignment.is_qcfail
+                                    and not _.alignment.is_unmapped)]
                 
-
-            ## deletions reads alone
-            #elif self.params.basic_filter.is_deletion:
-            #    del_reads = [_ for _ in reads if _.is_del < 0]
-            #    del_prop_reads = [_ for _ in reads if _.is_del < 0]
-            #    passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref]
-            #    passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref]
-            # 
-            ## insertion reads alone
-            #elif self.params.basic_filter.is_insertion:
-            #    ins_reads = [_ for _ in reads if _.is_del > 0]
-            #    ins_prop_reads = [_ for _ in reads if _.is_del > 0]
-            #    passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref]
-            #    passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref]
-            #    
-            # 
-            ## row reads
-            #elif (self.params.basic_filter.is_duplicated
-            #      and self.params.basic_filter.is_deletion
-            #      and self.params.basic_filter.is_insertion):
-            # 
-            #    raw_reads = [_ for _ in reads]
-            #    raw_mismatches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] != ref]
-            #    raw_matches = [_ for _ in raw_reads if _.alignment.seq[_.qpos] == ref]
-            # 
-            # 
-            ### Has proper_pair and without deletion
-            ##prop_nodel_reads = [_ for _ in reads if not _.is_del and _.alignment.is_proper_pair]
-            ##prop_nodel_mismatchs = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] != ref]
-            ##prop_nodel_matches = [_ for _ in prop_nodel_reads if _.alignment.seq[_.qpos] == ref]
-            ## 
-            ### Has NO deletion
-            ##nodel_reads = [_ for _ in reads if not _.is_del]
-            ##nodel_mismatches = [_ for _ in nodel_reads if _.alignment.seq[_.qpos] != ref]
-            ##nodel_matches = [_ for _ in nodel_reads if _.alignment.seq[_.qpos] == ref]
-            ## 
-            ### Has proper_pair alone
-            ##prop_reads = [_ for _ in reads if _.alignment.is_proper_pair]
-            ##prop_mismatches =  [_ for _ in prop_reads if _.alignment.seq[_.qpos] != ref]
-            ##prop_matches =  [_ for _ in prop_reads if _.alignment.seq[_.qpos] == ref]
-            ##
-            # 
-            #for _ in col.pileups:
-            #    if _.alignment.is_proper_pair \
-            #       and not _.alignment.is_secondary:
-            #       #and not _.alignment.is_qcfail \
-            #       #and not _.alignment.is_duplicate \
-            #       #and not _.alignment.is_unmapped \
-            #       #and not _.is_del:
-            #        passed_reads.append(_)
-            #        
-            #filt_mismatches = [_ for _ in filt_read if _.alignment.seq[_.qpos] != ref]
-            #filt_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref]
-
-            #print self.chrom, self.start, self.end
+                passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref]
+                passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref]
+             
+            # allow insertion containing reads
+            elif (not self.params.basic_filter.rm_insertion
+                  and self.params.basic_filter.rm_deletion
+                  and self.params.basic_filterf.rm_duplicated):
+                raise RuntimeError("Use --rm-insertion-reads is recommended")
+                
+            # no filter
+            else:
+                passed_reads = [_ for _ in col.pileups
+                                if (not _.alignment.is_unmapped)]
+                passed__mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref]
+                passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref]
+                
             if not ref_base:
                 # TODO: resolve difference name in fasta and bam
                 raise ValueError(
