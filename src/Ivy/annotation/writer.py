@@ -1,51 +1,44 @@
 import sys
 from Ivy.parse_opt import CommandLineParser
-
-class VCFWriterException(Exception):
-    pass
+from Ivy.utils import AttrDict
+import datetime
 
 class VCFWriteHeader(object):
-    def __init__(self):
-        self.__spec = {
+    def __init__(self, __params):
+        d = datetime.datetime.today()
+        
+        _info = {
             'fileformat': 'VCFv4.1',
             'source': 'Ivy_v0.0.1',
-            'reference': 'test.fasta',
-            'species': 'Homo Sapiens',
-            'samples': 'sample.bam',
+            'filedate': '{0}/{1}/{2} {3}:{4}:{5}'.format(
+                d.year, d.month, d.day, d.hour, d.minute, d.second)
         }
-
+        __params._vcf_meta = _info
+        self.__spec = __params
+        #AttrDict.show(self.__spec)
+        
     def make_vcf_header(self):
         sys.stdout.write(self.__spec_section())
         sys.stdout.write(self.__params_section())
         sys.stdout.write(self.__header_name())
 
     def merge_filtering_param(self):
-        '''
-        merge_filtering_param() -> dict, returns merged filtering and spec dict
-        '''
-        p = AlignmentConfig()
         self.__spec.update({k: p.conf[k] for k in p.conf})
         return self.__spec
 
     def __spec_section(self):
-        '''
-        spec_section() -> str, return VCF header of basic informations
-        e.g. ##fileformat=VCFv4.1
-        '''
+        meta = self.__spec._vcf_metadata
         s = ''
-        for k in self.__spec:
-            s += "##"+  "=".join([k, self.__spec[k]]) + "\n"
+        for _ in self.__spec._vcf_meta._data:
+            s += "##"+  "=".join([_, self.__spec._vcf_meta[_]]) + "\n"
         return s
-        
+            
     def __params_section(self):
-        '''
-        params_section()->str, returns VCF header of PARAM section
-        e.g. ##PARAMS=<ID=is_qcfail,value=False>
-        '''
-        p = AlignmentConfig()
         params = ''
-        for k in p.conf:
-            params += "##PARAMS="+ ",".join(['<ID='+ k, 'Value='+ str(p.conf[k])])+ '>\n'
+        for _ in self.__spec.basic_filter._data:
+            params += "##PARAMS=" + ','.join([
+                '<ID={id},Value={val},Filter_class={filt}>\n'.format(id=_, val=self.__spec.basic_filter._data[_], filt='basic_filter')
+                ])
         return params
 
     def __info_section(self, id, number, value, desc):
