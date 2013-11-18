@@ -78,7 +78,8 @@ class AlignmentStream(object):
             print "filename: %s" % self.fafile.filename
             
     def pileup_stream(self):
-        if self.params.verbose: self.logger.debug("Start pileup bam file...")
+        if self.params.verbose:
+            self.logger.debug("Start pileup bam file...")
             
         for col in self.samfile.pileup(reference=self.params.region.chrom,
                                        start=self.params.region.start,
@@ -103,6 +104,7 @@ class AlignmentStream(object):
             if (self.params.basic_filter.rm_duplicated
                 and self.params.basic_filter.rm_deletion
                 and self.params.basic_filter.rm_insertion):
+                
                 passed_reads = [_ for _ in col.pileups
                                 if (_.alignment.is_proper_pair
                                     and not _.alignment.is_qcfail
@@ -117,6 +119,7 @@ class AlignmentStream(object):
             elif (not self.params.basic_filter.rm_duplicated
                   and self.params.basic_filter.rm_deletion
                   and self.params.basic_filter.rm_insertion):
+                
                 passed_reads = [_ for _ in col.pileups
                                 if (_.alignment.is_proper_pair
                                     and not _.alignment.is_qcfail
@@ -130,13 +133,14 @@ class AlignmentStream(object):
             elif (not self.params.basic_filter.rm_deletion
                   and self.params.basic_filter.rm_insertion
                   and self.params.basic_filter.rm_duplicated):
+                
                 passed_reads = [_ for _ in col.pileups
                                 if (_.alignment.is_proper_pair
                                     and not _.alignment.is_qcfail
                                     and not _.alignment.is_unmapped)]
                 
-                passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref]
-                passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref]
+                passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
+                passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
              
             # allow insertion containing reads
             elif (not self.params.basic_filter.rm_insertion
@@ -148,8 +152,8 @@ class AlignmentStream(object):
             else:
                 passed_reads = [_ for _ in col.pileups
                                 if (not _.alignment.is_unmapped)]
-                passed__mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref]
-                passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref]
+                passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
+                passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
                 
             if not ref_base:
                 # TODO: resolve difference name in fasta and bam
