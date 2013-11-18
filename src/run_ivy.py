@@ -10,10 +10,12 @@ __license__ = ''
 __status__ = 'development'
 
 
+
 class Ivy(object):
     def __init__(self):
         logging.basicConfig(level=logging.ERROR, format="%(asctime)s %(message)s")
-        logging.error('[Ivy] Job started')
+        log = logging.getLogger(__name__)
+        log.error('[Ivy] Job started')
         
     def run(self):
         pp = pprint.PrettyPrinter(indent=6)
