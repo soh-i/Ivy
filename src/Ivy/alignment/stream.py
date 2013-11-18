@@ -73,6 +73,7 @@ class AlignmentStream(object):
             print "N_references: %s" % self.samfile.nreferences
             print "references: %s" % [_ for _ in self.samfile.references]
             print "unmapped: %s" % self.samfile.unmapped
+            
             # info. for fasta
             print "### info. for fasfile object ###"
             print "filename: %s" % self.fafile.filename
@@ -158,8 +159,8 @@ class AlignmentStream(object):
             if not ref_base:
                 # TODO: resolve difference name in fasta and bam
                 raise ValueError(
-                    'No sequence content within {chrom:s}, {start:s}, {end:s}'
-                    .format(chrom=self.chrom, start=self.start, end=self.end))
+                    'No sequence content within {chrom:s}, {start:s}, {end:s}'.format(
+                        chrom=self.chrom, start=self.start, end=self.end))
                 
             # array in read object per base types
             A = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'A']
