@@ -19,8 +19,8 @@ class AlignmentStream(object):
             self.params = __params
             #AttrDict.show(self.params)
         else:
-            raise TypeError("Given param %s is %s class, not 'AttrDic' class" %
-                            (__params, __params.__class__.__name__))
+            raise TypeError("Given param {prm:s} is {cls:s} class, not 'AttrDic' class"
+                            .format(prm=__params, cls=__params.__class__.__name__))
 
         __bm = pysam.Samfile(self.params.r_bams, 'rb', check_header=True, check_sq=True)
         __ft = pysam.Fastafile(self.params.fasta)
@@ -173,9 +173,9 @@ class AlignmentStream(object):
             #print self.chrom, self.start, self.end
             if not ref:
                 # TODO: resolve difference name in fasta and bam
-                raise ValueError('No seq. content within [chr:%s, start:%s, end:%s], maybe different name of fasta and bam' % \
-                                 (self.chrom, self.start, self.end))
-
+                raise ValueError('No sequence content within {chrom:s}, {start:s}, {end:s}, mybe different name of fasta and bam'
+                                 .format(chrom=self.chrom, start=self.start, end=self.end))
+                
             # array in read object per base types
             A = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'A']
             C = [_ for _ in filt_reads if _.alignment.seq[_.qpos] == 'C']
@@ -266,8 +266,8 @@ class AlignmentStream(object):
                 
             else:
                 raise RuntimeError(
-                    'Could not able to define the allele base %s, chr[%s], pos[%s]'
-                    % (all_bases, bam_chrom, pos))
+                    'Could not able to define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
+                    .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
             
             debug = False
             if debug:
@@ -375,6 +375,7 @@ class AlignmentStream(object):
    
 class AlignmentStreamMerger(object):
     def __init__(self, rna, dna):
+        raise NotImplementedError()
         self.rna = rna
         self.dna = dna
 
@@ -397,7 +398,8 @@ def _is_same_chromosome_name(bam=None, fa=None):
             else:
                 return False
     else:
-        raise RuntimeError("%s of faidx file is not found" % (fa_dx_filename))
+        raise RuntimeError('{filename:s} of faidx file is not found'.
+                           format(filename=fa_dx_filename))
         
 def _parse_faidx(filename):
     fasta_chrom_name = []
