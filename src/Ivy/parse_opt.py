@@ -1,4 +1,9 @@
-from optparse import OptionParser, OptionGroup, HelpFormatter, IndentedHelpFormatter
+from optparse import (
+    OptionParser,
+    OptionGroup,
+    HelpFormatter,
+    IndentedHelpFormatter,
+    )
 import os.path
 import logging
 import string
@@ -23,6 +28,10 @@ class CommandLineParser(object):
         fmt = IndentedHelpFormatter(indent_increment=2, max_help_position=60, width=120, short_first=1)
         self.parser = OptionParser(usage=usage, formatter=fmt, version=__version__, description=desc)
         #self.parse()
+
+        logging.basicConfig(level=logging.DEBUG)
+        self.logger = logging.getLogger(type(self).__name__)
+        self.logger.debug("This is debug message")
         
     def parse_basic_opt(self):
         # basic options
@@ -481,7 +490,7 @@ class CommandLineParser(object):
         # --mask-repeat
         if opt.is_mask_rep:
             passed_params.ext_filter.is_mask_rep = opt.is_mask_rep
- 
+
         return passed_params
 
     def _ok_file(self, filename):
