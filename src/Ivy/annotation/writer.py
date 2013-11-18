@@ -15,7 +15,7 @@ class VCFWriteHeader(object):
         }
         __params._vcf_meta = _info
         self.__spec = __params
-        #AttrDict.show(self.__spec)
+        AttrDict.show(self.__spec)
         
     def make_vcf_header(self):
         sys.stdout.write(self.__spec_section())
@@ -27,18 +27,32 @@ class VCFWriteHeader(object):
         return self.__spec
 
     def __spec_section(self):
-        meta = self.__spec._vcf_metadata
         s = ''
         for _ in self.__spec._vcf_meta._data:
-            s += "##"+  "=".join([_, self.__spec._vcf_meta[_]]) + "\n"
+            s += "##"+  "=".join(['{meta:s}'.format(
+                meta=_), self.__spec._vcf_meta[_]]) + "\n"
         return s
             
     def __params_section(self):
         params = ''
         for _ in self.__spec.basic_filter._data:
-            params += "##PARAMS=" + ','.join([
-                '<ID={id},Value={val},Filter_class={filt}>\n'.format(id=_, val=self.__spec.basic_filter._data[_], filt='basic_filter')
-                ])
+            params += '##PARAMS=' + ','.join([
+                '<ID={id},Value={val},Filter_class={filt}>\n'.format(
+                    id=_, val=self.__spec.basic_filter._data[_], filt='basic_filter')])
+        for _ in self.__spec.ext_filter._data:
+            params += '##PARAMS=' + ','.join([
+                '<ID={id},Value={val},Filter_class={filt}>\n'.format(
+                    id=_, val=self.__spec.ext_filter._data[_], filt='ext_filter')])
+        for _ in self.__spec.stat_filter._data:
+            params += '##PARAMS=' + ','.join([
+                '<ID={id},Value={val},Filter_class={filt}>\n'.format(
+                    id=_, val=self.__spec.stat_filter._data[_], filt='stat_filter')])
+            
+        for _ in self.__spec.sample_filter._data:
+            params += '##PARAMS=' + ','.join([
+                '<ID={id},Value={val},Filter_class={filt}>\n'.format(
+                    id=_, val=self.__spec.sample_filter._data[_], filt='sample_filter')])
+             
         return params
 
     def __info_section(self, id, number, value, desc):
