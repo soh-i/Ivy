@@ -1,7 +1,8 @@
 from Ivy.version import __version__
+from Ivy.utils import die
 from Ivy.alignment.stream import AlignmentStream
 from Ivy.parse_opt import CommandLineParser
-import logging
+from Ivy.annotation.writer import VCFWriteHeader
 import pprint
 
 __program__ = 'run_ivy'
@@ -10,20 +11,18 @@ __license__ = ''
 __status__ = 'development'
 
 
-
 class Ivy(object):
     def __init__(self):
         pass
-        #logging.basicConfig(level=logging.ERROR, format="%(asctime)s %(message)s")
-        #log = logging.getLogger(__name__)
-        #log.error('[Ivy] Job started')
         
     def run(self):
         pp = pprint.PrettyPrinter(indent=6)
         parse = CommandLineParser()
         params = parse.ivy_parse_options()
+        vcf = VCFWriteHeader(params)
         stream = AlignmentStream(params)
-                
+
+        print vcf.make_vcf_header()
         for rna in stream.pileup_stream():
             print '{chrom}\t{pos:d}\t{ref:s}\t{alt:s}\t{coverage:d}\t{mismatch_ratio:0.4f}'.format(
                 chrom=rna['chrom'],
