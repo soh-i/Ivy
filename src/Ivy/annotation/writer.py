@@ -3,10 +3,10 @@ from Ivy.parse_opt import CommandLineParser
 from Ivy.utils import AttrDict
 import datetime
 
+
 class VCFWriteHeader(object):
     def __init__(self, __params):
         d = datetime.datetime.today()
-        
         _info = {
             'fileformat': 'VCFv4.1',
             'source': 'Ivy_v0.0.1',
