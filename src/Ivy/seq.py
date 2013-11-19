@@ -21,9 +21,12 @@ class Fasta(object):
                     flag = True
         return header
 
-    def splitheader(self, num):
-        raise NotImplementedError()
-
+    def split_fasta(self, num):
+        for i in range(1, num):
+            f = open(str(i)+'_'+str(self.filename), 'w')
+            f.write(str(i))
+            f.close()
+        
     def get_fasta_length(self):
         raise NotImplementedError()
         
@@ -32,3 +35,4 @@ if __name__ == '__main__':
     fa = Fasta(fa="seq.fa")
     print fa.filename
     print fa.fasta_header()
+    print fa.split_fasta(4)
