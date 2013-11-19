@@ -3,7 +3,7 @@ from multiprocessing import Pool, Process
 chroms = ['chr'+str(_) for _ in range(1, 23)]
 chroms += ['chrX', 'chrY']
 
-threads = 7
+threads = 5
 max_cpus = 24
 
 try:
@@ -40,13 +40,22 @@ for num in range(1, len(chroms)+1):
                 #print  num, chroms[start:end]
                 start += div
                 end += div
+            else:
                 overflow.append(chroms[start:end])
+                start += div
+                end += div
             c += 1
 
-for i in range(0, mod):
-    result[i].extend([overflow[0][i]])
-
+j = 0
+print overflow
 print result
+
+for i in range(0, mod-1):
+    
+    result[i].extend([overflow[0][j]])
+    j += 1
+
+#print result
 
 
 """
