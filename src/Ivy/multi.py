@@ -3,16 +3,22 @@ from multiprocessing import Pool, Process
 chroms = ['chr'+str(_) for _ in range(1, 23)]
 chroms += ['chrX', 'chrY']
 
-threads = 5
+threads = 7
 max_cpus = 24
-div, mod = divmod(len(chroms), threads)
-start = 0
-end = div
-result = []
+
+try:
+    div, mod = divmod(len(chroms), threads)
+except ZeroDivisionError:
+    pass
+
 print "threads:", threads
 print div, mod
 
 c = 1
+start = 0
+end = div
+result = []
+overflow = []
 for num in range(1, len(chroms)+1):
     if threads > max_cpus:
         raise RuntimeError("Threads num is bigger than system CUPs")
@@ -29,25 +35,27 @@ for num in range(1, len(chroms)+1):
                 start += div
                 end += div
             elif c == threads:
-                mm.append(chroms[start:])
-                
-                #print num, chroms[start:]
+                # over flow
+                result.append(chroms[start:end])
+                #print  num, chroms[start:end]
+                start += div
+                end += div
+                overflow.append(chroms[start:end])
             c += 1
 
+for i in range(0, mod):
+    result[i].extend([overflow[0][i]])
 
-    for _ in mm:
-        if _:
-            for i in _:
-                #result.append(i)
-                print i[3]
-#print resul
-            
+print result
+
+
+"""
 def split_fasta(fastafile, num):
     if not os.path.isfile(fastafile):
         raise ValueError("{0} is not found".format(fastafile))
         
             
-"""
+
 class test(object):
     def __init__(self, x):
         self.x = x
