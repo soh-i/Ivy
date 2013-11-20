@@ -194,9 +194,36 @@ class CommandLineParser(object):
                                       dest='min_rna_mapq',
                                       action='store',
                                       nargs=1,
-                                      default=10,
+                                      default=30,
                                       type='int',
-                                      help='Min mapping quality of RNA-seq data[default: %default]'
+                                      help='Min mapping quality of RNA-seq data [default: %default]'
+                                      )
+        basic_filter_group.add_option('--min-dna-mapq',
+                                      metavar='',
+                                      dest='min_dna_mapq',
+                                      action='store',
+                                      nargs=1,
+                                      default=30,
+                                      type='int',
+                                      help='Min mapping quality of DNA-seq data [default: %default]'
+                                      )
+        basic_filter_group.add_option('--min-rna-baq',
+                                      metavar='',
+                                      dest='min_rna_baq',
+                                      action='store',
+                                      nargs=1,
+                                      default=28,
+                                      type='int',
+                                      help='Min base call quality in RNA [default: %default]'
+                                      )
+        basic_filter_group.add_option('--min-dna-baq',
+                                      metavar='',
+                                      dest='min_dna_baq',
+                                      action='store',
+                                      nargs=1,
+                                      default=28,
+                                      type='int',
+                                      help='Min base call quality in DNA [default: %default]'
                                       )
         basic_filter_group.add_option('--num-allow-type',
                                       metavar='',
@@ -206,24 +233,6 @@ class CommandLineParser(object):
                                       default=1,
                                       type='int',
                                       help='Number of allowing base modification type [default: %default]'
-                                      )
-        basic_filter_group.add_option('--min-baq-rna',
-                                      metavar='',
-                                      dest='min_baq_r',
-                                      action='store',
-                                      nargs=1,
-                                      default=28,
-                                      type='int',
-                                      help='Min base call quality in RNA [default: %default]'
-                                      )
-        basic_filter_group.add_option('--min-baq-dna',
-                                      metavar='',
-                                      dest='min_baq_d',
-                                      action='store',
-                                      nargs=1,
-                                      default=28,
-                                      type='int',
-                                      help='Min base call quality in DNA [default: %default]'
                                       )
         self.parser.add_option_group(basic_filter_group)
         
@@ -441,17 +450,21 @@ class CommandLineParser(object):
         if opt.min_rna_mapq:
             passed_params.basic_filter.min_rna_mapq = opt.min_rna_mapq
 
+        # --min-rna-mapq
+        if opt.min_dna_mapq:
+            passed_params.basic_filter.min_rna_mapq = opt.min_dna_mapq
+
         # --num-allow-type
         if opt.num_type:
             passed_params.basic_filter.num_type = opt.num_type
 
         # --min-baq-rna
-        if opt.min_baq_r:
-            passed_params.basic_filter.min_baq_rna = opt.min_baq_r
+        if opt.min_rna_baq:
+            passed_params.basic_filter.min_baq_rna = opt.min_rna_baq
 
         # --min-baq-dna
-        if opt.min_baq_d:
-            passed_params.basic_filter.min_baq_dba = opt.min_baq_d
+        if opt.min_dna_baq:
+            passed_params.basic_filter.min_baq_dba = opt.min_dna_baq
 
         ##################################
         ### Statistical filter options ###
