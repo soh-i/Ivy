@@ -188,7 +188,7 @@ class AlignmentStream(object):
             # --min-rna-mapq
             mapqs_in_pos = [_.alignment.mapq for _ in passed_reads]
             try:
-                average_mapq = math.ceil(sum(mapqs_in_pos)/len(mapqs_in_pos))
+                average_mapq = math.ceil(sum(mapqs_in_pos) / len(mapqs_in_pos))
             except ZeroDivisionError:
                 average_mapq = 0
             
@@ -219,7 +219,7 @@ class AlignmentStream(object):
                 Tb =  [_.alignment.seq[_.qpos] for _ in T]
                 Cb =  [_.alignment.seq[_.qpos] for _ in C]
             
-                # strand informations
+                # Array in read strand information by base type
                 G_r = [_.alignment.is_reverse for _ in G
                        if _.alignment.is_reverse].count(True)
                 G_f = [_.alignment.is_reverse for _ in G
@@ -244,65 +244,24 @@ class AlignmentStream(object):
                                   'T': len(T),
                                   'G': len(G),
                                   'C': len(C),})
-
                 # TODO:
-                # comapre speed by  __len__()
+                # comapre speed by __len__() and count()
                 Ac = [_.alignment.seq[_.qpos] for _ in A].count('A')
                 Tc = [_.alignment.seq[_.qpos] for _ in T].count('T')
                 Gc = [_.alignment.seq[_.qpos] for _ in G].count('G')
                 Cc = [_.alignment.seq[_.qpos] for _ in C].count('C')
-                #Nc = [_.alignment.seq[_.qpos] for _ in C].count('N')
+
                 
                 _all_base = Ab + Gb + Cb + Tb
                 alt = self.define_allele(_all_base, ref=ref_base)
             
-            # compute DP4 collumn
-            # TODO: to write unittest is needed!
-            #if len(alt): TODO:  here is bug # TypeError: object of type 'NoneType' has no len()
-            if True: # TODO: set any condition(s)
-                ref_r = 0
-                ref_f = 0
-                alt_r = 0
-                alt_f = 0
                 
-                if ref_base == 'A':
-                    ref_r = (A_r)
-                    ref_f = (A_f)
-                    alt_r = (G_f+C_f+T_f)
-                    alt_f = (G_r+C_r+T_r)
-                elif ref_base == 'T':
-                    ref_r = (T_r)
-                    ref_f = (T_f)
-                    alt_r = (G_r+C_r+A_r)
-                    alt_f = (G_f+C_f+A_f)
-                elif ref_base == 'G':
-                    ref_r = (G_r)
-                    ref_f = (G_f)
-                    alt_r = (C_r+T_r+A_r)
-                    alt_f = (C_f+C_f+C_r)
-                elif ref_base == 'C':
-                    ref_r = (C_r)
-                    ref_f = (C_f)
-                    alt_r = (A_r+T_r+G_r)
-                    alt_f = (A_f+T_f+G_f)
-                elif ref_base == 'N':
-                    ref_r = (N_r)
-                    ref_f = (N_f)
-                    alt_r = (A_r+T_r+G_r+C_r)
-                    alt_f = (A_f+T_f+G_f+C_f)
-                dp4 = tuple([ref_r, ref_f, alt_r, alt_f])
-                
-            else:
-                raise RuntimeError(
-                    'Could not able to define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
-                    .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
-            
-            try:
-                allele_ratio= len(passed_mismatches) / (len(passed_mismatches) + len(passed_matches))
-                ag_ratio = len(G) / (len(G) + len(A))
-            except ZeroDivisionError:
-                allele_ratio = float(0)
-                ag_ratio = float(0)
+                try:
+                    allele_ratio= len(passed_mismatches) / (len(passed_mismatches) + len(passed_matches))
+                    ag_ratio = len(G) / (len(G) + len(A))
+                except ZeroDivisionError:
+                    allele_ratio = float(0)
+                    ag_ratio = float(0)
                 
             ###############################
             ### Basic filtering options ###
@@ -385,12 +344,51 @@ class AlignmentStream(object):
             return '.'
 
             
-    def _compute_dp4(self):
-        pass
-
-
+    def compute_dp4(self):
+        # compute DP4 collumn
+        # TODO: to write unittest is needed!
+        #if len(alt): TODO:  here is bug # TypeError: object of type 'NoneType' has no len()
+        if True: # TODO: set any condition(s)
+            ref_r = 0
+            ref_f = 0
+            alt_r = 0
+            alt_f = 0
+                
+            if ref_base == 'A':
+                ref_r = (A_r)
+                ref_f = (A_f)
+                alt_r = (G_f+C_f+T_f)
+                alt_f = (G_r+C_r+T_r)
+            elif ref_base == 'T':
+                ref_r = (T_r)
+                ref_f = (T_f)
+                alt_r = (G_r+C_r+A_r)
+                alt_f = (G_f+C_f+A_f)
+            elif ref_base == 'G':
+                ref_r = (G_r)
+                ref_f = (G_f)
+                alt_r = (C_r+T_r+A_r)
+                alt_f = (C_f+C_f+C_r)
+            elif ref_base == 'C':
+                ref_r = (C_r)
+                ref_f = (C_f)
+                alt_r = (A_r+T_r+G_r)
+                alt_f = (A_f+T_f+G_f)
+            elif ref_base == 'N':
+                ref_r = (N_r)
+                ref_f = (N_f)
+                alt_r = (A_r+T_r+G_r+C_r)
+                alt_f = (A_f+T_f+G_f+C_f)
+                dp4 = tuple([ref_r, ref_f, alt_r, alt_f])
+                
+        else:
+            raise RuntimeError(
+                'Could not able to define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
+                .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
+            
 
 def _is_pileup(bam, fa):
+    # validate bam and fa file, if sorted/indexed or not
     pass
     
 
