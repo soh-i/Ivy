@@ -3,9 +3,9 @@ from collections import Counter, namedtuple
 import os.path
 import string
 import re
-import pysam
 import pprint
 import logging
+import pysam
 from Ivy.utils import die, AttrDict, IvyLogger
 
 __program__ = 'stream'
@@ -109,7 +109,7 @@ class AlignmentStream(object):
                     'No sequence content within {chrom:s}, {start:s}, {end:s}'.format(
                         chrom=self.chrom, start=self.start, end=self.end))
             elif ref_base == 'N' or ref_base == 'n':
-                yield {}
+                continue
 
             #####################################
             ### Loading alignment with params ###
@@ -301,21 +301,7 @@ class AlignmentStream(object):
                     'mismatch_ratio': allele_ratio,
                     'ag_ratio': ag_ratio,
                     'types': mutation_type,
-                    'Ac': len(A),
-                    'Tc': len(T),
-                    'Cc': len(C),
-                    'Gc': len(G),
-                    'Nc': len(N),
-                    'Gr': (G_r),
-                    'Gf': (G_f),
-                    'Cr': (C_r),
-                    'Cf': (C_f),
-                    'Tf': (T_f),
-                    'Tr': (T_r),
-                    'Af': (A_f),
-                    'Ar': (A_r),
-                    'Nr': (N_r),
-                    'Nf': (N_f),
+                    'dp4': dp4,
                 }
     
     def __resolve_coords(self, start, end, is_one_based):
