@@ -21,8 +21,8 @@ class Ivy(object):
         params = parse.ivy_parse_options()
         vcf = VCFWriteHeader(params)
         stream = AlignmentStream(params)
-
-        print vcf.make_vcf_header()
+        vcf.make_vcf_header()
+        
         for rna in stream.pileup_stream():
             print '{chrom}\t{pos:d}\t{ref:s}\t{alt:s}\t{coverage:d}\t{mismatch_ratio:0.4f}'.format(
                 chrom=rna['chrom'],
