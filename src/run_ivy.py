@@ -22,12 +22,17 @@ class Ivy(object):
         vcf = VCFWriteHeader(params)
         stream = AlignmentStream(params)
         vcf.make_vcf_header()
-        
+
+        #with open(params.outname, 'w') as f:
+        #f.write()
+            
         for rna in stream.pileup_stream():
-            print '{chrom}\t{pos:d}\t{ref:s}\t{alt:s}\t{coverage:d}\t{mismatch_ratio:0.4f}'.format(
+            
+            print '{chrom}\t{pos:d}\t{ref:s}\t{alt:s}\tDP={coverage:d};DP4={dp4:s};MIS_RATIO={mismatch_ratio:0.4f}'.format(
                 chrom=rna['chrom'],
                 pos=rna['pos'],
                 ref=rna['ref'],
                 alt=rna['alt'],
+                mismatch_ratio=rna['mismatch_ratio'],
                 coverage=rna['coverage'],
-                mismatch_ratio=rna['mismatch_ratio'])
+                dp4=",".join([str(_) for _ in rna['dp4']]))

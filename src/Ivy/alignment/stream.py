@@ -3,9 +3,10 @@ from collections import Counter, namedtuple
 import os.path
 import string
 import re
-import pysam
+import math
 import pprint
 import logging
+import pysam
 from Ivy.utils import die, AttrDict, IvyLogger
 
 __program__ = 'stream'
@@ -15,13 +16,14 @@ __status__ = 'development'
 
 DEBUG = False
 
+
 class AlignmentStream(object):
     def __init__(self, __params):
         ig = IvyLogger()
         self.logger = logging.getLogger(type(self).__name__)
         
         if hasattr(__params, 'AttrDict'):
-            self.params = __params
+            self.params = self.__add_preset(__params)
         else:
             raise TypeError("Given param {prm:s} is {cls:s} class, not 'AttrDic' class"
                             .format(prm=__params, cls=__params.__class__.__name__))
@@ -77,6 +79,13 @@ class AlignmentStream(object):
             # info. for fasta
             print "### info. for fasfile object ###"
             print "filename: %s" % self.fafile.filename
+
+    def __add_preset(self, __p):
+        # Preset params add to the AttrDic attribute
+        # preset_params.__{Name} = Value
+        __p.preset_params._skip_N = True
+        __p.preset_params._skip_has_many_allele = True
+        return __p
             
     def pileup_stream(self):
         if self.params.verbose:
@@ -95,11 +104,17 @@ class AlignmentStream(object):
             ref_base= self.fafile.fetch(reference=bam_chrom,
                                     start=col.pos,
                                     end=col.pos+1).upper()
+            if not ref_base:
+                # TODO: resolve difference name in fasta and bam
+                raise ValueError(
+                    'No sequence content within {chrom:s}, {start:s}, {end:s}'.format(
+                        chrom=self.chrom, start=self.start, end=self.end))
+            elif ref_base == 'N' or ref_base == 'n':
+                continue
 
             #####################################
             ### Loading alignment with params ###
             #####################################
-            
             # filter reads with all params
             passed_reads = []
             if (self.params.basic_filter.rm_duplicated
@@ -153,161 +168,127 @@ class AlignmentStream(object):
             else:
                 passed_reads = [_ for _ in col.pileups
                                 if (not _.alignment.is_unmapped)]
-                passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
-                passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
-                
-            if not ref_base:
-                # TODO: resolve difference name in fasta and bam
-                raise ValueError(
-                    'No sequence content within {chrom:s}, {start:s}, {end:s}'.format(
-                        chrom=self.chrom, start=self.start, end=self.end))
-                
-            # array in read object per base types
-            A = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'A']
-            C = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'C']
-            T = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'T']
-            G = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'G']
-            N = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'N']
+                passed_mismatches = [_ for _ in passed_reads
+                                     if _.alignment.seq[_.qpos] != ref_base]
+                passed_matches = [_ for _ in passed_reads
+                                  if _.alignment.seq[_.qpos] == ref_base]
 
-            # base string for 4 nucleotide types
-            Gb =  [_.alignment.seq[_.qpos] for _ in G]
-            Ab =  [_.alignment.seq[_.qpos] for _ in A]
-            Tb =  [_.alignment.seq[_.qpos] for _ in T]
-            Cb =  [_.alignment.seq[_.qpos] for _ in C]
-            
-            # strand informations
-            G_r = [_.alignment.is_reverse for _ in G
-                   if _.alignment.is_reverse].count(True)
-            G_f = [_.alignment.is_reverse for _ in G
-                   if not _.alignment.is_reverse].count(False)
-            
-            A_r = [_.alignment.is_reverse for _ in A
-                   if _.alignment.is_reverse].count(True)
-            A_f = [_.alignment.is_reverse for _ in A
-                   
-                   if not _.alignment.is_reverse].count(False)
-            T_r = [_.alignment.is_reverse for _ in T
-                   if _.alignment.is_reverse].count(True)
-            T_f = [_.alignment.is_reverse for _ in T
-                   if not _.alignment.is_reverse].count(False)
-            
-            C_r = [_.alignment.seq[_.qpos] for _ in C
-                   if _.alignment.is_reverse].count(True)
-            C_f = [_.alignment.seq[_.qpos] for _ in C
-                   if not _.alignment.is_reverse].count(False)
-            
-            N_r = [_.alignment.is_reverse for _ in N
-                   if _.alignment.is_reverse].count(True)
-            N_f = [_.alignment.is_reverse for _ in N
-                   if not _.alignment.is_reverse].count(False)
-
-            mutation_type = ({'A': len(A), 'T': len(T), 'G': len(G),
-                              'C': len(C), 'N': len(N)})
-
-            Ac = [_.alignment.seq[_.qpos] for _ in A].count('A')
-            Tc = [_.alignment.seq[_.qpos] for _ in T].count('T')
-            Gc = [_.alignment.seq[_.qpos] for _ in G].count('G')
-            Cc = [_.alignment.seq[_.qpos] for _ in C].count('C')
-            Nc = [_.alignment.seq[_.qpos] for _ in C].count('N')
-            coverage = Ac + Tc + Gc + Cc + Nc
-            
-            _all_base = Ab + Gb + Cb + Tb
-            alt = self.define_allele(_all_base, ref=ref_base)
-            
-            # compute DP4 collumn
-            # TODO: to write unittest is needed!
-            #if len(alt): TODO:  here is bug # TypeError: object of type 'NoneType' has no len()
-            if True: # TODO: set any condition(s)
-                ref_r = 0
-                ref_f = 0
-                alt_r = 0
-                alt_f = 0
-                
-                if ref_base == 'A':
-                    ref_r = (A_r)
-                    ref_f = (A_f)
-                    alt_r = (G_f+C_f+T_f)
-                    alt_f = (G_r+C_r+T_r)
-                elif ref_base == 'T':
-                    ref_r = (T_r)
-                    ref_f = (T_f)
-                    alt_r = (G_r+C_r+A_r)
-                    alt_f = (G_f+C_f+A_f)
-                elif ref_base == 'G':
-                    ref_r = (G_r)
-                    ref_f = (G_f)
-                    alt_r = (C_r+T_r+A_r)
-                    alt_f = (C_f+C_f+C_r)
-                elif ref_base == 'C':
-                    ref_r = (C_r)
-                    ref_f = (C_f)
-                    alt_r = (A_r+T_r+G_r)
-                    alt_f = (A_f+T_f+G_f)
-                elif ref_base == 'N':
-                    ref_r = (N_r)
-                    ref_f = (N_f)
-                    alt_r = (A_r+T_r+G_r+C_r)
-                    alt_f = (A_f+T_f+G_f+C_f)
-                dp4 = tuple([ref_r, ref_f, alt_r, alt_f])
-                
-            else:
-                raise RuntimeError(
-                    'Could not able to define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
-                    .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
-            
-            debug = False
-            if debug:
-                coverage = A_r+ a_f+ T_r+ t_f+ G_r+ g_f+ C_r+ c_f + N_r + n_f
-                #print [_.alignment.seq[_.qpos] for _ in G]
-                print '[A:%s,%s] [T:%s,%s] [G:%s,%s] [C:%s,%s]' \
-                    % (A_r, a_f, T_r, t_f, G_r, g_f, C_r, c_f)
-                print 'Coverage:%d' % (coverage)
-            
+            ##############################
+            ### Basic filters in reads ###
+            ##############################
+            # --min-rna-baq
+            quals_in_pos = [ord(_.alignment.qual[_.qpos])-33 for _ in passed_reads]
             try:
-                allele_ratio= len(passed_mismatches) / (len(passed_mismatches) + len(passed_matches))
-                ag_ratio = len(G) / (len(G) + len(A))
+                average_baq = math.ceil(sum(quals_in_pos)/len(quals_in_pos))
             except ZeroDivisionError:
-                allele_ratio = float(0)
-                ag_ratio = float(0)
-
-                
-            ###############################
-            ### Basic filtering options ###
-            ###############################
-
+                average_baq = 0
+            
             # --min-rna-cov
-            if (len(passed_reads) > self.params.basic_filter.min_rna_cov
-                and allele_ratio > self.params.basic_filter.ag_ratio):
+            coverage = len(quals_in_pos)
+            
+            # --min-rna-mapq
+            mapqs_in_pos = [_.alignment.mapq for _ in passed_reads]
+            try:
+                average_mapq = math.ceil(sum(mapqs_in_pos) / len(mapqs_in_pos))
+            except ZeroDivisionError:
+                average_mapq = 0
+            
+            if (self.params.basic_filter.min_rna_cov <= coverage
+                and self.params.basic_filter.min_rna_mapq <= average_mapq
+                and self.params.basic_filter.min_baq_rna <= average_baq):
                 
-                yield {
-                    'chrom': bam_chrom,
-                    'pos': pos,
-                    'ref': ref_base,
-                    'alt': alt,
-                    'coverage': len(passed_reads),
-                    'mismatches': len(passed_mismatches),
-                    'matches': len(passed_matches),
-                    'cov': coverage,
-                    'mismatch_ratio': allele_ratio,
-                    'ag_ratio': ag_ratio,
-                    'types': mutation_type,
-                    'Ac': len(A),
-                    'Tc': len(T),
-                    'Cc': len(C),
-                    'Gc': len(G),
-                    'Nc': len(N),
-                    'Gr': (G_r),
-                    'Gf': (G_f),
-                    'Cr': (C_r),
-                    'Cf': (C_f),
-                    'Tf': (T_f),
-                    'Tr': (T_r),
-                    'Af': (A_f),
-                    'Ar': (A_r),
-                    'Nr': (N_r),
-                    'Nf': (N_f),
-                }
-    
+                A = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'A']
+                C = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'C']
+                T = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'T']
+                G = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'G']
+                
+                # --min-mis-frequency
+                try:
+                    allele_freq= len(passed_mismatches) / coverage
+                    ag_freq = len(G) / (len(G) + len(A))
+                except ZeroDivisionError:
+                    allele_freq = float(0)
+                    ag_freq = float(0)
+                
+                # --num-allow-type
+                mutation_type = {}
+                if len(A) > 0 and ref_base != 'A':
+                    mutation_type.update({'A': len(A)})
+                elif len(T) > 0 and ref_base != 'T':
+                    mutation_type.update({'T': len(T)})
+                elif len(G) > 0 and ref_base != 'G':
+                    mutation_type.update({'G': len(G)})
+                elif len(C) > 0 and ref_base != 'C':
+                    mutation_type.update({'C': len(C)})
+                    
+                if (len(mutation_type) <= self.params.basic_filter.num_type
+                    and len(mutation_type) != 0
+                    and allele_freq >= self.params.basic_filter.min_mut_freq):
+                    
+                    # Array in four type of sequence
+                    Gb =  [_.alignment.seq[_.qpos] for _ in G]
+                    Ab =  [_.alignment.seq[_.qpos] for _ in A]
+                    Tb =  [_.alignment.seq[_.qpos] for _ in T]
+                    Cb =  [_.alignment.seq[_.qpos] for _ in C]
+                    
+                    # define allele
+                    _all_base = Ab + Gb + Cb + Tb
+                    alt = self.define_allele(_all_base, ref=ref_base)
+                
+                    # Array in seq with read strand information
+                    G_base_r = [_.alignment.seq[_.qpos] for _ in G
+                                if _.alignment.is_reverse]
+                    G_base_f = [_.alignment.seq[_.qpos] for _ in G
+                                if not _.alignment.is_reverse]
+                    
+                    A_base_r = [_.alignment.seq[_.qpos] for _ in A
+                                if _.alignment.is_reverse]
+                    A_base_f = [_.alignment.seq[_.qpos] for _ in A
+                                if not _.alignment.is_reverse]
+                
+                    T_base_r = [_.alignment.seq[_.qpos] for _ in T
+                                if _.alignment.is_reverse]
+                    T_base_f = [_.alignment.seq[_.qpos] for _ in T
+                                if not _.alignment.is_reverse]
+                    
+                    C_base_r = [_.alignment.seq[_.qpos] for _ in C
+                                if _.alignment.is_reverse]
+                    C_base_f = [_.alignment.seq[_.qpos] for _ in C
+                                if not _.alignment.is_reverse]
+
+                    dp4 = (self.compute_dp4(ref_base,
+                                            len(A_base_r), len(A_base_f),
+                                            len(T_base_r), len(T_base_f),
+                                            len(G_base_r), len(G_base_f),
+                                            len(C_base_r), len(C_base_f)))
+                    ## TODO:
+                    ## comapre speed by __len__() and count()
+                    #Ac = [_.alignment.seq[_.qpos] for _ in A].count('A')
+                    #Tc = [_.alignment.seq[_.qpos] for _ in T].count('T')
+                    #Gc = [_.alignment.seq[_.qpos] for _ in G].count('G')
+                    # G_base_count = G_base_r + G_base_f
+                    #Cc = [_.alignment.seq[_.qpos] for _ in C].count('C')
+                    #
+                    
+                    #############################
+                    ### Basic filters in base ###
+                    #############################
+                    if True:
+                        yield {
+                            'chrom': bam_chrom,
+                            'pos': pos,
+                            'ref': ref_base,
+                            'alt': alt,
+                            'coverage': len(passed_reads),
+                            'mismatches': len(passed_mismatches),
+                            'matches': len(passed_matches),
+                            'cov': coverage,
+                            'mismatch_ratio': allele_freq,
+                            'types': mutation_type,
+                            'dp4': dp4
+                        }
+                        #raise SystemExit("End")
+                
     def __resolve_coords(self, start, end, is_one_based):
         if is_one_based:
             if start is not None:
@@ -320,8 +301,8 @@ class AlignmentStream(object):
                 None
         return int(start), int(end)
 
-    def average_baq(self, string):
-        return [ord(s)-33 for s in string]
+    def average_baq(self, baq):
+        return (sum([ord(_)-33 for _ in baq]) / len(baq))
 
     @classmethod
     def define_allele(self, base, ref=None):
@@ -357,19 +338,47 @@ class AlignmentStream(object):
         else:
             # allele is not found
             return '.'
+
+    def compute_dp4(self, ref, A_f, A_r, T_f, T_r, G_f, G_r, C_f, C_r):
+        #if len(alt): TODO:  here is bug # TypeError: object of type 'NoneType' has no len()
+        if True: # TODO: set any condition(s)
+            ref_r = 0
+            ref_f = 0
+            alt_r = 0
+            alt_f = 0
             
-   
-class AlignmentStreamMerger(object):
-    def __init__(self, rna, dna):
-        raise NotImplementedError()
-        self.rna = rna
-        self.dna = dna
+            if ref == 'A':
+                ref_r = (A_r)
+                ref_f = (A_f)
+                alt_r = (G_f+C_f+T_f)
+                alt_f = (G_r+C_r+T_r)
+            elif ref == 'T':
+                ref_r = (T_r)
+                ref_f = (T_f)
+                alt_r = (G_r+C_r+A_r)
+                alt_f = (G_f+C_f+A_f)
+            elif ref == 'G':
+                ref_r = (G_r)
+                ref_f = (G_f)
+                alt_r = (C_r+T_r+A_r)
+                alt_f = (C_f+C_f+C_r)
+            elif ref == 'C':
+                ref_r = (C_r)
+                ref_f = (C_f)
+                alt_r = (A_r+T_r+G_r)
+                alt_f = (A_f+T_f+G_f)
+            return tuple([ref_r, ref_f, alt_r, alt_f])
 
-    def merge_streaming(self):
-        dna_stream = AlignmentStream(conf)
-        rna_stream = AlignmentStream(conf)
 
-
+        else:
+            raise RuntimeError(
+                'Could not able to define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
+                .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
+            
+def _is_pileup(bam, fa):
+    # validate bam and fa file, if sorted/indexed or not
+    pass
+    
 def _is_same_chromosome_name(bam=None, fa=None):
     __bam = pysam.Samfile(os.path.abspath(bam), 'rb')
     __fa = pysam.Fastafile(os.path.abspath(fa))
@@ -432,3 +441,13 @@ if __name__ == '__main__':
     ###print d, 'r:G',
     ##print define_allele(d, ref='G')
     
+class AlignmentStreamMerger(object):
+    def __init__(self, rna, dna):
+        raise NotImplementedError()
+        self.rna = rna
+        self.dna = dna
+
+    def merge_streaming(self):
+        dna_stream = AlignmentStream(conf)
+        rna_stream = AlignmentStream(conf)
+
