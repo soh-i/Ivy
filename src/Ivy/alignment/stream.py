@@ -168,8 +168,10 @@ class AlignmentStream(object):
             else:
                 passed_reads = [_ for _ in col.pileups
                                 if (not _.alignment.is_unmapped)]
-                passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
-                passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
+                passed_mismatches = [_ for _ in passed_reads
+                                     if _.alignment.seq[_.qpos] != ref_base]
+                passed_matches = [_ for _ in passed_reads
+                                  if _.alignment.seq[_.qpos] == ref_base]
 
             ##############################
             ### Basic filters in reads ###
@@ -194,25 +196,19 @@ class AlignmentStream(object):
             if (self.params.basic_filter.min_rna_cov <= coverage
                 and self.params.basic_filter.min_rna_mapq <= average_mapq
                 and self.params.basic_filter.min_baq_rna <= average_baq):
-                #print average_mapq, average_baq
-                #mapq = r.alignment.mapq
-                #baq  = r.alignment.qual
-                #print coverage, len(quals_in_pos)
-                #print "Mapping qual",  passed_reads[0].alignment.mapq
                 
-                # Array in read object per base types
                 A = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'A']
                 C = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'C']
                 T = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'T']
                 G = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'G']
-
-                # allele ratio,
+                
+                # --min-mis-frequency
                 try:
-                    allele_ratio= len(passed_mismatches) / (len(passed_mismatches) + len(passed_matches))
-                    ag_ratio = len(G) / (len(G) + len(A))
+                    allele_freq= len(passed_mismatches) / coverage
+                    ag_freq = len(G) / (len(G) + len(A))
                 except ZeroDivisionError:
-                    allele_ratio = float(0)
-                    ag_ratio = float(0)
+                    allele_freq = float(0)
+                    ag_freq = float(0)
                 
                 # --num-allow-type
                 mutation_type = {}
@@ -227,75 +223,69 @@ class AlignmentStream(object):
                     
                 if (len(mutation_type) <= self.params.basic_filter.num_type
                     and len(mutation_type) != 0
-                    and self.params, ):
+                    and allele_freq >= self.params.basic_filter.min_mut_freq):
                     
-                    print mutation_type
+                    #print mutation_type,
 
+                    # Array in four type of sequence
+                    Gb =  [_.alignment.seq[_.qpos] for _ in G]
+                    Ab =  [_.alignment.seq[_.qpos] for _ in A]
+                    Tb =  [_.alignment.seq[_.qpos] for _ in T]
+                    Cb =  [_.alignment.seq[_.qpos] for _ in C]
                     
-                # Array in four type of sequence 
-                Gb =  [_.alignment.seq[_.qpos] for _ in G]
-                Ab =  [_.alignment.seq[_.qpos] for _ in A]
-                Tb =  [_.alignment.seq[_.qpos] for _ in T]
-                Cb =  [_.alignment.seq[_.qpos] for _ in C]
-
-                # define allele
-                _all_base = Ab + Gb + Cb + Tb
-                alt = self.define_allele(_all_base, ref=ref_base)
+                    # define allele
+                    _all_base = Ab + Gb + Cb + Tb
+                    alt = self.define_allele(_all_base, ref=ref_base)
                 
-            
-                # Array in seq with read strand information
-                G_base_r = [_.alignment.seq[_.qpos] for _ in G
-                            if _.alignment.is_reverse]
-                G_base_f = [_.alignment.seq[_.qpos] for _ in G
-                             if not _.alignment.is_reverse]
+                    # Array in seq with read strand information
+                    G_base_r = [_.alignment.seq[_.qpos] for _ in G
+                                if _.alignment.is_reverse]
+                    G_base_f = [_.alignment.seq[_.qpos] for _ in G
+                                if not _.alignment.is_reverse]
+                    
+                    A_base_r = [_.alignment.seq[_.qpos] for _ in A
+                                if _.alignment.is_reverse]
+                    A_base_f = [_.alignment.seq[_.qpos] for _ in A
+                                if not _.alignment.is_reverse]
                 
-                A_base_r = [_.alignment.seq[_.qpos] for _ in A
-                            if _.alignment.is_reverse]
-                A_base_f = [_.alignment.seq[_.qpos] for _ in A
-                            if not _.alignment.is_reverse]
+                    T_base_r = [_.alignment.seq[_.qpos] for _ in T
+                                if _.alignment.is_reverse]
+                    T_base_f = [_.alignment.seq[_.qpos] for _ in T
+                                if not _.alignment.is_reverse]
+                    
+                    C_base_r = [_.alignment.seq[_.qpos] for _ in C
+                                if _.alignment.is_reverse]
+                    C_base_f = [_.alignment.seq[_.qpos] for _ in C
+                                if not _.alignment.is_reverse]
+                    
+                    ## TODO:
+                    ## comapre speed by __len__() and count()
+                    #Ac = [_.alignment.seq[_.qpos] for _ in A].count('A')
+                    #Tc = [_.alignment.seq[_.qpos] for _ in T].count('T')
+                    #Gc = [_.alignment.seq[_.qpos] for _ in G].count('G')
+                    # G_base_count = G_base_r + G_base_f
+                    #Cc = [_.alignment.seq[_.qpos] for _ in C].count('C')
+                    #
+                    
+                    #############################
+                    ### Basic filters in base ###
+                    #############################
+                    if True:
+                        yield {
+                            'chrom': bam_chrom,
+                            'pos': pos,
+                            'ref': ref_base,
+                            'alt': alt,
+                            'coverage': len(passed_reads),
+                            'mismatches': len(passed_mismatches),
+                            'matches': len(passed_matches),
+                            'cov': coverage,
+                            'mismatch_ratio': allele_freq,
+                            'types': mutation_type,
+                            'dp4': tuple(),
+                        }
+                        #raise SystemExit("End")
                 
-                T_base_r = [_.alignment.seq[_.qpos] for _ in T
-                            if _.alignment.is_reverse]
-                T_base_f = [_.alignment.seq[_.qpos] for _ in T
-                            if not _.alignment.is_reverse]
-            
-                C_base_r = [_.alignment.seq[_.qpos] for _ in C
-                            if _.alignment.is_reverse]
-                C_base_f = [_.alignment.seq[_.qpos] for _ in C
-                            if not _.alignment.is_reverse]
-
-                ## TODO:
-                ## comapre speed by __len__() and count()
-                #Ac = [_.alignment.seq[_.qpos] for _ in A].count('A')
-                #Tc = [_.alignment.seq[_.qpos] for _ in T].count('T')
-                #Gc = [_.alignment.seq[_.qpos] for _ in G].count('G')
-                # G_base_count = G_base_r + G_base_f
-                #Cc = [_.alignment.seq[_.qpos] for _ in C].count('C')
-                #
-                
-                 
-                #############################
-                ### Basic filters in base ###
-                #############################
-            
-                if (coverage > self.params.basic_filter.min_rna_cov):
-                    yield {
-                        'chrom': bam_chrom,
-                        'pos': pos,
-                        'ref': ref_base,
-                        'alt': alt,
-                        'coverage': len(passed_reads),
-                        'mismatches': len(passed_mismatches),
-                        'matches': len(passed_matches),
-                        'cov': coverage,
-                        'mismatch_ratio': 0.00,
-                        'ag_ratio': ag_ratio,
-                        'types': mutation_type,
-                        'dp4': tuple(),
-                    }
-                    #raise SystemExit("End")
-                
-    
     def __resolve_coords(self, start, end, is_one_based):
         if is_one_based:
             if start is not None:
