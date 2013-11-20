@@ -141,14 +141,14 @@ class CommandLineParser(object):
     def parse_basic_filt_opt(self):
         # basic filter options
         basic_filter_group = OptionGroup(self.parser, 'Basic filter options')
-        basic_filter_group.add_option('--min-ag-ratio',
+        basic_filter_group.add_option('--min-mutation-frequency',
                                       metavar='',
-                                      dest='ag_ratio',
+                                      dest='min_mut_freq',
                                       action='store',
                                       nargs=1,
                                       default=0.1,
                                       type='float',
-                                      help='Min A-to-G edit base ratio [default: %default]'
+                                      help='Min mutation frequency [default: %default]'
                                       )
         basic_filter_group.add_option('--min-rna-coverage',
                                       metavar='',
@@ -422,9 +422,9 @@ class CommandLineParser(object):
         ############################
         ### Basic filter options ###
         ############################
-        # --min-ag-ratio
-        if opt.ag_ratio:
-            passed_params.basic_filter.ag_ratio = opt.ag_ratio
+        # --min-mutation-frequency
+        if opt.min_mut_freq:
+            passed_params.basic_filter.min_mut_freq = opt.min_mut_freq
 
         # --min-rna-coverage
         if opt.min_rna_cov:
