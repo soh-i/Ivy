@@ -206,21 +206,42 @@ class AlignmentStream(object):
                 T = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'T']
                 G = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'G']
 
+                # allele ratio,
+                try:
+                    allele_ratio= len(passed_mismatches) / (len(passed_mismatches) + len(passed_matches))
+                    ag_ratio = len(G) / (len(G) + len(A))
+                except ZeroDivisionError:
+                    allele_ratio = float(0)
+                    ag_ratio = float(0)
+                
                 # --num-allow-type
-                mutation_type = ({'A': len(A),
-                                  'T': len(T),
-                                  'G': len(G),
-                                  'C': len(C)})
-                for i in mutation_type:
-                    if (mutation_type[i] <= self.params.basic_filter.num_type
-                        and ref_base != mutation_type[i]):
-                        print i, mutation_type[i]
-                        
+                mutation_type = {}
+                if len(A) > 0 and ref_base != 'A':
+                    mutation_type.update({'A': len(A)})
+                elif len(T) > 0 and ref_base != 'T':
+                    mutation_type.update({'T': len(T)})
+                elif len(G) > 0 and ref_base != 'G':
+                    mutation_type.update({'G': len(G)})
+                elif len(C) > 0 and ref_base != 'C':
+                    mutation_type.update({'C': len(C)})
+                    
+                if (len(mutation_type) <= self.params.basic_filter.num_type
+                    and len(mutation_type) != 0
+                    and self.params, ):
+                    
+                    print mutation_type
+
+                    
                 # Array in four type of sequence 
                 Gb =  [_.alignment.seq[_.qpos] for _ in G]
                 Ab =  [_.alignment.seq[_.qpos] for _ in A]
                 Tb =  [_.alignment.seq[_.qpos] for _ in T]
                 Cb =  [_.alignment.seq[_.qpos] for _ in C]
+
+                # define allele
+                _all_base = Ab + Gb + Cb + Tb
+                alt = self.define_allele(_all_base, ref=ref_base)
+                
             
                 # Array in seq with read strand information
                 G_base_r = [_.alignment.seq[_.qpos] for _ in G
@@ -252,15 +273,6 @@ class AlignmentStream(object):
                 #Cc = [_.alignment.seq[_.qpos] for _ in C].count('C')
                 #
                 
-                _all_base = Ab + Gb + Cb + Tb
-                alt = self.define_allele(_all_base, ref=ref_base)
-                 
-                try:
-                    allele_ratio= len(passed_mismatches) / (len(passed_mismatches) + len(passed_matches))
-                    ag_ratio = len(G) / (len(G) + len(A))
-                except ZeroDivisionError:
-                    allele_ratio = float(0)
-                    ag_ratio = float(0)
                  
                 #############################
                 ### Basic filters in base ###
