@@ -115,7 +115,6 @@ class AlignmentStream(object):
             #####################################
             ### Loading alignment with params ###
             #####################################
-            
             # filter reads with all params
             passed_reads = []
             if (self.params.basic_filter.rm_duplicated
@@ -172,91 +171,90 @@ class AlignmentStream(object):
                 passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
                 passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
 
-            ####################
-            ### Basic filter ###
-            ###################
+                
+            ##############################
+            ### Basic filters in reads ###
+            ##############################
+            # --min-rna-baq
+            quals_in_pos = [ord(_.alignment.qual[_.qpos])-33 for _ in passed_reads]
+            try:
+                average_baq = math.ceil(sum(quals_in_pos)/len(quals_in_pos))
+            except ZeroDivisionError:
+                average_baq = 0
             
             # --min-rna-cov
-            # --min-rna-baq
-            # --min-rna-mapq
-            
-            quals_in_pos = [ord(_.alignment.qual[_.qpos])-33 for _ in passed_reads]
             coverage = len(quals_in_pos)
+            
+            # --min-rna-mapq
             mapqs_in_pos = [_.alignment.mapq for _ in passed_reads]
-            average_baq = math.ceil(sum(quals_in_pos)/len(quals_in_pos))
-            average_mapq = math.ceil(sum(mapqs_in_pos)/len(mapqs_in_pos))
-
-            #print average_mapq, average_baq
-            #mapq = r.alignment.mapq
-            #baq  = r.alignment.qual
-            
-            #print coverage, len(quals_in_pos)
-            #print "Mapping qual",  passed_reads[0].alignment.mapq
-            #print self.average_baq(qual)
-            
-            #raise SystemExit(dir(passed_reads[0].alignment))
-            #print self.params.basic_filter.min_rna_cov
-            #print self.params.basic_filter.min_rna_mapq
-            #print self.params.basic_filter.min_baq_rna
+            try:
+                average_mapq = math.ceil(sum(mapqs_in_pos)/len(mapqs_in_pos))
+            except ZeroDivisionError:
+                average_mapq = 0
             
             if (self.params.basic_filter.min_rna_cov <= coverage
                 and self.params.basic_filter.min_rna_mapq <= average_mapq
                 and self.params.basic_filter.min_baq_rna <= average_baq):
+
+                #print average_mapq, average_baq
+                #mapq = r.alignment.mapq
+                #baq  = r.alignment.qual
+                #print coverage, len(quals_in_pos)
+                #print "Mapping qual",  passed_reads[0].alignment.mapq
+                #print self.average_baq(qual)
+                #raise SystemExit(dir(passed_reads[0].alignment))
+                #print self.params.basic_filter.min_rna_cov
+                #print self.params.basic_filter.min_rna_mapq
+                #print self.params.basic_filter.min_baq_rna
                 
-                print pos, len(quals_in_pos)
+                # Array in read object per base types
+                A = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'A']
+                C = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'C']
+                T = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'T']
+                G = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'G']
+                
+                # Array in four type of sequence 
+                Gb =  [_.alignment.seq[_.qpos] for _ in G]
+                Ab =  [_.alignment.seq[_.qpos] for _ in A]
+                Tb =  [_.alignment.seq[_.qpos] for _ in T]
+                Cb =  [_.alignment.seq[_.qpos] for _ in C]
             
-            # array in read object per base types
-            A = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'A']
-            C = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'C']
-            T = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'T']
-            G = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'G']
-            N = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'N']
+                # strand informations
+                G_r = [_.alignment.is_reverse for _ in G
+                       if _.alignment.is_reverse].count(True)
+                G_f = [_.alignment.is_reverse for _ in G
+                       if not _.alignment.is_reverse].count(False)
+                
+                A_r = [_.alignment.is_reverse for _ in A
+                       if _.alignment.is_reverse].count(True)
+                A_f = [_.alignment.is_reverse for _ in A
+                       if not _.alignment.is_reverse].count(False)
+                
+                T_r = [_.alignment.is_reverse for _ in T
+                       if _.alignment.is_reverse].count(True)
+                T_f = [_.alignment.is_reverse for _ in T
+                       if not _.alignment.is_reverse].count(False)
+            
+                C_r = [_.alignment.seq[_.qpos] for _ in C
+                       if _.alignment.is_reverse].count(True)
+                C_f = [_.alignment.seq[_.qpos] for _ in C
+                       if not _.alignment.is_reverse].count(False)
+                
+                mutation_type = ({'A': len(A),
+                                  'T': len(T),
+                                  'G': len(G),
+                                  'C': len(C),})
 
-            # base string for 4 nucleotide types
-            Gb =  [_.alignment.seq[_.qpos] for _ in G]
-            Ab =  [_.alignment.seq[_.qpos] for _ in A]
-            Tb =  [_.alignment.seq[_.qpos] for _ in T]
-            Cb =  [_.alignment.seq[_.qpos] for _ in C]
-            
-            # strand informations
-            G_r = [_.alignment.is_reverse for _ in G
-                   if _.alignment.is_reverse].count(True)
-            G_f = [_.alignment.is_reverse for _ in G
-                   if not _.alignment.is_reverse].count(False)
-            
-            A_r = [_.alignment.is_reverse for _ in A
-                   if _.alignment.is_reverse].count(True)
-            A_f = [_.alignment.is_reverse for _ in A
-                   
-                   if not _.alignment.is_reverse].count(False)
-            T_r = [_.alignment.is_reverse for _ in T
-                   if _.alignment.is_reverse].count(True)
-            T_f = [_.alignment.is_reverse for _ in T
-                   if not _.alignment.is_reverse].count(False)
-            
-            C_r = [_.alignment.seq[_.qpos] for _ in C
-                   if _.alignment.is_reverse].count(True)
-            C_f = [_.alignment.seq[_.qpos] for _ in C
-                   if not _.alignment.is_reverse].count(False)
-            
-            N_r = [_.alignment.is_reverse for _ in N
-                   if _.alignment.is_reverse].count(True)
-            N_f = [_.alignment.is_reverse for _ in N
-                   if not _.alignment.is_reverse].count(False)
-
-            mutation_type = ({'A': len(A), 'T': len(T), 'G': len(G),
-                              'C': len(C), 'N': len(N)})
-
-            Ac = [_.alignment.seq[_.qpos] for _ in A].count('A')
-            Tc = [_.alignment.seq[_.qpos] for _ in T].count('T')
-            Gc = [_.alignment.seq[_.qpos] for _ in G].count('G')
-            Cc = [_.alignment.seq[_.qpos] for _ in C].count('C')
-            Nc = [_.alignment.seq[_.qpos] for _ in C].count('N')
-            
-            coverage = Ac + Tc + Gc + Cc + Nc
-                        
-            _all_base = Ab + Gb + Cb + Tb
-            alt = self.define_allele(_all_base, ref=ref_base)
+                # TODO:
+                # comapre speed by  __len__()
+                Ac = [_.alignment.seq[_.qpos] for _ in A].count('A')
+                Tc = [_.alignment.seq[_.qpos] for _ in T].count('T')
+                Gc = [_.alignment.seq[_.qpos] for _ in G].count('G')
+                Cc = [_.alignment.seq[_.qpos] for _ in C].count('C')
+                #Nc = [_.alignment.seq[_.qpos] for _ in C].count('N')
+                
+                _all_base = Ab + Gb + Cb + Tb
+                alt = self.define_allele(_all_base, ref=ref_base)
             
             # compute DP4 collumn
             # TODO: to write unittest is needed!
