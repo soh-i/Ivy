@@ -3,6 +3,7 @@ from collections import Counter, namedtuple
 import os.path
 import string
 import re
+import math
 import pprint
 import logging
 import pysam
@@ -170,8 +171,34 @@ class AlignmentStream(object):
                                 if (not _.alignment.is_unmapped)]
                 passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
                 passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
-                
-                
+
+            ####################
+            ### Basic filter ###
+            ###################
+            
+            # --min-rna-cov
+            # --min-baq
+            # --min-mapq
+            
+            quals_in_pos = [ord(_.alignment.qual[_.qpos])-33 for _ in passed_reads]
+            mapqs_in_pos = [_.alignment.mapq for _ in passed_reads]
+            average_baq = math.ceil(sum(quals_in_pos)/len(quals_in_pos))
+            average_mapq = math.ceil(sum(mapqs_in_pos)/len(mapqs_in_pos))
+            
+            print average_mapq, average_baq
+            #mapq = r.alignment.mapq
+            #baq  = r.alignment.qual
+            
+            
+            #print coverage, len(quals_in_pos)
+            #print "Mapping qual",  passed_reads[0].alignment.mapq
+            #print self.average_baq(qual)
+            
+            #raise SystemExit(dir(passed_reads[0].alignment))
+            
+            if self.params.basic_filter.min_rna_cov > len(quals_in_pos):
+                pass
+            
             # array in read object per base types
             A = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'A']
             C = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'C']
@@ -219,8 +246,9 @@ class AlignmentStream(object):
             Gc = [_.alignment.seq[_.qpos] for _ in G].count('G')
             Cc = [_.alignment.seq[_.qpos] for _ in C].count('C')
             Nc = [_.alignment.seq[_.qpos] for _ in C].count('N')
-            coverage = Ac + Tc + Gc + Cc + Nc
             
+            coverage = Ac + Tc + Gc + Cc + Nc
+                        
             _all_base = Ab + Gb + Cb + Tb
             alt = self.define_allele(_all_base, ref=ref_base)
             
@@ -265,27 +293,22 @@ class AlignmentStream(object):
                     'Could not able to define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
                     .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
             
-            debug = False
-            if debug:
-                coverage = A_r+ a_f+ T_r+ t_f+ G_r+ g_f+ C_r+ c_f + N_r + n_f
-                #print [_.alignment.seq[_.qpos] for _ in G]
-                print '[A:%s,%s] [T:%s,%s] [G:%s,%s] [C:%s,%s]' \
-                    % (A_r, a_f, T_r, t_f, G_r, g_f, C_r, c_f)
-                print 'Coverage:%d' % (coverage)
-            
             try:
                 allele_ratio= len(passed_mismatches) / (len(passed_mismatches) + len(passed_matches))
                 ag_ratio = len(G) / (len(G) + len(A))
             except ZeroDivisionError:
                 allele_ratio = float(0)
                 ag_ratio = float(0)
-
                 
             ###############################
             ### Basic filtering options ###
             ###############################
+            
+            # --min-ag-ratio
+            # --num-allow-type
 
-            # --min-rna-cov
+            
+            
             if (len(passed_reads) > self.params.basic_filter.min_rna_cov
                 and allele_ratio > self.params.basic_filter.ag_ratio):
                 
@@ -303,6 +326,8 @@ class AlignmentStream(object):
                     'types': mutation_type,
                     'dp4': dp4,
                 }
+                #raise SystemExit("End")
+                
     
     def __resolve_coords(self, start, end, is_one_based):
         if is_one_based:
@@ -316,8 +341,9 @@ class AlignmentStream(object):
                 None
         return int(start), int(end)
 
-    def average_baq(self, string):
-        return [ord(s)-33 for s in string]
+    def average_baq(self, baq):
+        return (sum([ord(_)-33 for _ in baq]) / len(baq))
+
 
     @classmethod
     def define_allele(self, base, ref=None):
@@ -359,6 +385,10 @@ class AlignmentStream(object):
         pass
 
 
+
+def _is_pileup(bam, fa):
+    pass
+    
 
                      
 def _is_same_chromosome_name(bam=None, fa=None):
