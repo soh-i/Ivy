@@ -15,6 +15,16 @@ __status__ = 'development'
 
 DEBUG = False
 
+class AlignmentPresetParams(object):
+    def __init__(self, opts):
+        self.__opts = opts
+
+    def __set_default_params(self):
+        # Preset params add to the AttrDic attribute
+        # Do not modify this params before
+        self.__opts.preset_params.skip_N = True
+        
+        
 class AlignmentStream(object):
     def __init__(self, __params):
         ig = IvyLogger()
@@ -95,6 +105,13 @@ class AlignmentStream(object):
             ref_base= self.fafile.fetch(reference=bam_chrom,
                                     start=col.pos,
                                     end=col.pos+1).upper()
+            if not ref_base:
+                # TODO: resolve difference name in fasta and bam
+                raise ValueError(
+                    'No sequence content within {chrom:s}, {start:s}, {end:s}'.format(
+                        chrom=self.chrom, start=self.start, end=self.end))
+            elif ref_base == 'N' or ref_base == 'n':
+                yield {}
 
             #####################################
             ### Loading alignment with params ###
@@ -156,11 +173,6 @@ class AlignmentStream(object):
                 passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
                 passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
                 
-            if not ref_base:
-                # TODO: resolve difference name in fasta and bam
-                raise ValueError(
-                    'No sequence content within {chrom:s}, {start:s}, {end:s}'.format(
-                        chrom=self.chrom, start=self.start, end=self.end))
                 
             # array in read object per base types
             A = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'A']
@@ -357,19 +369,14 @@ class AlignmentStream(object):
         else:
             # allele is not found
             return '.'
+
             
-   
-class AlignmentStreamMerger(object):
-    def __init__(self, rna, dna):
-        raise NotImplementedError()
-        self.rna = rna
-        self.dna = dna
-
-    def merge_streaming(self):
-        dna_stream = AlignmentStream(conf)
-        rna_stream = AlignmentStream(conf)
+    def _compute_dp4(self):
+        pass
 
 
+
+                     
 def _is_same_chromosome_name(bam=None, fa=None):
     __bam = pysam.Samfile(os.path.abspath(bam), 'rb')
     __fa = pysam.Fastafile(os.path.abspath(fa))
@@ -432,3 +439,13 @@ if __name__ == '__main__':
     ###print d, 'r:G',
     ##print define_allele(d, ref='G')
     
+class AlignmentStreamMerger(object):
+    def __init__(self, rna, dna):
+        raise NotImplementedError()
+        self.rna = rna
+        self.dna = dna
+
+    def merge_streaming(self):
+        dna_stream = AlignmentStream(conf)
+        rna_stream = AlignmentStream(conf)
+
