@@ -189,14 +189,14 @@ class CommandLineParser(object):
                                       default=False,
                                       help='Remove insertion reads [default: %default]'
                                       )
-        basic_filter_group.add_option('--min-mapq',
+        basic_filter_group.add_option('--min-rna-mapq',
                                       metavar='',
-                                      dest='min_mapq',
+                                      dest='min_rna_mapq',
                                       action='store',
                                       nargs=1,
-                                      default=0,
+                                      default=10,
                                       type='int',
-                                      help='Min mapping quality [default: %default]'
+                                      help='Min mapping quality of RNA-seq data[default: %default]'
                                       )
         basic_filter_group.add_option('--num-allow-type',
                                       metavar='',
@@ -437,9 +437,9 @@ class CommandLineParser(object):
         if opt.rm_insertion is not None:
             passed_params.basic_filter.rm_insertion = opt.rm_insertion
 
-        # --min-mapq
-        if opt.min_mapq:
-            passed_params.basic_filter.min_mapq = opt.min_mapq
+        # --min-rna-mapq
+        if opt.min_rna_mapq:
+            passed_params.basic_filter.min_rna_mapq = opt.min_rna_mapq
 
         # --num-allow-type
         if opt.num_type:
