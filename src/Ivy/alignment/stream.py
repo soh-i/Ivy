@@ -225,8 +225,6 @@ class AlignmentStream(object):
                     and len(mutation_type) != 0
                     and allele_freq >= self.params.basic_filter.min_mut_freq):
                     
-                    #print mutation_type,
-
                     # Array in four type of sequence
                     Gb =  [_.alignment.seq[_.qpos] for _ in G]
                     Ab =  [_.alignment.seq[_.qpos] for _ in A]
@@ -257,7 +255,12 @@ class AlignmentStream(object):
                                 if _.alignment.is_reverse]
                     C_base_f = [_.alignment.seq[_.qpos] for _ in C
                                 if not _.alignment.is_reverse]
-                    
+
+                    dp4 = (self.compute_dp4(ref_base,
+                                            len(A_base_r), len(A_base_f),
+                                            len(T_base_r), len(T_base_f),
+                                            len(G_base_r), len(G_base_f),
+                                            len(C_base_r), len(C_base_f)))
                     ## TODO:
                     ## comapre speed by __len__() and count()
                     #Ac = [_.alignment.seq[_.qpos] for _ in A].count('A')
@@ -282,7 +285,7 @@ class AlignmentStream(object):
                             'cov': coverage,
                             'mismatch_ratio': allele_freq,
                             'types': mutation_type,
-                            'dp4': tuple(),
+                            'dp4': dp4
                         }
                         #raise SystemExit("End")
                 
@@ -336,38 +339,37 @@ class AlignmentStream(object):
             # allele is not found
             return '.'
 
-    def compute_dp4(self, A_f, A_r, T_f, T_r, G_f, G_r, C_f, C_r):
-        
+    def compute_dp4(self, ref, A_f, A_r, T_f, T_r, G_f, G_r, C_f, C_r):
         #if len(alt): TODO:  here is bug # TypeError: object of type 'NoneType' has no len()
-        
         if True: # TODO: set any condition(s)
             ref_r = 0
             ref_f = 0
             alt_r = 0
             alt_f = 0
-                
-            if ref_base == 'A':
+            
+            if ref == 'A':
                 ref_r = (A_r)
                 ref_f = (A_f)
                 alt_r = (G_f+C_f+T_f)
                 alt_f = (G_r+C_r+T_r)
-            elif ref_base == 'T':
+            elif ref == 'T':
                 ref_r = (T_r)
                 ref_f = (T_f)
                 alt_r = (G_r+C_r+A_r)
                 alt_f = (G_f+C_f+A_f)
-            elif ref_base == 'G':
+            elif ref == 'G':
                 ref_r = (G_r)
                 ref_f = (G_f)
                 alt_r = (C_r+T_r+A_r)
                 alt_f = (C_f+C_f+C_r)
-            elif ref_base == 'C':
+            elif ref == 'C':
                 ref_r = (C_r)
                 ref_f = (C_f)
                 alt_r = (A_r+T_r+G_r)
                 alt_f = (A_f+T_f+G_f)
             return tuple([ref_r, ref_f, alt_r, alt_f])
-                
+
+
         else:
             raise RuntimeError(
                 'Could not able to define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
