@@ -194,7 +194,7 @@ class CommandLineParser(object):
                                       dest='min_mapq',
                                       action='store',
                                       nargs=1,
-                                      default=30,
+                                      default=0,
                                       type='int',
                                       help='Min mapping quality [default: %default]'
                                       )
