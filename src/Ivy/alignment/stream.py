@@ -177,27 +177,33 @@ class AlignmentStream(object):
             ###################
             
             # --min-rna-cov
-            # --min-baq
-            # --min-mapq
+            # --min-rna-baq
+            # --min-rna-mapq
             
             quals_in_pos = [ord(_.alignment.qual[_.qpos])-33 for _ in passed_reads]
+            coverage = len(quals_in_pos)
             mapqs_in_pos = [_.alignment.mapq for _ in passed_reads]
             average_baq = math.ceil(sum(quals_in_pos)/len(quals_in_pos))
             average_mapq = math.ceil(sum(mapqs_in_pos)/len(mapqs_in_pos))
-            
-            print average_mapq, average_baq
+
+            #print average_mapq, average_baq
             #mapq = r.alignment.mapq
             #baq  = r.alignment.qual
-            
             
             #print coverage, len(quals_in_pos)
             #print "Mapping qual",  passed_reads[0].alignment.mapq
             #print self.average_baq(qual)
             
             #raise SystemExit(dir(passed_reads[0].alignment))
+            #print self.params.basic_filter.min_rna_cov
+            #print self.params.basic_filter.min_rna_mapq
+            #print self.params.basic_filter.min_baq_rna
             
-            if self.params.basic_filter.min_rna_cov > len(quals_in_pos):
-                pass
+            if (self.params.basic_filter.min_rna_cov <= coverage
+                and self.params.basic_filter.min_rna_mapq <= average_mapq
+                and self.params.basic_filter.min_baq_rna <= average_baq):
+                
+                print pos, len(quals_in_pos)
             
             # array in read object per base types
             A = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'A']
