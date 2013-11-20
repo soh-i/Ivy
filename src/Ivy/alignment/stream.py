@@ -15,23 +15,14 @@ __status__ = 'development'
 
 DEBUG = False
 
-class AlignmentPresetParams(object):
-    def __init__(self, opts):
-        self.__opts = opts
 
-    def __set_default_params(self):
-        # Preset params add to the AttrDic attribute
-        # Do not modify this params before
-        self.__opts.preset_params.skip_N = True
-        
-        
 class AlignmentStream(object):
     def __init__(self, __params):
         ig = IvyLogger()
         self.logger = logging.getLogger(type(self).__name__)
         
         if hasattr(__params, 'AttrDict'):
-            self.params = __params
+            self.params = self.__add_preset(__params)
         else:
             raise TypeError("Given param {prm:s} is {cls:s} class, not 'AttrDic' class"
                             .format(prm=__params, cls=__params.__class__.__name__))
@@ -87,6 +78,13 @@ class AlignmentStream(object):
             # info. for fasta
             print "### info. for fasfile object ###"
             print "filename: %s" % self.fafile.filename
+
+    def __add_preset(self, __p):
+        # Preset params add to the AttrDic attribute
+        # preset_params.__{Name} = Value
+        __p.preset_params._skip_N = True
+        __p.preset_params._skip_has_many_allele = True
+        return __p
             
     def pileup_stream(self):
         if self.params.verbose:
