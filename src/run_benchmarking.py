@@ -44,7 +44,7 @@ def run():
                         dest='source',
                         action='store',
                         metavar='',
-                        help='use specific sample/tissue/cell line [default: All]',
+                        help='specific sample/tissue/cell line [default: All]',
                         )
     parser.add_argument('--sp',
                         required=True,
@@ -58,6 +58,11 @@ def run():
                         default=False,
                         action='store_true',
                         help='plot benchmarking stats [default: Off]',
+                        )
+    parser.add_argument('--out',
+                        required=False,
+                        action='store_true',
+                        help='output name',
                         )
     parser.add_argument('--version',
                         action='version',
@@ -152,5 +157,3 @@ def plot(p, r, labs):
         return True
     else:
         return False
-        
-    
