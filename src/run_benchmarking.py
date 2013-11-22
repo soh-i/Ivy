@@ -1,3 +1,5 @@
+from argparse import ArgumentParser
+import os.path
 from Ivy.benchmark.benchmark import (
     DarnedDataGenerator,
     DarnedReader,
@@ -8,8 +10,6 @@ from Ivy.benchmark.benchmark import (
 from Ivy.benchmark.plot import BenchmarkPlot
 from Ivy.version import __version__
 import Ivy.utils
-import argparse
-import os.path
 
 __program__ = 'ivy_benchmark'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -19,9 +19,9 @@ __status__ = 'development'
 def run():
     desc = "Benchmarking test for detected RNA editing sites based on HTSeq data to evaluate detection params."
     
-    parser = argparse.ArgumentParser(description=desc,
-                                     prog=__program__,
-                                     )
+    parser = ArgumentParser(description=desc,
+                            prog=__program__,
+                            )
     group = parser.add_mutually_exclusive_group(required=True)
     
     group.add_argument('--vcf',
@@ -94,7 +94,7 @@ def run():
             r = bench.recall()
             f = bench.f_measure()
 
-            print ('{species:s}\t{source:s}\t{db_name:s}\t{vcf_file:s}\t{precision:f}\t
+            print '{species:s}\t{source:s}\t{db_name:s}\t{vcf_file:s}\t{precision:f}\t \
             {recall:f}\t{f_measure:f}\t{ag_count:d}\t{other_count:d}\t{ans_size:d}'.format(
                 species=ans.sp()[0],
                 source=args.source,
@@ -105,7 +105,7 @@ def run():
                 f_measure=f,
                 ag_count=vcf.ag_count(),
                 other_count=vcf.other_mutations_count(),
-                ans_size=ans.size()))
+                ans_size=ans.size())
             
         if args.plot:
             names = [os.path.basename(_).split('.')[0] for _ in args.vcf_file]
