@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 import os.path
+import sys
 from Ivy.benchmark.benchmark import (
     DarnedDataGenerator,
     DarnedReader,
@@ -75,13 +76,13 @@ def run():
     # check darned raw file
     darned_raw_file = gen.saved_abs_path + gen.filename
     if not os.path.isfile(darned_raw_file):
-        print "No {f:s} file".format(f=darned_raw_file)
-        print "Fetching {sp:s} from Darned DB...".format(sp=args.sp)
+        sys.stderr.write("No {f:s} file\n".format(f=darned_raw_file))
+        sys.stderr.write("Fetching {sp:s} from Darned DB...\n".format(sp=args.sp))
         gen.fetch_darned()
         
     darned_parsed_csv = gen.out_name
     if not os.path.isfile(darned_parsed_csv):
-        print "Parsing darned db..."
+        sys.stderr.write("Parsing Darned db...\n")
         gen.darned_to_csv()
 
     # use VCF files
