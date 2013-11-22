@@ -1,14 +1,3 @@
-'''
-ooooo
-`888'
- 888  oooo    ooo oooo    ooo
- 888   `88.  .8'   `88.  .8'
- 888    `88..8'     `88..8'
- 888     `888'       `888'
-o888o     `8'         .8'
-                  .o..P'
-                  `Y8P'
-'''
 from Ivy.benchmark.benchmark import (
     DarnedDataGenerator,
     DarnedReader,
@@ -40,14 +29,14 @@ def run():
                        action='store',
                        nargs='+',
                        metavar='',
-                       help='set VCF file(s)',
+                       help='VCF file(s)',
                        )
     group.add_argument('--csv',
                        dest='csv_file',
                        action='store',
                        nargs='+',
                        metavar='',
-                       help='set CSV file(s)',
+                       help='CSV file(s), For debug mode',
                        )
     parser.add_argument('--source',
                         required=False,
@@ -62,7 +51,7 @@ def run():
                         dest='sp',
                         metavar='species',
                         action='store',
-                        help='set species and genome version (eg. human_hg19)',
+                        help='species and genome version (eg. human_hg19)',
                         )
     parser.add_argument('--plot',
                         required=False,
@@ -70,19 +59,24 @@ def run():
                         action='store_true',
                         help='plot benchmarking stats [default: Off]',
                         )
-    parser.add_argument('--version', action='version', version=__version__)
-    
+    parser.add_argument('--version',
+                        action='version',
+                        version=__version__
+                        )
+
     args = parser.parse_args()
     gen = DarnedDataGenerator(species=args.sp)
     
+    # check darned raw file
     darned_raw_file = gen.saved_abs_path + gen.filename
     if not os.path.isfile(darned_raw_file):
-        print "Fetching from darned..."
+        print "No {f:s} file".format(f=darned_raw_file)
+        print "Fetching {sp:s} from Darned DB...".format(sp=args.sp)
         gen.fetch_darned()
         
     darned_parsed_csv = gen.out_name
     if not os.path.isfile(darned_parsed_csv):
-        print "parsing darned..."
+        print "Parsing darned db..."
         gen.darned_to_csv()
 
     # use VCF files
@@ -99,27 +93,26 @@ def run():
             p = bench.precision()
             r = bench.recall()
             f = bench.f_measure()
-            
-            print "%s,%s,%s,%s,%f,%f,%f,%d,%d,%d" % (
-                ans.sp()[0],
-                args.source,
-                ans.db_name(),
-                vcf.vcf_name(),
-                p, r, f,
-                vcf.ag_count(),
-                vcf.other_mutations_count(),
-                ans.size())
-            
-            precision.append(float(p))
-            recall.append(float(r))
-            f_measure.append(float(f))
+
+            print ('{species:s}\t{source:s}\t{db_name:s}\t{vcf_file:s}\t{precision:f}\t
+            {recall:f}\t{f_measure:f}\t{ag_count:d}\t{other_count:d}\t{ans_size:d}'.format(
+                species=ans.sp()[0],
+                source=args.source,
+                db_name=ans.db_name(),
+                vcf_file=vcf.vcf_name(),
+                precision=p,
+                recall=r,
+                f_measure=f,
+                ag_count=vcf.ag_count(),
+                other_count=vcf.other_mutations_count(),
+                ans_size=ans.size()))
             
         if args.plot:
             names = [os.path.basename(_).split('.')[0] for _ in args.vcf_file]
             bplt = BenchmarkPlot('plot_' + ','.join(names))
             bplt.plot_accuracy(lab=args.vcf_file, recall=r, precision=p)
             
-    # use CSV files
+    # use CSV files, this is debug mode
     elif args.csv_file and args.sp:
         print "Species,Source,DB,CSV,Precision,Recall,F-measure,AnsCount"
 
