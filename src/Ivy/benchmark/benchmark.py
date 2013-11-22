@@ -50,33 +50,36 @@ class DarnedDataGenerator(object):
     def fetch_darned(self):
         '''
         Fetch specify raw dataest from darned.ucc.ie/static/downloads/ into APP_ROOT/data,
-        species name must be given, and acceptable type is defined as:
-        human_hg18/hg19, mice_mm9/mm10, fly_dm3
+        species name must be given, and acceptable type is defined as follows:
+        human_hg18, humna_hg19, mice_mm9, mice_mm10, fly_dm3
         '''
         
         if os.path.isfile(self.saved_abs_path + self.filename):
-            print "%s is already exist" % (self.filename)
+            sys.stderr.write("{f:s} is already exist".format(f=self.filename))
             return False
         
         req = Request(self.url)
         try:
             response = urlopen(req, timeout=10)
+            
         except URLError, e:
             if hasattr(e, 'reason'):
-                print 'We failed to reach a server.'
-                print 'Reason: ', e.reason
+                sys.stderr.write('We failed to reach a server due to {0}'.format(e.reason))
                 raise URLError(", Could not connect " + req.get_full_url())
+                
             elif hasattr(e, 'code'):
-                print 'The server couldn\'t fulfill the request.'
-                print 'Error code: ', e.code
+                sys.stderr.write('The server couldn\'t fulfill the request\n')
+                sys.stderr.write('Error code: {e}'.format(e=e.code))
                 raise URLError(", Could not connect " + req.get_full_url())
         else:
             # works fine
             if not os.path.isdir(self.saved_abs_path):
                 os.makedirs(self.saved_abs_path)
-                print "Create directory into [%s]" % (self.saved_abs_path)
+                sys.stderr.write("Create directory into {path:s}\n".format(path=self.saved_abs_path))
                 
-            print "Dowloading [%s] from [%s] ..." % (self.filename, self.url)
+            sys.stderr.write("Dowloading {filename:s} from {url:s} ...\n".format(
+                filename=self.filename, url= self.url))
+            
             with open(self.saved_abs_path + self.filename, "w") as fout:
                 fout.write(response.read())
             return True
