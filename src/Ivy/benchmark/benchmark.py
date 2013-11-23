@@ -390,9 +390,9 @@ class Benchmark(object):
     
     def __init__(self, answer=None, predict=None):
         if not isinstance(answer, list):
-            raise TypeError, "[%s] is given, data must be list alone" % (type(answer))
+            raise TypeError, "\'{0}\' is given, data must be list alone".format(type(answer))
         elif not isinstance(predict, list):
-            raise TypeError, "[%s] is given, data must be list alone" % (type(predict))
+            raise TypeError, "\'{0}\' is given, data must be list alone".format(type(predict))
             
         # remove string(tissue/sample info) except chromosome and position
         self.answer = set([":".join(_.split(":")[:2]) for _ in answer])
@@ -406,7 +406,7 @@ class Benchmark(object):
         self.intersect = self.answer.intersection(self.predict)
 
     def __str__(self):
-        return "Answer set[%d], Candidate set[%d]\n" % (len(self.answer), len(self.predict))
+        return "Answer set \'{0:d}\', Candidate set \'{1:d}\'\n".format(len(self.answer), len(self.predict))
 
     def precision(self):
         '''
