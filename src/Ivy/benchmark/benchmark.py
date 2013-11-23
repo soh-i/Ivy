@@ -18,7 +18,15 @@ __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
 
+class DarnedDataGeneratorValueError(Exception):
+    def __init__(self, sp):
+        self.sp = sp
+        #self.spss = sp
+        
+    def __str__(self):
+        return repr('{sp:s} is not valid species name'.format(sp=self.sp))
 
+        
 class DarnedDataGenerator(object):
     '''
     DarnedDataGenerator provides to prepare data that are used for benchmarking test.
@@ -47,7 +55,13 @@ class DarnedDataGenerator(object):
                 break;
         else:
             raise ValueError('Given species name: \'{sp}\' is invalid, {sps} are acceptable'.format(
-                sp=species, sps="/".join([_ for _ in __species])))
+               sp=species, sps="/".join([_ for _ in __species])))
+            #raise DarnedDataGeneratorValueError(species)
+            #sys.stderr.write('Given species name: \'{sp}\' is invalid, {sps} are acceptable'.format(
+            #    sp=species, sps="/".join([_ for _ in __species])))
+            #print sys.exc_info()[1]
+            #raise
+
 
         if self.species is not None:
             self.filename = ''.join([self.species, '.txt'])
