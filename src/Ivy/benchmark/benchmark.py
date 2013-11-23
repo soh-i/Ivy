@@ -22,13 +22,13 @@ class DarnedDataGenerator(object):
     '''
     DarnedDataGenerator provides to prepare data that are used for benchmarking test.
     Args:
-     species=(string), 
+     species=(string)
     Returns:
      Darned db object
     Example:
      >>> ddg = DarnedDataGenerator(species=human_hg18)
     Raises:
-     ValueError: invalid species name
+     ValueError: when invalid species name was given
     '''
     
     def __init__(self, species=None):
@@ -44,11 +44,11 @@ class DarnedDataGenerator(object):
                 self.species = species
                 break;
         else:
-            raise ValueError, ('Given species name: %s is invalid, %s is only acceptable' %
-                                 (species, [_ for _ in __species]))
+            raise ValueError('Given species name: {sp} is invalid, {sps} is only acceptable'.format(
+                sp=species, sps=[_ for _ in __species]))
 
         if self.species is not None:
-            self.filename = "".join([self.species, '.txt'])
+            self.filename = ''.join([self.species, '.txt'])
             self.url = __species[self.species]
             self.saved_abs_path = Utils.find_app_root() + '/data/'
             name, _ = os.path.splitext(self.filename)
