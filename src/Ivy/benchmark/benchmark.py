@@ -325,9 +325,9 @@ class VCFReader(object):
 class __CSVReader(object):
     '''
     CSVReader class provides to generate array of CSV file
-    >>> csv = VCFReader(path_to_csv_file)
-    >>> csv.db
-    Returns array of csv file
+    Examples:
+     >>> csv = VCFReader(path_to_csv_file)
+     >>> csv.db
     '''
     
     def __init__(self, filename):
@@ -370,16 +370,6 @@ class __CSVReader(object):
 
     def name(self):
         return os.path.basename(self.__filename)
-
-    def ag_count(self):
-        raise NotImplementedError
-
-    def other_mutations_count(self):
-        raise NotImplementedError
-
-    #def __line__(self):
-    #    frame = inspect.currentframe(1)
-    #    return frame.f_lineno
 
         
 class Benchmark(object):
