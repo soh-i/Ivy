@@ -117,7 +117,12 @@ def _data_prepare(args):
         content = str()
         for v in args.vcf_file:
             vcf = VCFReader(v)
-            bench = Benchmark(answer=ans.db, predict=vcf.db)
+
+            try:
+                bench = Benchmark(answer=ans.db, predict=vcf.db)
+            except BenchmarkIOException as e:
+                raise SystemExit('[{0}]: {1}'.format(e.__class__.__name__, e))
+                
             p = bench.precision()
             r = bench.recall()
             f = bench.f_measure()
