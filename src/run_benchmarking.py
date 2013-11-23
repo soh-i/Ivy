@@ -61,8 +61,10 @@ def run():
                         help='plot benchmarking stats [default: Off]',
                         )
     parser.add_argument('--out',
+                        dest='out',
                         required=False,
-                        action='store_true',
+                        action='store',
+                        metavar='out',
                         help='output name',
                         )
     parser.add_argument('--version',
@@ -87,12 +89,17 @@ def run():
 
     # use VCF files
     if args.vcf_file and args.sp:
-        print "Species,Source,DB,VCF,Precision,Recall,F-measure,AGs,Others,AnsCount"
+        if args.out:
+            _ = open(args.out, 'w')
+            _.write("Species,Source,DB,VCF,Precision,Recall,F-measure,AGs,Others,AnsCount\n")
+        else:
+            sys.stdout.write("Species,Source,DB,VCF,Precision,Recall,F-measure,AGs,Others,AnsCount\n")
         
         ans = DarnedReader(sp=args.sp, source=args.source)
         precision = []
         recall = []
         f_measure = []
+        content = str()
         for v in args.vcf_file:
             vcf = VCFReader(v)
             bench = Benchmark(answer=ans.db, predict=vcf.db)
@@ -100,19 +107,30 @@ def run():
             r = bench.recall()
             f = bench.f_measure()
 
-            print '{species:s}\t{source:s}\t{db_name:s}\t{vcf_file:s}\t{precision:f}\t \
-            {recall:f}\t{f_measure:f}\t{ag_count:d}\t{other_count:d}\t{ans_size:d}'.format(
-                species=ans.sp()[0],
-                source=args.source,
-                db_name=ans.db_name(),
-                vcf_file=vcf.vcf_name(),
-                precision=p,
-                recall=r,
-                f_measure=f,
-                ag_count=vcf.ag_count(),
-                other_count=vcf.other_mutations_count(),
-                ans_size=ans.size())
+            content += (
+                '{species:s},{source:s},{db_name:s},{vcf_file:s},{precision:f},{recall:f},{f_measure:f},{ag_count:d},{other_count:d},{ans_size:d}\n'
+                .format(
+                    species=ans.sp()[0],
+                    source=args.source,
+                    db_name=ans.db_name(),
+                    vcf_file=vcf.vcf_name(),
+                    precision=p,
+                    recall=r,
+                    f_measure=f,
+                    ag_count=vcf.ag_count(),
+                    other_count=vcf.other_mutations_count(),
+                    ans_size=ans.size()))
             
+        # save to file
+        if args.out:
+            _ = open(args.out, 'a')
+            _.write(content)
+            _.close()
+        # print stdout
+        else:
+            sys.stdout.write(content)
+            
+        # plot
         if args.plot:
             names = [os.path.basename(_).split('.')[0] for _ in args.vcf_file]
             bplt = BenchmarkPlot('plot_' + ','.join(names))
