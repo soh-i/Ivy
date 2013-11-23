@@ -3,6 +3,7 @@ import os.path
 import sys
 from Ivy.benchmark.benchmark import (
     DarnedDataGenerator,
+    DarnedDataGeneratorValueError,
     DarnedReader,
     VCFReader,
     Benchmark,
@@ -73,8 +74,12 @@ def run():
                         )
 
     args = parser.parse_args()
-    gen = DarnedDataGenerator(species=args.sp)
-    
+    try:
+        gen = DarnedDataGenerator(species=args.sp)
+    except DarnedDataGeneratorValueError as e:
+        raise SystemExit('[{cls}]: given \'{sp}\' is not valid name'.format(
+            cls=e.__class__.__name__, sp=e.sp))
+        
     # check darned raw file
     darned_raw_file = gen.saved_abs_path + gen.filename
     if not os.path.isfile(darned_raw_file):
