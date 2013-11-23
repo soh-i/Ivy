@@ -1,10 +1,6 @@
 import unittest
 
 class TestDarnedDataGenerator(unittest.TestCase):
-    def test___init__(self):
-        # darned_data_generator = DarnedDataGenerator(species)
-        assert False # TODO: implement your test here
-
     def test_darned_to_csv(self):
         # darned_data_generator = DarnedDataGenerator(species)
         # self.assertEqual(expected, darned_data_generator.darned_to_csv())
