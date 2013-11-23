@@ -316,8 +316,11 @@ class VCFReader(object):
         
         if os.path.isdir(self.__vcf):
             raise IOError, "[%s] is directory, not csv file"
-        
-        _vcf_reader = vcf.Reader(open(self.__vcf, 'r'))
+        try:
+            _vcf_reader = vcf.Reader(open(self.__vcf, 'r'))
+        except IOError:
+            raise SystemExit('No such file or directory: {0}'.format(self.__vcf))
+            
         self.__substitutions = Counter()
         
         for rec in _vcf_reader:
