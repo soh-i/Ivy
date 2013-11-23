@@ -8,6 +8,7 @@ from Ivy.benchmark.benchmark import (
     DarnedReader,
     VCFReader,
     Benchmark,
+    BenchmarkIOException,
     __CSVReader,
     )
 from Ivy.benchmark.plot import BenchmarkPlot
@@ -94,7 +95,7 @@ def run():
         try:
             gen.darned_to_csv()
         except DarnedDataGeneratorParseError as e:
-            raise SystemExit(e)
+            raise SystemExit('[{cls}]: {e}'.format(cls=e.__class__.__name__, e=e))
 
     # use VCF files
     if args.vcf_file and args.sp:
@@ -149,7 +150,13 @@ def run():
     elif args.csv_file and args.sp:
         print "Species,Source,DB,CSV,Precision,Recall,F-measure,AnsCount"
 
-        ans = DarnedReader(sp=args.sp, source=args.source)
+        try:
+            ans = DarnedReader(sp=args.sp, source=args.source)
+        except TypeError as e:
+            raise SystemExit('[{cls}]: {err}'.format(cls=e.__class__.__name__, err=e))
+        except BenchmarkIOException as e:
+            raise SystemExit('[{cls}]: {err}'.format(cls=e.__class__.__name__, err=e))
+            
         precisions = []
         recalls = []
         f_measures = []
