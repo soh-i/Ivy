@@ -21,23 +21,30 @@ __status__ = 'development'
 class DarnedDataGenerator(object):
     '''
     DarnedDataGenerator provides to prepare data that are used for benchmarking test.
-    >>> ddg = DarnedDataGenerator(species=human_hg18)
+    Args:
+     species=(string), 
+    Returns:
+     Darned db object
+    Example:
+     >>> ddg = DarnedDataGenerator(species=human_hg18)
+    Raises:
+     ValueError: invalid species name
     '''
     
     def __init__(self, species=None):
         __species = {
-            'human_hg19':'http://darned.ucc.ie/static/downloads/hg19.txt',
-            'human_hg18':'http://darned.ucc.ie/static/downloads/hg18.txt',
-            'mice_mm9':'http://darned.ucc.ie/static/downloads/mm9.txt',
-            'mice_mm10':'http://darned.ucc.ie/static/downloads/mm10.txt',
-            'fly_dm3':'http://darned.ucc.ie/static/downloads/dm3.txt',
+            'human_hg19': 'http://darned.ucc.ie/static/downloads/hg19.txt',
+            'human_hg18': 'http://darned.ucc.ie/static/downloads/hg18.txt',
+            'mice_mm9': 'http://darned.ucc.ie/static/downloads/mm9.txt',
+            'mice_mm10': 'http://darned.ucc.ie/static/downloads/mm10.txt',
+            'fly_dm3': 'http://darned.ucc.ie/static/downloads/dm3.txt',
         }
         for k in __species:
             if k == species:
                 self.species = species
                 break;
         else:
-            raise RuntimeError, ('Given species name: %s is invalid, %s is only acceptable' %
+            raise ValueError, ('Given species name: %s is invalid, %s is only acceptable' %
                                  (species, [_ for _ in __species]))
 
         if self.species is not None:
