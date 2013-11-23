@@ -231,7 +231,7 @@ class DarnedReader(object):
             selected = []
             if os.path.isdir(self.__darned_path):
                 raise IOError, "[%s] is directory, not csv file"
-        
+            
             with open(self.__darned_path, 'r') as f:
                 for line in f:
                     if not line.startswith('chrom'):
