@@ -45,7 +45,15 @@ class DarnedDataGeneratorValueError(Exception):
     def __str__(self):
         return repr('{sp:s} is not valid species name'.format(sp=self.sp))
 
-        
+
+class DarnedDataGeneratorParseError(Exception):
+    def __init__(self, line):
+        self.line = line
+    
+    def __str__(self):
+        return repr('Parsing error at line No.{0}'.format(self.line)
+
+                    
 class DarnedDataGenerator(object):
     '''
     DarnedDataGenerator provides to prepare data that are used for benchmarking test.
@@ -161,7 +169,7 @@ class DarnedDataGenerator(object):
                     out.write(mod.upper() + ",")
                     out.write(",".join(row[9:]) + "\n")
         except:
-            raise ValueError, 'Parsing error at line No.[%d]' % (line_n)
+            raise DarnedDataGeneratorParseError(line_n)
         finally:
             out.close()
 
