@@ -21,6 +21,7 @@ __status__ = 'development'
 class DarnedDataGenerator(object):
     '''
     DarnedDataGenerator provides to prepare data that are used for benchmarking test.
+    
     Args:
      species=(string)
     Returns:
@@ -58,8 +59,7 @@ class DarnedDataGenerator(object):
         '''
         Fetch specify raw dataest from darned.ucc.ie/static/downloads/ into the APP_ROOT/data.
         Create './data' directory if APP_ROOT/data is not found.
-        Args:
-         self
+
         Returns:
          bool
         Raises:
@@ -99,8 +99,7 @@ class DarnedDataGenerator(object):
     def darned_to_csv(self):
         '''
         Converting darned raw datafile to csv, and generate csv file into the APP_ROOT/data.
-        Args:
-         self
+
         Returns:
          bool
         Raises:
@@ -142,6 +141,7 @@ class DarnedDataGenerator(object):
 class DarnedReader(object):
     '''
     DarnedReader generates subset of DARNED db.
+    
     Args:
      sp=species name, source=speify tissue or cell line name
      Do not use source params, store to all records by the default settings.
@@ -242,6 +242,7 @@ class DarnedReader(object):
 class VCFReader(object):
     '''
     VCFReader class provides that list of VCF file within utils methods
+    
     Args:
      filename(string): filename of VCF
     Returns:
@@ -325,6 +326,7 @@ class VCFReader(object):
 class __CSVReader(object):
     '''
     CSVReader class provides to generate array of CSV file
+    
     Examples:
      >>> csv = VCFReader(path_to_csv_file)
      >>> csv.db
@@ -378,6 +380,7 @@ class Benchmark(object):
     those metrics are defined as follows:
     precision = TP/(TP+FP), recall = TP/(TP+FN),
     F-measure = 2*Precision*Recall/(Precision+Recall)
+    
     Args:
      answer(set), predict(set)
     Examples:
@@ -398,6 +401,7 @@ class Benchmark(object):
         self.answer = set([":".join(_.split(":")[:2]) for _ in answer])
         self.predict = set([":".join(_.split(":")[:2]) for _ in predict])
         
+
         if len(self.answer) == 0:
             raise ValueError, 'Answer data set has no entory'
         elif len(self.predict) == 0:
