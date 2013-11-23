@@ -21,6 +21,10 @@ __license__ = ''
 __status__ = 'development'
 
 def run():
+    args = _parse_args()
+    _data_prepare(args)
+
+def _parse_args():
     desc = "Benchmarking test for detected RNA editing sites based on HTSeq data to evaluate detection params."
     
     parser = ArgumentParser(description=desc,
@@ -74,8 +78,9 @@ def run():
                         action='version',
                         version=__version__
                         )
+    return parser.parse_args()
 
-    args = parser.parse_args()
+def _data_prepare(args):
     try:
         gen = DarnedDataGenerator(species=args.sp)
     except DarnedDataGeneratorValueError as e:
@@ -167,7 +172,7 @@ def run():
             p = bench.precision()
             r = bench.recall()
             f = bench.f_measure()
-
+            
             print "%s,%s,%s,%s,%f,%f,%f,%d" % (
                 ans.sp()[0],
                 args.source,
@@ -181,9 +186,9 @@ def run():
             f_measures.append(float(f))
         
         if args.plot:
-            plot(precisions, recalls, args.csv_file)
+            __plot(precisions, recalls, args.csv_file)
 
-def plot(p, r, labs):
+def __plot(p, r, labs):
     if isinstance(p, list) and isinstance(r, list) and isinstance(labs, list):
         names = [os.path.basename(_).split('.')[0] for _ in labs]
         #bplt = BenchmarkPlot('plot_' + ','.join(names), "human")
@@ -192,3 +197,4 @@ def plot(p, r, labs):
         return True
     else:
         return False
+
