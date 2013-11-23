@@ -234,17 +234,22 @@ class DarnedReader(object):
     def size(self):
         '''
         Returns:
-         Int: number of the Darned entories
+         int: number of the Darned entories
         '''
         return self.__db_size
 
         
 class VCFReader(object):
     '''
-    VCFReader class provides that list of VCF file and utils methods
-    >>> vr = VCFReader(path_to_vcf_file)
-    >>> vr.db
-    Returns array of vcf file
+    VCFReader class provides that list of VCF file within utils methods
+    Args:
+     filename(string): filename of VCF
+    Returns:
+     list: vcf files
+    Attributes:
+     db(list): Stored VCF list
+    Examples:
+     >>> vr = VCFReader(path_to_vcf_file)
     '''
     
     def __init__(self, filename):
@@ -269,25 +274,47 @@ class VCFReader(object):
         return _vcf_recs
         
     def size(self):
-        '''number of entory of the parsed vcf records'''
+        '''
+        Returns:
+         int: number of entory of the parsed vcf records
+        '''
         return self.__size
 
     def vcf_name(self):
+        '''
+        Returns:
+         string: filename of vcf
+        '''
         return os.path.basename(self.__vcf)
 
     def editing_types(self):
-        '''All type of the base substitutions'''
+        '''
+        Returns:
+         collection object: All type of the base substitutions
+        '''
         return self.__substitutions
         
     def ag_count(self):
-        '''A-to-G editing alone'''
+        '''
+        Returns:
+         int: A-to-G editing alone
+        '''
         return self.__substitutions.get('A-to-G')
 
     def target_count(self, types):
-        '''Specify type of base substitutions'''
+        '''
+        Args:
+         types(string): specify type of base substitution
+        Returns:
+         int: base substitution count
+        '''
         return self.__substitutions.get(types)
         
     def other_mutations_count(self):
+        '''
+        Returns:
+         collection object: substitution count except A-to-G editing
+        '''
         i = 0
         for k in self.__substitutions:
             if not k == 'A-to-G':
