@@ -21,8 +21,7 @@ __status__ = 'development'
 class DarnedDataGeneratorValueError(Exception):
     def __init__(self, sp):
         self.sp = sp
-        #self.spss = sp
-        
+
     def __str__(self):
         return repr('{sp:s} is not valid species name'.format(sp=self.sp))
 
@@ -54,8 +53,9 @@ class DarnedDataGenerator(object):
                 self.species = species
                 break;
         else:
-            raise ValueError('Given species name: \'{sp}\' is invalid, {sps} are acceptable'.format(
-               sp=species, sps="/".join([_ for _ in __species])))
+            #raise ValueError('Given species name: \'{sp}\' is invalid, {sps} are acceptable'.format(
+            #   sp=species, sps="/".join([_ for _ in __species])))
+            raise DarnedDataGeneratorValueError(species)
             #raise DarnedDataGeneratorValueError(species)
             #sys.stderr.write('Given species name: \'{sp}\' is invalid, {sps} are acceptable'.format(
             #    sp=species, sps="/".join([_ for _ in __species])))

@@ -77,8 +77,8 @@ def run():
     try:
         gen = DarnedDataGenerator(species=args.sp)
     except DarnedDataGeneratorValueError as e:
-        raise SystemExit('[{cls}]: given \'{sp}\' is not valid name'.format(
-            cls=e.__class__.__name__, sp=e.sp))
+        raise SystemExit('[{cls}]: given \'{sp}\' is not valid name, {sps} is only valid name'.format(
+            cls=e.__class__.__name__, sp=e.sp, sps=e.sps))
         
     # check darned raw file
     darned_raw_file = gen.saved_abs_path + gen.filename
