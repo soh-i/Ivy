@@ -47,8 +47,23 @@ class DarnedDataGeneratorValueError(Exception):
 
 
 class DarnedDataGeneratorParseError(Exception):
-    def __init__(self, line):
+    '''
+    Exception class for parsing Darned text file to csv
+    
+    Args:
+     int: error line number
+     string: data
+
+    Attributes:
+     line(int): error line in Darned file
+     data(string): correspond entory
+     filename(string): opend filename
+    '''
+    
+    def __init__(self, line, data, filename):
         self.line = line
+        self.data = data
+        self.filename = filename
     
     def __str__(self):
         return repr('Parsing error at line No.{0}'.format(self.line))
@@ -169,7 +184,7 @@ class DarnedDataGenerator(object):
                     out.write(mod.upper() + ",")
                     out.write(",".join(row[9:]) + "\n")
         except:
-            raise DarnedDataGeneratorParseError(line_n)
+            raise DarnedDataGeneratorParseError(line_n, row, self.filename)
         finally:
             out.close()
 
