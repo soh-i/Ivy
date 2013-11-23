@@ -98,9 +98,7 @@ class DarnedDataGenerator(object):
 
     def darned_to_csv(self):
         '''
-        Converting darned raw datafile to csv,
-        the data that fetched from darned.ucc.ie/static/downloads/*.txt is given.
-        Generate csv file into the APP_ROOT/data
+        Converting darned raw datafile to csv, and generate csv file into the APP_ROOT/data.
         Args:
          self
         Returns:
@@ -143,12 +141,14 @@ class DarnedDataGenerator(object):
 
 class DarnedReader(object):
     '''
-    DarnedReader class generates subset of DARNED db.
-    >>> dr = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
-    >>> dr.db
-    Returns array of subset of darned db.
-    Do not use source option, store to all records by the default settings.
-    Acceptable type of sp argument is defined as human_hg18/hg19, mice_mm9/mm10, fly_dm3.
+    DarnedReader generates subset of DARNED db.
+    Args:
+     sp=species name, source=speify tissue or cell line name
+     Do not use source params, store to all records by the default settings.
+    Example:
+     >>> dr = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
+    Attributes:
+     dr.db: array of subset of darned db
     '''
     
     def __init__(self, sp=None, source=None):
@@ -169,6 +169,9 @@ class DarnedReader(object):
         return "<%s.%s>" % (self.__class__.__name__)
         
     def __generate_darned_set(self):
+        '''
+        Generate darned db object stored as array
+        '''
         # Store selected records
         if not self.__source == 'ALL':
             selected = []
@@ -207,20 +210,32 @@ class DarnedReader(object):
             raise RuntimeError, 'Given species name[%s] is not valid' % (self.__sp)
 
     def sp(self):
-        '''return tuple of species and genome version'''
+        '''
+        Returns:
+         tuple: species and genome version
+        '''
         (sp, ver) = self.__sp.split("_")
         return sp, ver
 
     def path(self):
-        '''absolute path to Darned database file'''
+        '''
+        Returns:
+         string: absolute path to Darned database file
+        '''
         return os.path.abspath(self.__darned_path)
         
     def db_name(self):
-        '''Darned db name'''
+        '''
+        Returns:
+         string: Darned db name
+        '''
         return os.path.basename(self.__darned_path)
                  
     def size(self):
-        '''number of the Darned entories'''
+        '''
+        Returns:
+         Int: number of the Darned entories
+        '''
         return self.__db_size
 
         
