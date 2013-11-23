@@ -19,6 +19,25 @@ __license__ = ''
 __status__ = 'development'
 
 class DarnedDataGeneratorValueError(Exception):
+    '''
+    Exception class for invalid species name
+    
+    Args:
+     sp(string): species name
+     sps(list): list of all valid species names
+    
+    Attributes:
+     sp(string): species name
+     sps(string): all species names
+
+    Examples:
+     >>> try:
+     ...     gen = DarnedDataGenerator(species=args.sp)
+     ... except DarnedDataGeneratorValueError as e:
+     ...     print e.sp
+     ...     print e
+    '''
+    
     def __init__(self, sp, sps):
         self.sp = sp
         self.sps = "/".join([_ for _ in sps])
