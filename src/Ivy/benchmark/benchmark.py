@@ -427,6 +427,12 @@ class __CSVReader(object):
     def name(self):
         return os.path.basename(self.__filename)
 
+class BenchmarkIOException(Exception):
+    def __init__(self, data):
+        self.data = data
+    
+    def __repr__(self):
+        return repr('Answer data set has no entory')
         
 class Benchmark(object):
     '''
@@ -457,10 +463,10 @@ class Benchmark(object):
         
 
         if len(self.answer) == 0:
-            raise ValueError, 'Answer data set has no entory'
+            raise BenchmarkIOException(self.answer)
         elif len(self.predict) == 0:
-            raise ValueError, 'Candidate data set has no entory'
-                
+            raise BenchmarkIOException(self.predict)
+        
         self.intersect = self.answer.intersection(self.predict)
 
     def __str__(self):
