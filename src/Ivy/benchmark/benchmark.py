@@ -51,7 +51,7 @@ class DarnedDataGeneratorParseError(Exception):
         self.line = line
     
     def __str__(self):
-        return repr('Parsing error at line No.{0}'.format(self.line)
+        return repr('Parsing error at line No.{0}'.format(self.line))
 
                     
 class DarnedDataGenerator(object):
