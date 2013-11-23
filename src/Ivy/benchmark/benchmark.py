@@ -434,7 +434,7 @@ class BenchmarkIOException(Exception):
     def __init__(self, data):
         self.data = data
     
-    def __repr__(self):
+    def __str__(self):
         return repr('Answer data set has no entory')
         
 class Benchmark(object):
