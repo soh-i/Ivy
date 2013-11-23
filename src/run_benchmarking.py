@@ -4,6 +4,7 @@ import sys
 from Ivy.benchmark.benchmark import (
     DarnedDataGenerator,
     DarnedDataGeneratorValueError,
+    DarnedDataGeneratorParseError,
     DarnedReader,
     VCFReader,
     Benchmark,
@@ -90,7 +91,10 @@ def run():
     darned_parsed_csv = gen.out_name
     if not os.path.isfile(darned_parsed_csv):
         sys.stderr.write("Parsing Darned db...\n")
-        gen.darned_to_csv()
+        try:
+            gen.darned_to_csv()
+        except DarnedDataGeneratorParseError as e:
+            raise SystemExit(e)
 
     # use VCF files
     if args.vcf_file and args.sp:
