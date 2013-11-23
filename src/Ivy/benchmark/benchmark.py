@@ -38,9 +38,10 @@ class DarnedDataGeneratorValueError(Exception):
      ...     print e
     '''
     
-    def __init__(self, sp, sps):
-        self.sp = sp
-        self.sps = "/".join([_ for _ in sps])
+    def __init__(self, *sp):
+        self.sp = sp[0]
+        if sp[1]:
+            self.sps = "/".join([_ for _ in sp[1]])
 
     def __str__(self):
         return repr('{sp:s} is not valid species name'.format(sp=self.sp))
@@ -213,7 +214,10 @@ class DarnedReader(object):
             self.__source = source.upper()
             
         self.__darned_path = Utils.find_app_root()+ '/data/darned_'+ self.__sp+ '.csv'
-        self.db = self.__generate_darned_set()
+        try:
+            self.db = self.__generate_darned_set()
+        except DarnedDataGeneratorValueError as e:
+            raise SystemExit('Given species name \'{0}\' is not valid'.format(e.sp))
         
     def __str__(self):
         return "<%s.%s>" % (self.__class__.__name__)
@@ -257,8 +261,8 @@ class DarnedReader(object):
                 return darned_list
                 
         elif not self.__sp:
-            raise RuntimeError, 'Given species name[%s] is not valid' % (self.__sp)
-
+            raise DarnedDataGeneratorValueError(self.__sp)
+            
     def sp(self):
         '''
         Returns:
