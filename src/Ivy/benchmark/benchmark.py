@@ -374,15 +374,18 @@ class __CSVReader(object):
         
 class Benchmark(object):
     '''
-    >>> darned_db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
-    >>> editing_db = VCFReader(filename)
-    >>> bench = Benchmark(answer=darned_db, predict=candidate_db)
-    >>> bench.answer
-    returns set opf darned
-    >>> bench.predict
-    returns set of candidate sites from vcf
-    >>> bench.intersect
-    returns set of the intersection between sets
+    Benchmark calculates precision, recall and F-measure from given data set,
+    those metrics are defined as follows:
+    precision = TP/(TP+FP), recall = TP/(TP+FN),
+    F-measure = 2*Precision*Recall/(Precision+Recall)
+    Args:
+     answer(set), predict(set)
+    Examples:
+     >>> >>> bench = Benchmark(answer=darned_db, predict=candidate_db)
+    Attributes:
+     answer(set): set of answer sites from Darned
+     predict(set): set of predicted sites
+     intersect(set): intersection between anseer and predict
     '''
     
     def __init__(self, answer=None, predict=None):
@@ -406,6 +409,10 @@ class Benchmark(object):
         return "Answer set[%d], Candidate set[%d]\n" % (len(self.answer), len(self.predict))
 
     def precision(self):
+        '''
+        Returns:
+         float: precision
+        '''
         try:
             _precision = len(self.intersect)/len(self.predict)
             return _precision
@@ -415,6 +422,10 @@ class Benchmark(object):
             return _precision
             
     def recall(self):
+        '''
+        Returns:
+         float: recall
+        '''
         try:
             _recall = len(self.intersect)/len(self.answer)
             return _recall
@@ -424,6 +435,10 @@ class Benchmark(object):
             return _recall
             
     def f_measure(self):
+        '''
+        Returns:
+         float: F-measure
+        '''
         _precision = self.precision()
         _recall = self.recall()
         try:
