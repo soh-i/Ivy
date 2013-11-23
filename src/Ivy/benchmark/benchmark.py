@@ -3,6 +3,7 @@ import vcf
 import os.path
 import re
 import csv
+import sys
 from Ivy.utils import Utils
 from urllib2 import (
     Request,
