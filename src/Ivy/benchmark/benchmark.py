@@ -3,6 +3,7 @@ import vcf
 import os.path
 import re
 import csv
+import sys
 from Ivy.utils import Utils
 from urllib2 import (
     Request,
@@ -17,31 +18,89 @@ __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
 
+class DarnedDataGeneratorValueError(Exception):
+    '''
+    Exception class for invalid species name
+    
+    Args:
+     sp(string): species name
+     sps(list): list of all valid species names
+    
+    Attributes:
+     sp(string): species name
+     sps(string): all species names
 
+    Examples:
+     >>> try:
+     ...     gen = DarnedDataGenerator(species=args.sp)
+     ... except DarnedDataGeneratorValueError as e:
+     ...     print e.sp
+     ...     print e
+    '''
+    
+    def __init__(self, *sp):
+        self.sp = sp[0]
+        if sp[1]:
+            self.sps = "/".join([_ for _ in sp[1]])
+
+    def __str__(self):
+        return repr('{sp:s} is not valid species name'.format(sp=self.sp))
+
+
+class DarnedDataGeneratorParseError(Exception):
+    '''
+    Exception class for parsing Darned text file to csv
+    
+    Args:
+     int: error line number
+     string: data
+
+    Attributes:
+     line(int): error line in Darned file
+     data(string): correspond entory
+     filename(string): opend filename
+    '''
+    
+    def __init__(self, line, data, filename):
+        self.line = line
+        self.data = data
+        self.filename = filename
+    
+    def __str__(self):
+        return repr('Parsing error at line No.{0}'.format(self.line))
+
+                    
 class DarnedDataGenerator(object):
     '''
     DarnedDataGenerator provides to prepare data that are used for benchmarking test.
-    >>> ddg = DarnedDataGenerator(species=human_hg18)
+    
+    Args:
+     species=(string)
+    Returns:
+     Darned db object
+    Example:
+     >>> ddg = DarnedDataGenerator(species=human_hg18)
+    Raises:
+     ValueError: when invalid species name was given
     '''
     
     def __init__(self, species=None):
         __species = {
-            'human_hg19':'http://darned.ucc.ie/static/downloads/hg19.txt',
-            'human_hg18':'http://darned.ucc.ie/static/downloads/hg18.txt',
-            'mice_mm9':'http://darned.ucc.ie/static/downloads/mm9.txt',
-            'mice_mm10':'http://darned.ucc.ie/static/downloads/mm10.txt',
-            'fly_dm3':'http://darned.ucc.ie/static/downloads/dm3.txt',
+            'human_hg19': 'http://darned.ucc.ie/static/downloads/hg19.txt',
+            'human_hg18': 'http://darned.ucc.ie/static/downloads/hg18.txt',
+            'mice_mm9': 'http://darned.ucc.ie/static/downloads/mm9.txt',
+            'mice_mm10': 'http://darned.ucc.ie/static/downloads/mm10.txt',
+            'fly_dm3': 'http://darned.ucc.ie/static/downloads/dm3.txt',
         }
         for k in __species:
             if k == species:
                 self.species = species
                 break;
         else:
-            raise RuntimeError, ('Given species name: %s is invalid, %s is only acceptable' %
-                                 (species, [_ for _ in __species]))
+            raise DarnedDataGeneratorValueError(species, __species)
 
         if self.species is not None:
-            self.filename = "".join([self.species, '.txt'])
+            self.filename = ''.join([self.species, '.txt'])
             self.url = __species[self.species]
             self.saved_abs_path = Utils.find_app_root() + '/data/'
             name, _ = os.path.splitext(self.filename)
@@ -49,45 +108,56 @@ class DarnedDataGenerator(object):
             
     def fetch_darned(self):
         '''
-        Fetch specify raw dataest from darned.ucc.ie/static/downloads/ into APP_ROOT/data,
-        species name must be given, and acceptable type is defined as:
-        human_hg18/hg19, mice_mm9/mm10, fly_dm3
+        Fetch specify raw dataest from darned.ucc.ie/static/downloads/ into the APP_ROOT/data.
+        Create './data' directory if APP_ROOT/data is not found.
+
+        Returns:
+         bool
+        Raises:
+         URLError: could not connect Darned server
         '''
         
         if os.path.isfile(self.saved_abs_path + self.filename):
-            print "%s is already exist" % (self.filename)
+            sys.stderr.write("{f:s} is already exist".format(f=self.filename))
             return False
         
         req = Request(self.url)
         try:
             response = urlopen(req, timeout=10)
+            
         except URLError, e:
             if hasattr(e, 'reason'):
-                print 'We failed to reach a server.'
-                print 'Reason: ', e.reason
+                sys.stderr.write('We failed to reach a server due to {0}'.format(e.reason))
                 raise URLError(", Could not connect " + req.get_full_url())
+                
             elif hasattr(e, 'code'):
-                print 'The server couldn\'t fulfill the request.'
-                print 'Error code: ', e.code
+                sys.stderr.write('The server couldn\'t fulfill the request\n')
+                sys.stderr.write('Error code: {e}'.format(e=e.code))
                 raise URLError(", Could not connect " + req.get_full_url())
         else:
             # works fine
             if not os.path.isdir(self.saved_abs_path):
                 os.makedirs(self.saved_abs_path)
-                print "Create directory into [%s]" % (self.saved_abs_path)
+                sys.stderr.write("Create directory into {path:s}\n".format(path=self.saved_abs_path))
                 
-            print "Dowloading [%s] from [%s] ..." % (self.filename, self.url)
+            sys.stderr.write("Dowloading {filename:s} from {url:s} ...\n".format(
+                filename=self.filename, url= self.url))
+            
             with open(self.saved_abs_path + self.filename, "w") as fout:
                 fout.write(response.read())
             return True
 
     def darned_to_csv(self):
         '''
-        Converting darned raw datafile to csv,
-        the data that fetched from darned.ucc.ie/static/downloads/*.txt is given.
-        >>> path_to_data = hg19.txt
-        >>> darned_to_csv(path_to_data)
-        Generate csv file into the APP_ROOT/data
+        Converting darned raw datafile to csv, and generate csv file into the APP_ROOT/data.
+
+        Returns:
+         bool
+        Raises:
+         ValueError: when parsing error
+        Exmples:
+         >>> path_to_data = hg19.txt
+         >>> darned_to_csv(path_to_data)
         '''
         
         if not os.path.isfile(self.saved_abs_path + self.filename):
@@ -115,18 +185,21 @@ class DarnedDataGenerator(object):
                     out.write(mod.upper() + ",")
                     out.write(",".join(row[9:]) + "\n")
         except:
-            raise ValueError, 'Parsing error at line No.[%d]' % (line_n)
+            raise DarnedDataGeneratorParseError(line_n, row, self.filename)
         finally:
             out.close()
 
 class DarnedReader(object):
     '''
-    DarnedReader class generates subset of DARNED db.
-    >>> dr = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
-    >>> dr.db
-    Returns array of subset of darned db.
-    Do not use source option, store to all records by the default settings.
-    Acceptable type of sp argument is defined as human_hg18/hg19, mice_mm9/mm10, fly_dm3.
+    DarnedReader generates subset of DARNED db.
+    
+    Args:
+     sp=species name, source=speify tissue or cell line name
+     Do not use source params, store to all records by the default settings.
+    Example:
+     >>> dr = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
+    Attributes:
+     dr.db: array of subset of darned db
     '''
     
     def __init__(self, sp=None, source=None):
@@ -141,18 +214,24 @@ class DarnedReader(object):
             self.__source = source.upper()
             
         self.__darned_path = Utils.find_app_root()+ '/data/darned_'+ self.__sp+ '.csv'
-        self.db = self.__generate_darned_set()
+        try:
+            self.db = self.__generate_darned_set()
+        except DarnedDataGeneratorValueError as e:
+            raise SystemExit('Given species name \'{0}\' is not valid'.format(e.sp))
         
     def __str__(self):
         return "<%s.%s>" % (self.__class__.__name__)
         
     def __generate_darned_set(self):
+        '''
+        Generate darned db object stored as array
+        '''
         # Store selected records
         if not self.__source == 'ALL':
             selected = []
             if os.path.isdir(self.__darned_path):
                 raise IOError, "[%s] is directory, not csv file"
-        
+            
             with open(self.__darned_path, 'r') as f:
                 for line in f:
                     if not line.startswith('chrom'):
@@ -182,32 +261,50 @@ class DarnedReader(object):
                 return darned_list
                 
         elif not self.__sp:
-            raise RuntimeError, 'Given species name[%s] is not valid' % (self.__sp)
-
+            raise DarnedDataGeneratorValueError(self.__sp)
+            
     def sp(self):
-        '''return tuple of species and genome version'''
+        '''
+        Returns:
+         tuple: species and genome version
+        '''
         (sp, ver) = self.__sp.split("_")
         return sp, ver
 
     def path(self):
-        '''absolute path to Darned database file'''
+        '''
+        Returns:
+         string: absolute path to Darned database file
+        '''
         return os.path.abspath(self.__darned_path)
         
     def db_name(self):
-        '''Darned db name'''
+        '''
+        Returns:
+         string: Darned db name
+        '''
         return os.path.basename(self.__darned_path)
                  
     def size(self):
-        '''number of the Darned entories'''
+        '''
+        Returns:
+         int: number of the Darned entories
+        '''
         return self.__db_size
 
         
 class VCFReader(object):
     '''
-    VCFReader class provides that list of VCF file and utils methods
-    >>> vr = VCFReader(path_to_vcf_file)
-    >>> vr.db
-    Returns array of vcf file
+    VCFReader class provides that list of VCF file within utils methods
+    
+    Args:
+     filename(string): filename of VCF
+    Returns:
+     list: vcf files
+    Attributes:
+     db(list): Stored VCF list
+    Examples:
+     >>> vr = VCFReader(path_to_vcf_file)
     '''
     
     def __init__(self, filename):
@@ -219,8 +316,11 @@ class VCFReader(object):
         
         if os.path.isdir(self.__vcf):
             raise IOError, "[%s] is directory, not csv file"
-        
-        _vcf_reader = vcf.Reader(open(self.__vcf, 'r'))
+        try:
+            _vcf_reader = vcf.Reader(open(self.__vcf, 'r'))
+        except IOError:
+            raise SystemExit('No such file or directory: {0}'.format(self.__vcf))
+            
         self.__substitutions = Counter()
         
         for rec in _vcf_reader:
@@ -232,25 +332,47 @@ class VCFReader(object):
         return _vcf_recs
         
     def size(self):
-        '''number of entory of the parsed vcf records'''
+        '''
+        Returns:
+         int: number of entory of the parsed vcf records
+        '''
         return self.__size
 
     def vcf_name(self):
+        '''
+        Returns:
+         string: filename of vcf
+        '''
         return os.path.basename(self.__vcf)
 
     def editing_types(self):
-        '''All type of the base substitutions'''
+        '''
+        Returns:
+         collection object: All type of the base substitutions
+        '''
         return self.__substitutions
         
     def ag_count(self):
-        '''A-to-G editing alone'''
+        '''
+        Returns:
+         int: A-to-G editing alone
+        '''
         return self.__substitutions.get('A-to-G')
 
     def target_count(self, types):
-        '''Specify type of base substitutions'''
+        '''
+        Args:
+         types(string): specify type of base substitution
+        Returns:
+         int: base substitution count
+        '''
         return self.__substitutions.get(types)
         
     def other_mutations_count(self):
+        '''
+        Returns:
+         collection object: substitution count except A-to-G editing
+        '''
         i = 0
         for k in self.__substitutions:
             if not k == 'A-to-G':
@@ -261,9 +383,10 @@ class VCFReader(object):
 class __CSVReader(object):
     '''
     CSVReader class provides to generate array of CSV file
-    >>> csv = VCFReader(path_to_csv_file)
-    >>> csv.db
-    Returns array of csv file
+    
+    Examples:
+     >>> csv = VCFReader(path_to_csv_file)
+     >>> csv.db
     '''
     
     def __init__(self, filename):
@@ -307,51 +430,56 @@ class __CSVReader(object):
     def name(self):
         return os.path.basename(self.__filename)
 
-    def ag_count(self):
-        raise NotImplementedError
-
-    def other_mutations_count(self):
-        raise NotImplementedError
-
-    #def __line__(self):
-    #    frame = inspect.currentframe(1)
-    #    return frame.f_lineno
-
+class BenchmarkIOException(Exception):
+    def __init__(self, data):
+        self.data = data
+    
+    def __repr__(self):
+        return repr('Answer data set has no entory')
         
 class Benchmark(object):
     '''
-    >>> darned_db = DarnedReader(sp='human_hg19', source='Brain', db='Path_to_Darned_DB')
-    >>> editing_db = VCFReader(filename)
-    >>> bench = Benchmark(answer=darned_db, predict=candidate_db)
-    >>> bench.answer
-    returns set opf darned
-    >>> bench.predict
-    returns set of candidate sites from vcf
-    >>> bench.intersect
-    returns set of the intersection between sets
+    Benchmark calculates precision, recall and F-measure from given data set,
+    those metrics are defined as follows:
+    precision = TP/(TP+FP), recall = TP/(TP+FN),
+    F-measure = 2*Precision*Recall/(Precision+Recall)
+    
+    Args:
+     answer(set), predict(set)
+    Examples:
+     >>> >>> bench = Benchmark(answer=darned_db, predict=candidate_db)
+    Attributes:
+     answer(set): set of answer sites from Darned
+     predict(set): set of predicted sites
+     intersect(set): intersection between anseer and predict
     '''
     
     def __init__(self, answer=None, predict=None):
         if not isinstance(answer, list):
-            raise TypeError, "[%s] is given, data must be list alone" % (type(answer))
+            raise TypeError, "\'{0}\' is given, data must be list alone".format(type(answer))
         elif not isinstance(predict, list):
-            raise TypeError, "[%s] is given, data must be list alone" % (type(predict))
+            raise TypeError, "\'{0}\' is given, data must be list alone".format(type(predict))
             
         # remove string(tissue/sample info) except chromosome and position
         self.answer = set([":".join(_.split(":")[:2]) for _ in answer])
         self.predict = set([":".join(_.split(":")[:2]) for _ in predict])
         
+
         if len(self.answer) == 0:
-            raise ValueError, 'Answer data set has no entory'
+            raise BenchmarkIOException(self.answer)
         elif len(self.predict) == 0:
-            raise ValueError, 'Candidate data set has no entory'
-                
+            raise BenchmarkIOException(self.predict)
+        
         self.intersect = self.answer.intersection(self.predict)
 
     def __str__(self):
-        return "Answer set[%d], Candidate set[%d]\n" % (len(self.answer), len(self.predict))
+        return "Answer set \'{0:d}\', Candidate set \'{1:d}\'\n".format(len(self.answer), len(self.predict))
 
     def precision(self):
+        '''
+        Returns:
+         float: precision
+        '''
         try:
             _precision = len(self.intersect)/len(self.predict)
             return _precision
@@ -361,6 +489,10 @@ class Benchmark(object):
             return _precision
             
     def recall(self):
+        '''
+        Returns:
+         float: recall
+        '''
         try:
             _recall = len(self.intersect)/len(self.answer)
             return _recall
@@ -370,6 +502,10 @@ class Benchmark(object):
             return _recall
             
     def f_measure(self):
+        '''
+        Returns:
+         float: F-measure
+        '''
         _precision = self.precision()
         _recall = self.recall()
         try:

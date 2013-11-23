@@ -1,26 +1,19 @@
-'''
-ooooo
-`888'
- 888  oooo    ooo oooo    ooo
- 888   `88.  .8'   `88.  .8'
- 888    `88..8'     `88..8'
- 888     `888'       `888'
-o888o     `8'         .8'
-                  .o..P'
-                  `Y8P'
-'''
+from argparse import ArgumentParser
+import os.path
+import sys
 from Ivy.benchmark.benchmark import (
     DarnedDataGenerator,
+    DarnedDataGeneratorValueError,
+    DarnedDataGeneratorParseError,
     DarnedReader,
     VCFReader,
     Benchmark,
+    BenchmarkIOException,
     __CSVReader,
     )
 from Ivy.benchmark.plot import BenchmarkPlot
 from Ivy.version import __version__
 import Ivy.utils
-import argparse
-import os.path
 
 __program__ = 'ivy_benchmark'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -30,9 +23,9 @@ __status__ = 'development'
 def run():
     desc = "Benchmarking test for detected RNA editing sites based on HTSeq data to evaluate detection params."
     
-    parser = argparse.ArgumentParser(description=desc,
-                                     prog=__program__,
-                                     )
+    parser = ArgumentParser(description=desc,
+                            prog=__program__,
+                            )
     group = parser.add_mutually_exclusive_group(required=True)
     
     group.add_argument('--vcf',
@@ -40,14 +33,14 @@ def run():
                        action='store',
                        nargs='+',
                        metavar='',
-                       help='set VCF file(s)',
+                       help='VCF file(s)',
                        )
     group.add_argument('--csv',
                        dest='csv_file',
                        action='store',
                        nargs='+',
                        metavar='',
-                       help='set CSV file(s)',
+                       help='CSV file(s), For debug mode',
                        )
     parser.add_argument('--source',
                         required=False,
@@ -55,14 +48,14 @@ def run():
                         dest='source',
                         action='store',
                         metavar='',
-                        help='use specific sample/tissue/cell line [default: All]',
+                        help='specific sample/tissue/cell line [default: All]',
                         )
     parser.add_argument('--sp',
                         required=True,
                         dest='sp',
                         metavar='species',
                         action='store',
-                        help='set species and genome version (eg. human_hg19)',
+                        help='species and genome version (eg. human_hg19)',
                         )
     parser.add_argument('--plot',
                         required=False,
@@ -70,60 +63,100 @@ def run():
                         action='store_true',
                         help='plot benchmarking stats [default: Off]',
                         )
-    parser.add_argument('--version', action='version', version=__version__)
-    
+    parser.add_argument('--out',
+                        dest='out',
+                        required=False,
+                        action='store',
+                        metavar='out',
+                        help='output name',
+                        )
+    parser.add_argument('--version',
+                        action='version',
+                        version=__version__
+                        )
+
     args = parser.parse_args()
-    gen = DarnedDataGenerator(species=args.sp)
-    
+    try:
+        gen = DarnedDataGenerator(species=args.sp)
+    except DarnedDataGeneratorValueError as e:
+        raise SystemExit('[{cls}]: given \'{sp}\' is not valid name, {sps} is only valid name'.format(
+            cls=e.__class__.__name__, sp=e.sp, sps=e.sps))
+        
+    # check darned raw file
     darned_raw_file = gen.saved_abs_path + gen.filename
     if not os.path.isfile(darned_raw_file):
-        print "Fetching from darned..."
+        sys.stderr.write("No {f:s} file\n".format(f=darned_raw_file))
+        sys.stderr.write("Fetching {sp:s} from Darned DB...\n".format(sp=args.sp))
         gen.fetch_darned()
         
     darned_parsed_csv = gen.out_name
     if not os.path.isfile(darned_parsed_csv):
-        print "parsing darned..."
-        gen.darned_to_csv()
+        sys.stderr.write("Parsing Darned db...\n")
+        try:
+            gen.darned_to_csv()
+        except DarnedDataGeneratorParseError as e:
+            raise SystemExit('[{cls}]: {e}'.format(cls=e.__class__.__name__, e=e))
 
     # use VCF files
     if args.vcf_file and args.sp:
-        print "Species,Source,DB,VCF,Precision,Recall,F-measure,AGs,Others,AnsCount"
+        if args.out:
+            _ = open(args.out, 'w')
+            _.write("Species,Source,DB,VCF,Precision,Recall,F-measure,AGs,Others,AnsCount\n")
+        else:
+            sys.stdout.write("Species,Source,DB,VCF,Precision,Recall,F-measure,AGs,Others,AnsCount\n")
         
         ans = DarnedReader(sp=args.sp, source=args.source)
         precision = []
         recall = []
         f_measure = []
+        content = str()
         for v in args.vcf_file:
             vcf = VCFReader(v)
             bench = Benchmark(answer=ans.db, predict=vcf.db)
             p = bench.precision()
             r = bench.recall()
             f = bench.f_measure()
+
+            content += (
+                '{species:s},{source:s},{db_name:s},{vcf_file:s},{precision:f},{recall:f},{f_measure:f},{ag_count:d},{other_count:d},{ans_size:d}\n'
+                .format(
+                    species=ans.sp()[0],
+                    source=args.source,
+                    db_name=ans.db_name(),
+                    vcf_file=vcf.vcf_name(),
+                    precision=p,
+                    recall=r,
+                    f_measure=f,
+                    ag_count=vcf.ag_count(),
+                    other_count=vcf.other_mutations_count(),
+                    ans_size=ans.size()))
             
-            print "%s,%s,%s,%s,%f,%f,%f,%d,%d,%d" % (
-                ans.sp()[0],
-                args.source,
-                ans.db_name(),
-                vcf.vcf_name(),
-                p, r, f,
-                vcf.ag_count(),
-                vcf.other_mutations_count(),
-                ans.size())
+        # save to file
+        if args.out:
+            _ = open(args.out, 'a')
+            _.write(content)
+            _.close()
+        # print stdout
+        else:
+            sys.stdout.write(content)
             
-            precision.append(float(p))
-            recall.append(float(r))
-            f_measure.append(float(f))
-            
+        # plot
         if args.plot:
             names = [os.path.basename(_).split('.')[0] for _ in args.vcf_file]
             bplt = BenchmarkPlot('plot_' + ','.join(names))
             bplt.plot_accuracy(lab=args.vcf_file, recall=r, precision=p)
             
-    # use CSV files
+    # use CSV files, this is debug mode
     elif args.csv_file and args.sp:
         print "Species,Source,DB,CSV,Precision,Recall,F-measure,AnsCount"
 
-        ans = DarnedReader(sp=args.sp, source=args.source)
+        try:
+            ans = DarnedReader(sp=args.sp, source=args.source)
+        except TypeError as e:
+            raise SystemExit('[{cls}]: {err}'.format(cls=e.__class__.__name__, err=e))
+        except BenchmarkIOException as e:
+            raise SystemExit('[{cls}]: {err}'.format(cls=e.__class__.__name__, err=e))
+            
         precisions = []
         recalls = []
         f_measures = []
@@ -159,5 +192,3 @@ def plot(p, r, labs):
         return True
     else:
         return False
-        
-    
