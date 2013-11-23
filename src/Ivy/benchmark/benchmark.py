@@ -44,8 +44,8 @@ class DarnedDataGenerator(object):
                 self.species = species
                 break;
         else:
-            raise ValueError('Given species name: {sp} is invalid, {sps} is only acceptable'.format(
-                sp=species, sps=[_ for _ in __species]))
+            raise ValueError('Given species name: \'{sp}\' is invalid, {sps} are acceptable'.format(
+                sp=species, sps="/".join([_ for _ in __species])))
 
         if self.species is not None:
             self.filename = ''.join([self.species, '.txt'])
@@ -56,9 +56,14 @@ class DarnedDataGenerator(object):
             
     def fetch_darned(self):
         '''
-        Fetch specify raw dataest from darned.ucc.ie/static/downloads/ into APP_ROOT/data,
-        species name must be given, and acceptable type is defined as follows:
-        human_hg18, humna_hg19, mice_mm9, mice_mm10, fly_dm3
+        Fetch specify raw dataest from darned.ucc.ie/static/downloads/ into the APP_ROOT/data.
+        Create './data' directory if APP_ROOT/data is not found.
+        Args:
+         self
+        Returns:
+         bool
+        Raises:
+         URLError: could not connect Darned server
         '''
         
         if os.path.isfile(self.saved_abs_path + self.filename):
@@ -95,9 +100,16 @@ class DarnedDataGenerator(object):
         '''
         Converting darned raw datafile to csv,
         the data that fetched from darned.ucc.ie/static/downloads/*.txt is given.
-        >>> path_to_data = hg19.txt
-        >>> darned_to_csv(path_to_data)
         Generate csv file into the APP_ROOT/data
+        Args:
+         self
+        Returns:
+         bool
+        Raises:
+         ValueError: when parsing error
+        Exmples:
+         >>> path_to_data = hg19.txt
+         >>> darned_to_csv(path_to_data)
         '''
         
         if not os.path.isfile(self.saved_abs_path + self.filename):
