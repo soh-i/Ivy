@@ -1,7 +1,7 @@
 EditBench
 ===
 
-EditBench: Simple python program for identification of RNA editing sites based on massively parallel sequencing data.
+EditBench: Simple python program for benchmarking test against identified RNA editing sites based on high-throughput sequencing data.
 
 ## Requirements
 * Python 2.7+ (recomended)
@@ -17,7 +17,11 @@ python setup.py install
 ```
 
 ## Usage
-ivy_benchmark performs a benchmarking test of detected A-to-I editing sites in _H. sapiens_, _M. musclus_, _D. melanogaster_ to evaluate accuracy using recall, recision and F-measure score, which are defined as follows: (...).
+ivy_benchmark performs a benchmarking test of detected A-to-I editing sites in _H. sapiens_, _M. musclus_, _D. melanogaster_ to evaluate accuracy using recall, recision and F-measure score, which are defined as follows:   
+
+	Recall = 
+	Precision = 
+	F-measure = 
 
 For benchmarking test, we used DARNED database (Kiran _et al_., 2013, http://beamish.ucc.ie) as true known editing sites. DARNED db  provides the comprehensive list of the previously identified RNA editing sites by researchers.
 
@@ -28,11 +32,14 @@ ivy_benchmark --vcf test1.vcf test2.vcf --sp human_hg19 --source brain --plot
 ```
 then, recall/precision plot outputs in your directory as pdf file.
 
+### Required argumentss
+* `--vcf`: VCF(variant call format) files [required]
+* `--sp`: Species and genome version [required]
+
 ### Options
-* `--vcf`: Set VCF(variant call format) files [required]
-* `--sp`: Set joined string of species and genome version [required]
-* `--source`: Set specific smaple/tissues/cell line name [default: All]
-* `--plot`: Use this option, to visualize precision/recall plot [default: False] 
+* `--source`: Specific smaple/tissues/cell line name [default: All]
+* `--plot`: Plot precision/recall plot [default: False]
+* `--out`: Outpust filename. [default: stdout]
 * `--help`: Show help messages
 * `--version`: Show ivy_benchmark.py version
 
