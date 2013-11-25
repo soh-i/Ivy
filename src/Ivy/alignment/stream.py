@@ -16,9 +16,27 @@ __status__ = 'development'
 
 DEBUG = False
 
-
+    
 class AlignmentStream(object):
     def __init__(self, __params):
+        '''
+        Initialize for pileup bam files to explore RDD sites
+        
+        Args:
+         Alignment parameters wrapped by AttrDic object
+        
+        Raises:
+        
+         TypeError:
+         RuntimeError:
+        
+        Attributes:
+         samfile:
+         fasfile:
+         one_based:
+         params:
+        '''
+        
         ig = IvyLogger()
         self.logger = logging.getLogger(type(self).__name__)
         
@@ -61,28 +79,22 @@ class AlignmentStream(object):
         if _is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
             pass
         else:
-            raise RuntimeError("invalid chrom name")
+            raise RuntimeError("Invalid chrom name")
 
         if self.params.verbose:
             self.logger.debug(AttrDict.show(self.params))
             
         if DEBUG:
-            # info. for loaded samfile
-            print "### info. for samfile object from given Bam header @SQ ###"
-            print "Sam file: %s" % self.samfile.filename
-            print "lengths: %s" % [_ for _ in self.samfile.lengths]
-            print "mapped %d: " % self.samfile.mapped
-            print "N_references: %s" % self.samfile.nreferences
-            print "references: %s" % [_ for _ in self.samfile.references]
-            print "unmapped: %s" % self.samfile.unmapped
-            
-            # info. for fasta
-            print "### info. for fasfile object ###"
-            print "filename: %s" % self.fafile.filename
-
+            _fasta_info()
+            _sam_info()
+    
     def __add_preset(self, __p):
-        # Preset params add to the AttrDic attribute
-        # preset_params.__{Name} = Value
+        '''
+        Preset params add to the AttrDic attribute
+        preset_params.__{Name} = Value
+        Returns:
+         AttrDic object
+        '''
         __p.preset_params._skip_N = True
         __p.preset_params._skip_has_many_allele = True
         return __p
@@ -373,6 +385,23 @@ class AlignmentStream(object):
             raise RuntimeError(
                 'Could not able to define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
                 .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
+
+
+
+    def fasta_info(self):
+        # info. for fasta
+        print "### info. for fasfile object ###"
+        print "filename: %s" % self.fafile.filename
+
+    def sam_info(self):
+        # info. for loaded samfile
+        print "### info. for samfile object from given Bam header @SQ ###"
+        print "Sam file: %s" % self.samfile.filename
+        print "lengths: %s" % [_ for _ in self.samfile.lengths]
+        print "mapped %d: " % self.samfile.mapped
+        print "N_references: %s" % self.samfile.nreferences
+        print "references: %s" % [_ for _ in self.samfile.references]
+        print "unmapped: %s" % self.samfile.unmapped
             
 def _is_pileup(bam, fa):
     # validate bam and fa file, if sorted/indexed or not
@@ -410,6 +439,7 @@ def _resolve_chrom_name(bam_chr=None, fa_chr=None):
         return 'chr' + fa_chr
     else:
         return fa_chr
+
 
     
 if __name__ == '__main__':
