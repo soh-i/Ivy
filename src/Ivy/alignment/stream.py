@@ -7,7 +7,9 @@ import math
 import pprint
 import logging
 import pysam
+
 from Ivy.utils import die, AttrDict, IvyLogger
+from Ivy.alignment.filters import strand_bias_filter
 
 __program__ = 'stream'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -113,6 +115,7 @@ class AlignmentStream(object):
             ref_base= self.fafile.fetch(reference=bam_chrom,
                                         start=col.pos,
                                         end=col.pos+1).upper()
+            #print ref_base
             if not ref_base:
                 # TODO: resolve difference name in fasta and bam
                 raise ValueError(
@@ -192,7 +195,7 @@ class AlignmentStream(object):
                 average_baq = math.ceil(sum(quals_in_pos)/len(quals_in_pos))
             except ZeroDivisionError:
                 average_baq = 0
-            
+                
             # --min-rna-cov
             coverage = len(quals_in_pos)
             
@@ -219,6 +222,26 @@ class AlignmentStream(object):
                 except ZeroDivisionError:
                     allele_freq = float(0)
                     ag_freq = float(0)
+
+                if pos == 47721228:
+                    print ref_base, pos
+                    print  coverage
+                    #qpos = [_.alignment.qual[_.qpos] for _ in passed_reads]
+                    mis_r = [_.alignment.seq[_.qpos] for _ in passed_mismatches if _.alignment.is_reverse]
+                    mis_f = [_.alignment.seq[_.qpos] for _ in passed_mismatches if not _.alignment.is_reverse]
+                    ma_r =  [_.alignment.seq[_.qpos] for _ in passed_matches if _.alignment.is_reverse]
+                    ma_f =  [_.alignment.seq[_.qpos] for _ in passed_matches if not _.alignment.is_reverse]
+                    
+                    print strand_bias_filter(len(mis_r),len(mis_f), len(ma_r), len(ma_f))
+                    
+                    # print [_.qpos for _ in passed_reads]
+                    
+                    #print [_.alignment.qend for _ in passed_mismatches]
+                    
+                    #print passed_mismatches[1]
+                    #print [_.alignment.qstart for _ in passed_reads]
+                    
+                    raise SystemExit
                 
                 # --num-allow-type
                 mutation_type = {}
