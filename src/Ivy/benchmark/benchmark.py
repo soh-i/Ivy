@@ -159,7 +159,6 @@ class DarnedDataGenerator(object):
          >>> path_to_data = hg19.txt
          >>> darned_to_csv(path_to_data)
         '''
-        
         if not os.path.isfile(self.saved_abs_path + self.filename):
             raise RuntimeError, 'Darned of %s is not found' % (self.filename)
 
@@ -178,16 +177,21 @@ class DarnedDataGenerator(object):
             for row in reader:
                 line_n += 1
                 source = row[8]
-                if len(source):
+                if source is not None:
                     mod = source.replace(r';', ',').replace(r',', ';').\
                           replace(r'; ', ';').replace(r' ', '_').replace(r'_T', 'T')
                     out.write(",".join(row[:8]) + ",")
-                    out.write(mod.upper() + ",")
+                    if len(source):
+                        out.write(mod.upper() + ",")
+                    # source column is empty
+                    elif len(source) == 0:
+                        out.write('NA'+",")
                     out.write(",".join(row[9:]) + "\n")
         except:
             raise DarnedDataGeneratorParseError(line_n, row, self.filename)
         finally:
             out.close()
+
 
 class DarnedReader(object):
     '''
@@ -218,6 +222,7 @@ class DarnedReader(object):
             self.db = self.__generate_darned_set()
         except DarnedDataGeneratorValueError as e:
             raise SystemExit('Given species name \'{0}\' is not valid'.format(e.sp))
+
         
     def __str__(self):
         return "<%s.%s>" % (self.__class__.__name__)
