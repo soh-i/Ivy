@@ -158,7 +158,7 @@ def _data_prepare(args):
             
     # use CSV files, this is debug mode
     elif args.csv_file and args.sp:
-        print "Species,Source,DB,CSV,Precision,Recall,F-measure,AnsCount"
+        print "Species,Source,DB,CSV,Precision,Recall,F-measure,PredCount,AnsCount"
 
         try:
             ans = DarnedReader(sp=args.sp, source=args.source)
@@ -178,12 +178,13 @@ def _data_prepare(args):
             r = bench.recall()
             f = bench.f_measure()
             
-            print "%s,%s,%s,%s,%f,%f,%f,%d" % (
+            print "%s,%s,%s,%s,%f,%f,%f,%d,%d" % (
                 ans.sp()[0],
                 args.source,
                 ans.db_name(),
                 csv.name(),
                 p, r, f,
+                csv.size(),
                 ans.size())
 
             precisions.append(float(p))
