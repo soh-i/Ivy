@@ -232,7 +232,7 @@ class AlignmentStream(object):
                     ma_r =  [_.alignment.seq[_.qpos] for _ in passed_matches if _.alignment.is_reverse]
                     ma_f =  [_.alignment.seq[_.qpos] for _ in passed_matches if not _.alignment.is_reverse]
                     
-                    print strand_bias_filter(len(mis_r),len(mis_f), len(ma_r), len(ma_f))
+                    print strand_bias_filter(passed_matches, passed_mismatches)
                     
                     # print [_.qpos for _ in passed_reads]
                     
@@ -241,7 +241,7 @@ class AlignmentStream(object):
                     #print passed_mismatches[1]
                     #print [_.alignment.qstart for _ in passed_reads]
                     
-                    raise SystemExit
+                    #raise SystemExit
                 
                 # --num-allow-type
                 mutation_type = {}
@@ -303,9 +303,16 @@ class AlignmentStream(object):
                     #Cc = [_.alignment.seq[_.qpos] for _ in C].count('C')
                     #
                     
-                    #############################
-                    ### Basic filters in base ###
-                    #############################
+                    ############################
+                    ### Statistical filsher  ###
+                    ############################
+                    if (self.parms.stat_filter.pos_bias
+                        and self.params.stat_filter.baq_bias
+                        and self.params.stat_filter
+                        and self.params.stat_filter.strnad_bias):
+                        pass
+                        
+                    
                     if True:
                         yield {
                             'chrom': bam_chrom,
