@@ -26,7 +26,6 @@ class AlignmentStream(object):
          Alignment parameters wrapped by AttrDic object
         
         Raises:
-        
          TypeError:
          RuntimeError:
         
@@ -46,11 +45,8 @@ class AlignmentStream(object):
             raise TypeError("Given param {prm:s} is {cls:s} class, not 'AttrDic' class"
                             .format(prm=__params, cls=__params.__class__.__name__))
 
-        __bm = pysam.Samfile(self.params.r_bams, 'rb', check_header=True, check_sq=True)
-        __ft = pysam.Fastafile(self.params.fasta)
-        
-        self.samfile = __bm
-        self.fafile = __ft
+        self.samfile = pysam.Samfile(self.params.r_bams, 'rb', check_header=True, check_sq=True)
+        self.fafile = pysam.Fastafile(self.params.fasta)
         self.one_based = self.params.one_based
 
         ### Resolve to explore specified region or not
@@ -91,7 +87,8 @@ class AlignmentStream(object):
     def __add_preset(self, __p):
         '''
         Preset params add to the AttrDic attribute
-        preset_params.__{Name} = Value
+        Examples:
+         >>> __add_preset(AttrDic object)
         Returns:
          AttrDic object
         '''
@@ -114,8 +111,8 @@ class AlignmentStream(object):
                 pos = col.pos
                 
             ref_base= self.fafile.fetch(reference=bam_chrom,
-                                    start=col.pos,
-                                    end=col.pos+1).upper()
+                                        start=col.pos,
+                                        end=col.pos+1).upper()
             if not ref_base:
                 # TODO: resolve difference name in fasta and bam
                 raise ValueError(
@@ -132,7 +129,7 @@ class AlignmentStream(object):
             if (self.params.basic_filter.rm_duplicated
                 and self.params.basic_filter.rm_deletion
                 and self.params.basic_filter.rm_insertion):
-                
+                #print "# filter reads with all params"
                 passed_reads = [_ for _ in col.pileups
                                 if (_.alignment.is_proper_pair
                                     and not _.alignment.is_qcfail
@@ -143,11 +140,11 @@ class AlignmentStream(object):
                 passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
                 passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
 
-            # allow duplicated containing reads
+            # allow duplicated containing reasd
             elif (not self.params.basic_filter.rm_duplicated
                   and self.params.basic_filter.rm_deletion
                   and self.params.basic_filter.rm_insertion):
-                
+                #print "# allow duplicated containing reads"
                 passed_reads = [_ for _ in col.pileups
                                 if (_.alignment.is_proper_pair
                                     and not _.alignment.is_qcfail
@@ -157,11 +154,11 @@ class AlignmentStream(object):
                 passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
                 passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
 
-            # allow deletions containing reads
+            # allow deletions containing reasd
             elif (not self.params.basic_filter.rm_deletion
                   and self.params.basic_filter.rm_insertion
                   and self.params.basic_filter.rm_duplicated):
-                
+                #print  "# allow deletions containing reads"
                 passed_reads = [_ for _ in col.pileups
                                 if (_.alignment.is_proper_pair
                                     and not _.alignment.is_qcfail
@@ -178,6 +175,7 @@ class AlignmentStream(object):
                 
             # no filter
             else:
+                #print "No filter"
                 passed_reads = [_ for _ in col.pileups
                                 if (not _.alignment.is_unmapped)]
                 passed_mismatches = [_ for _ in passed_reads
