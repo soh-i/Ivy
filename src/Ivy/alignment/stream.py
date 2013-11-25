@@ -369,7 +369,6 @@ class AlignmentStream(object):
                 alt_f = (A_f+T_f+G_f)
             return tuple([ref_r, ref_f, alt_r, alt_f])
 
-
         else:
             raise RuntimeError(
                 'Could not able to define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
