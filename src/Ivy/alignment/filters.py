@@ -12,10 +12,11 @@ def strand_bias_filter(match, mismatch):
     ma_r =  [_.alignment.seq[_.qpos] for _ in match if _.alignment.is_reverse]
     ma_f =  [_.alignment.seq[_.qpos] for _ in match if not _.alignment.is_reverse]
     p = fisher.pvalue(len(ma_r), len(ma_f), len(mis_r), len(mis_f))
-    return p
+    return p.left_tail
         
-        
-
+def positional_bias_filter(match, mismatch):
+    pass
+    
 
 
 
