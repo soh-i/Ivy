@@ -479,7 +479,7 @@ class CommandLineParser(object):
 
         # strand-bias
         if opt.strand_bias is not None:
-            passed_params.stat_filter.strnad_bias = opt.strand_bias
+            passed_params.stat_filter.strand_bias = opt.strand_bias
         
         # --potitional-bias
         if opt.pos_bias is not None:
