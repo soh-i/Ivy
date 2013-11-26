@@ -223,26 +223,6 @@ class AlignmentStream(object):
                     allele_freq = float(0)
                     ag_freq = float(0)
 
-                if pos == 47721228:
-                    print ref_base, pos
-                    print  coverage
-                    #qpos = [_.alignment.qual[_.qpos] for _ in passed_reads]
-                    mis_r = [_.alignment.seq[_.qpos] for _ in passed_mismatches if _.alignment.is_reverse]
-                    mis_f = [_.alignment.seq[_.qpos] for _ in passed_mismatches if not _.alignment.is_reverse]
-                    ma_r =  [_.alignment.seq[_.qpos] for _ in passed_matches if _.alignment.is_reverse]
-                    ma_f =  [_.alignment.seq[_.qpos] for _ in passed_matches if not _.alignment.is_reverse]
-                    
-                    print strand_bias_filter(passed_matches, passed_mismatches)
-                    
-                    # print [_.qpos for _ in passed_reads]
-                    
-                    #print [_.alignment.qend for _ in passed_mismatches]
-                    
-                    #print passed_mismatches[1]
-                    #print [_.alignment.qstart for _ in passed_reads]
-                    
-                    #raise SystemExit
-                
                 # --num-allow-type
                 mutation_type = {}
                 if len(A) > 0 and ref_base != 'A':
@@ -301,19 +281,42 @@ class AlignmentStream(object):
                     #Gc = [_.alignment.seq[_.qpos] for _ in G].count('G')
                     # G_base_count = G_base_r + G_base_f
                     #Cc = [_.alignment.seq[_.qpos] for _ in C].count('C')
-                    #
                     
-                    ############################
-                    ### Statistical filsher  ###
-                    ############################
-                    if (self.parms.stat_filter.pos_bias
-                        and self.params.stat_filter.baq_bias
-                        and self.params.stat_filter
-                        and self.params.stat_filter.strnad_bias):
-                        pass
+                    ###########################
+                    ### Statistical filsher ###
+                    ###########################
+                    strand_bias_p = float()
+                    positional_bias_p = float()
+                    base_call_bias_p = float()
+                    if (self.params.stat_filter.strand_bias):
+                        strand_bias_p = strand_bias_filter(passed_matches, passed_mismatches)
+                        if strand_bias_p > self.params.stat_filter.sig_level:
+                            pass
+                            
+                    if (self.params.stat_filter.pos_bias):
+                        positional_bias_p = 0
+                    if (self.params.stat_filter.baq_bias):
+                        base_call_bias_p = 0
                         
+                    if pos == 47721228:
+                        print ref_base, pos
+                        print  coverage
+                        #qpos = [_.alignment.qual[_.qpos] for _ in passed_reads]
                     
-                    if True:
+                        mis_r = [_.alignment.seq[_.qpos] for _ in passed_mismatches if _.alignment.is_reverse]
+                        mis_f = [_.alignment.seq[_.qpos] for _ in passed_mismatches if not _.alignment.is_reverse]
+                        ma_r =  [_.alignment.seq[_.qpos] for _ in passed_matches if _.alignment.is_reverse]
+                        ma_f =  [_.alignment.seq[_.qpos] for _ in passed_matches if not _.alignment.is_reverse]
+                        
+                        print [_.qpos for _ in passed_reads]
+                        print [_.alignment.qend for _ in passed_mismatches]
+                        print [_.alignment.qstart for _ in passed_reads]
+                        raise SystemExit
+                        
+                    if (positional_bias_p > self.params.stat_filter.sig_level
+                        or base_call_bias_p > self.params.stat_filter.sig_level
+                        or strand_bias_p > self.params.stat_filter.sig_level):
+                    
                         yield {
                             'chrom': bam_chrom,
                             'pos': pos,
@@ -327,7 +330,6 @@ class AlignmentStream(object):
                             'types': mutation_type,
                             'dp4': dp4
                         }
-                        #raise SystemExit("End")
                 
     def __resolve_coords(self, start, end, is_one_based):
         if is_one_based:
