@@ -26,21 +26,26 @@ def run():
     args = parse_bench_opts()
     _prepare_required_data(args.sp)
 
-    # Input format
+    # Input format is vcf
     if args.vcf_file and args.sp:
-        result = _call_bench(args.vcf_file, sp=args.sp, source=args.source, mode='vcf')
+        if args.plot:
+            result = _call_bench(args.vcf_file, sp=args.sp, source=args.source,
+                                 mode='vcf', plt=True, labs=args.vcf_file)
+        else:
+            result = _call_bench(args.vcf_file, sp=args.sp, source=args.source, mode='vcf')
+    # Input format is csv
     elif args.csv_file and args.sp:
-        result = _call_bench(args.csv_file, sp=args.sp, source=args.source, mode='csv')
+        if args.plot:
+            result = _call_bench(args.csv_file, sp=args.sp, source=args.source,
+                                 mode='csv', plt=True, labs=args.csv_file)
+        else:
+            result = _call_bench(args.csv_file, sp=args.sp, source=args.source, mode='csv')
         
     # Output
     if args.out:
         _write_result(filename=args.out, content=result, is_file=True)
     elif not args.out:
         _write_result(content=result, is_file=False)
-        
-    # Plotting
-    if args.plot:
-        _plot(precisions, recalls, args.csv_file)
     
 def _prepare_required_data(species):
     '''
@@ -73,15 +78,16 @@ def _prepare_required_data(species):
         except DarnedDataGeneratorParseError as e:
             raise SystemExit('[{cls}]: {e}'.format(cls=e.__class__.__name__, e=e))
 
-def _call_bench(files, sp=None, source=None, mode=None):
+def _call_bench(files, sp=None, source=None, mode=None, plt=False, labs=[]):
     '''
     Wrapper of benchmark class
-    
+
     Args:
      files(string): vcf/csv file name
      sp(string): species name
      source(string): exploring specified sample/tissues
      mode(string): select input file fomrat
+     plt(dict): plot data or not
 
     Raises:
      ValueError: invalid file format as mode args
@@ -90,7 +96,7 @@ def _call_bench(files, sp=None, source=None, mode=None):
     Returns:
      content(string): all of the benchmarking results
     '''
-    precisions, recalls, f_measures = [0, 0, 0]
+    precisions, recalls, f_measures = [], [], []
     content = str()
     ans = DarnedReader(sp=sp, source=source)
     
@@ -99,7 +105,7 @@ def _call_bench(files, sp=None, source=None, mode=None):
             pred = VCFReader(f)
         elif mode == 'csv':
             pred = __CSVReader(f)
-        elif:
+        else:
             raise ValueError("Valid input filename is csv or vcf alone")
             
         try:
@@ -122,6 +128,13 @@ def _call_bench(files, sp=None, source=None, mode=None):
                     f_measure=f,
                     p_size=pred.size(),
                     a_size=ans.size()))
+        
+        if plt is True and len(labs) > 0:
+            precisions.append(p)
+            recalls.append(r)
+    if len(precisions) > 0 and len(recalls) > 0:
+        __plot(precisions, recalls, labs)
+        
     return content
         
 def _write_result(is_file=False, **data):
@@ -150,7 +163,7 @@ def __plot(p, r, labs):
     Args:
      p(float): precison
      r(float): recall
-     labs(string): label of the plot
+     labs(list): labels of plot
     '''
     if isinstance(p, list) and isinstance(r, list) and isinstance(labs, list):
         names = [os.path.basename(_).split('.')[0] for _ in labs]
