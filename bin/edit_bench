@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-import run_benchmarking
+import run_editbench
 
 if __name__ == '__main__':
-    run_benchmarking.run()
+    run_editbench.run()
     
