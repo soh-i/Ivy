@@ -132,9 +132,14 @@ def _call_bench(files, sp=None, source=None, mode=None, plt=False, labs=[]):
         if plt is True and len(labs) > 0:
             precisions.append(p)
             recalls.append(r)
+            
+    # plot data
     if len(precisions) > 0 and len(recalls) > 0:
-        __plot(precisions, recalls, labs)
-        
+        try:
+            __plot(precisions, recalls, labs)
+        except TypeError as e:
+            raise SystemExit(e)
+                
     return content
         
 def _write_result(is_file=False, **data):
@@ -151,11 +156,10 @@ def _write_result(is_file=False, **data):
         sys.stdout.write(header)
         sys.stdout.write(data['content'])
     elif is_file is True:
-        f = open(data['filename'], 'w')
-        f.write(header)
-        f.write(data['content'])
-        f.close()
-
+        with open(data['filename'], 'w') as f:
+            f.write(header)
+            f.write(data['content'])
+            
 def __plot(p, r, labs):
     '''
     Plot benchmarking result
@@ -172,4 +176,4 @@ def __plot(p, r, labs):
         bplt.plot_accuracy(lab=names, recall=r, precision=p)
         return True
     else:
-        return False
+        raise TypeError("[Error] Input data type must be \'list\' to plot data")
