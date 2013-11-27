@@ -343,7 +343,7 @@ class VCFReader(object):
         '''
         return self.__size
 
-    def vcf_name(self):
+    def name(self):
         '''
         Returns:
          string: filename of vcf

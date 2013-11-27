@@ -1,16 +1,6 @@
 from argparse import ArgumentParser
 import os.path
 import sys
-from Ivy.benchmark.benchmark import (
-    DarnedDataGenerator,
-    DarnedDataGeneratorValueError,
-    DarnedDataGeneratorParseError,
-    DarnedReader,
-    VCFReader,
-    Benchmark,
-    BenchmarkIOException,
-    __CSVReader,
-    )
 from Ivy.version import __version__
 
 __program__ = 'ivy_benchmark'
