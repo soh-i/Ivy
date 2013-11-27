@@ -311,7 +311,7 @@ class AlignmentStream(object):
                         print [_.qpos for _ in passed_reads]
                         print [_.alignment.qend for _ in passed_mismatches]
                         print [_.alignment.qstart for _ in passed_reads]
-                        raise SystemExit
+                        #raise SystemExit
                         
                     if (positional_bias_p > self.params.stat_filter.sig_level
                         or base_call_bias_p > self.params.stat_filter.sig_level
