@@ -20,23 +20,39 @@ __license__ = ''
 __status__ = 'development'
 
 def run():
+    '''
+    Run benchmarking test when call this function
+    '''
     args = parse_bench_opts()
     _prepare_required_data(args.sp)
-    
-    if args.vcf_file:
+
+    # Input format
+    if args.vcf_file and args.sp:
         result = _call_bench(args.vcf_file, sp=args.sp, source=args.source, mode='vcf')
-    elif args.csv_file:
+    elif args.csv_file and args.sp:
         result = _call_bench(args.csv_file, sp=args.sp, source=args.source, mode='csv')
-    
+        
+    # Output
     if args.out:
         _write_result(filename=args.out, content=result, is_file=True)
     elif not args.out:
         _write_result(content=result, is_file=False)
         
+    # Plotting
     if args.plot:
         _plot(precisions, recalls, args.csv_file)
     
 def _prepare_required_data(species):
+    '''
+    prepares and generates the required data files to test benchmaring
+    
+    Args:
+     species(string): must be given species name
+    
+    Raises:
+     DarnedDataGeneratorValueError: Invalid species name was given
+     DarnedDataGeneratorParseError: Faild to parse csv from Darned row data file
+    '''
     try:
         gen = DarnedDataGenerator(species)
     except DarnedDataGeneratorValueError as e:
@@ -58,6 +74,22 @@ def _prepare_required_data(species):
             raise SystemExit('[{cls}]: {e}'.format(cls=e.__class__.__name__, e=e))
 
 def _call_bench(files, sp=None, source=None, mode=None):
+    '''
+    Wrapper of benchmark class
+    
+    Args:
+     files(string): vcf/csv file name
+     sp(string): species name
+     source(string): exploring specified sample/tissues
+     mode(string): select input file fomrat
+
+    Raises:
+     ValueError: invalid file format as mode args
+     SystemExit: fetal error when create benchmarking instance
+    
+    Returns:
+     content(string): all of the benchmarking results
+    '''
     precisions, recalls, f_measures = [0, 0, 0]
     content = str()
     ans = DarnedReader(sp=sp, source=source)
@@ -67,6 +99,9 @@ def _call_bench(files, sp=None, source=None, mode=None):
             pred = VCFReader(f)
         elif mode == 'csv':
             pred = __CSVReader(f)
+        elif:
+            raise ValueError("Valid input filename is csv or vcf alone")
+            
         try:
             bench = Benchmark(answer=ans.db, predict=pred.db)
         except BenchmarkIOException as e:
@@ -90,6 +125,13 @@ def _call_bench(files, sp=None, source=None, mode=None):
     return content
         
 def _write_result(is_file=False, **data):
+    '''
+    Write benchmarking result into the file or console
+    
+    Args:
+     is_file(bool): print file or stdout
+     data(dict): character of the benchmarking and header
+    '''
     header = "Species,Source,DB,VCF,Precision,Recall,F-measure,AGs,Others,AnsCount\n"
     
     if is_file is False:
@@ -102,6 +144,14 @@ def _write_result(is_file=False, **data):
         f.close()
 
 def __plot(p, r, labs):
+    '''
+    Plot benchmarking result
+    
+    Args:
+     p(float): precison
+     r(float): recall
+     labs(string): label of the plot
+    '''
     if isinstance(p, list) and isinstance(r, list) and isinstance(labs, list):
         names = [os.path.basename(_).split('.')[0] for _ in labs]
         #bplt = BenchmarkPlot('plot_' + ','.join(names), "human")
