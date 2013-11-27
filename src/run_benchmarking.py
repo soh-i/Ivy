@@ -45,9 +45,10 @@ def _prepare_required_data(species):
             raise SystemExit('[{cls}]: {e}'.format(cls=e.__class__.__name__, e=e))
 
 def _call_bench(vcf_files, sp=None, source=None):
-    precision, recall, f_measure = [0, 0, 0]
+    precisions, recalls, f_measures = [0, 0, 0]
     content = str()
     ans = DarnedReader(sp=sp, source=source)
+    
     for v in vcf_files:
         vcf = VCFReader(v)
         try:
@@ -71,10 +72,11 @@ def _call_bench(vcf_files, sp=None, source=None):
                     ag_count=vcf.ag_count(),
                     other_count=vcf.other_mutations_count(),
                     ans_size=ans.size()))
-        return content
+    return content
         
 def _write_result(is_file=False, **data):
     header = "Species,Source,DB,VCF,Precision,Recall,F-measure,AGs,Others,AnsCount\n"
+    
     if is_file is False:
         sys.stdout.write(header)
         sys.stdout.write(data['content'])
