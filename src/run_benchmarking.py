@@ -3,15 +3,15 @@ import sys
 from Ivy.commandline.parse_benchmarking_opts import parse_bench_opts
 from Ivy.benchmark.plot import BenchmarkPlot
 from Ivy.benchmark.benchmark import (
-        DarnedDataGenerator,
-        DarnedDataGeneratorValueError,
-        DarnedDataGeneratorParseError,
-        DarnedReader,
-        VCFReader,
-        Benchmark,
-        BenchmarkIOException,
-        __CSVReader,
-        )
+    DarnedDataGenerator,
+    DarnedDataGeneratorValueError,
+    DarnedDataGeneratorParseError,
+    DarnedReader,
+    VCFReader,
+    Benchmark,
+    BenchmarkIOException,
+    __CSVReader,
+)
 import Ivy.utils
 
 __program__ = 'ivy_benchmark'
