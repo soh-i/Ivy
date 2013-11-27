@@ -7,7 +7,9 @@ import math
 import pprint
 import logging
 import pysam
+
 from Ivy.utils import die, AttrDict, IvyLogger
+from Ivy.alignment.filters import strand_bias_filter
 
 __program__ = 'stream'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -16,9 +18,26 @@ __status__ = 'development'
 
 DEBUG = False
 
-
+    
 class AlignmentStream(object):
     def __init__(self, __params):
+        '''
+        Initialize for pileup bam files to explore RDD sites
+        
+        Args:
+         Alignment parameters wrapped by AttrDic object
+        
+        Raises:
+         TypeError:
+         RuntimeError:
+        
+        Attributes:
+         samfile:
+         fasfile:
+         one_based:
+         params:
+        '''
+        
         ig = IvyLogger()
         self.logger = logging.getLogger(type(self).__name__)
         
@@ -28,11 +47,8 @@ class AlignmentStream(object):
             raise TypeError("Given param {prm:s} is {cls:s} class, not 'AttrDic' class"
                             .format(prm=__params, cls=__params.__class__.__name__))
 
-        __bm = pysam.Samfile(self.params.r_bams, 'rb', check_header=True, check_sq=True)
-        __ft = pysam.Fastafile(self.params.fasta)
-        
-        self.samfile = __bm
-        self.fafile = __ft
+        self.samfile = pysam.Samfile(self.params.r_bams, 'rb', check_header=True, check_sq=True)
+        self.fafile = pysam.Fastafile(self.params.fasta)
         self.one_based = self.params.one_based
 
         ### Resolve to explore specified region or not
@@ -61,28 +77,23 @@ class AlignmentStream(object):
         if _is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
             pass
         else:
-            raise RuntimeError("invalid chrom name")
+            raise RuntimeError("Invalid chrom name")
 
         if self.params.verbose:
             self.logger.debug(AttrDict.show(self.params))
             
         if DEBUG:
-            # info. for loaded samfile
-            print "### info. for samfile object from given Bam header @SQ ###"
-            print "Sam file: %s" % self.samfile.filename
-            print "lengths: %s" % [_ for _ in self.samfile.lengths]
-            print "mapped %d: " % self.samfile.mapped
-            print "N_references: %s" % self.samfile.nreferences
-            print "references: %s" % [_ for _ in self.samfile.references]
-            print "unmapped: %s" % self.samfile.unmapped
-            
-            # info. for fasta
-            print "### info. for fasfile object ###"
-            print "filename: %s" % self.fafile.filename
-
+            _fasta_info()
+            _sam_info()
+    
     def __add_preset(self, __p):
-        # Preset params add to the AttrDic attribute
-        # preset_params.__{Name} = Value
+        '''
+        Preset params add to the AttrDic attribute
+        Examples:
+         >>> __add_preset(AttrDic object)
+        Returns:
+         AttrDic object
+        '''
         __p.preset_params._skip_N = True
         __p.preset_params._skip_has_many_allele = True
         return __p
@@ -102,8 +113,9 @@ class AlignmentStream(object):
                 pos = col.pos
                 
             ref_base= self.fafile.fetch(reference=bam_chrom,
-                                    start=col.pos,
-                                    end=col.pos+1).upper()
+                                        start=col.pos,
+                                        end=col.pos+1).upper()
+            #print ref_base
             if not ref_base:
                 # TODO: resolve difference name in fasta and bam
                 raise ValueError(
@@ -120,7 +132,7 @@ class AlignmentStream(object):
             if (self.params.basic_filter.rm_duplicated
                 and self.params.basic_filter.rm_deletion
                 and self.params.basic_filter.rm_insertion):
-                
+                #print "# filter reads with all params"
                 passed_reads = [_ for _ in col.pileups
                                 if (_.alignment.is_proper_pair
                                     and not _.alignment.is_qcfail
@@ -131,11 +143,11 @@ class AlignmentStream(object):
                 passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
                 passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
 
-            # allow duplicated containing reads
+            # allow duplicated containing reasd
             elif (not self.params.basic_filter.rm_duplicated
                   and self.params.basic_filter.rm_deletion
                   and self.params.basic_filter.rm_insertion):
-                
+                #print "# allow duplicated containing reads"
                 passed_reads = [_ for _ in col.pileups
                                 if (_.alignment.is_proper_pair
                                     and not _.alignment.is_qcfail
@@ -145,11 +157,11 @@ class AlignmentStream(object):
                 passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
                 passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
 
-            # allow deletions containing reads
+            # allow deletions containing reasd
             elif (not self.params.basic_filter.rm_deletion
                   and self.params.basic_filter.rm_insertion
                   and self.params.basic_filter.rm_duplicated):
-                
+                #print  "# allow deletions containing reads"
                 passed_reads = [_ for _ in col.pileups
                                 if (_.alignment.is_proper_pair
                                     and not _.alignment.is_qcfail
@@ -166,6 +178,7 @@ class AlignmentStream(object):
                 
             # no filter
             else:
+                #print "No filter"
                 passed_reads = [_ for _ in col.pileups
                                 if (not _.alignment.is_unmapped)]
                 passed_mismatches = [_ for _ in passed_reads
@@ -182,7 +195,7 @@ class AlignmentStream(object):
                 average_baq = math.ceil(sum(quals_in_pos)/len(quals_in_pos))
             except ZeroDivisionError:
                 average_baq = 0
-            
+                
             # --min-rna-cov
             coverage = len(quals_in_pos)
             
@@ -209,7 +222,7 @@ class AlignmentStream(object):
                 except ZeroDivisionError:
                     allele_freq = float(0)
                     ag_freq = float(0)
-                
+
                 # --num-allow-type
                 mutation_type = {}
                 if len(A) > 0 and ref_base != 'A':
@@ -268,12 +281,42 @@ class AlignmentStream(object):
                     #Gc = [_.alignment.seq[_.qpos] for _ in G].count('G')
                     # G_base_count = G_base_r + G_base_f
                     #Cc = [_.alignment.seq[_.qpos] for _ in C].count('C')
-                    #
                     
-                    #############################
-                    ### Basic filters in base ###
-                    #############################
-                    if True:
+                    ###########################
+                    ### Statistical filsher ###
+                    ###########################
+                    strand_bias_p = float()
+                    positional_bias_p = float()
+                    base_call_bias_p = float()
+                    if (self.params.stat_filter.strand_bias):
+                        strand_bias_p = strand_bias_filter(passed_matches, passed_mismatches)
+                        if strand_bias_p > self.params.stat_filter.sig_level:
+                            pass
+                            
+                    if (self.params.stat_filter.pos_bias):
+                        positional_bias_p = 0
+                    if (self.params.stat_filter.baq_bias):
+                        base_call_bias_p = 0
+                        
+                    if pos == 47721228:
+                        print ref_base, pos
+                        print  coverage
+                        #qpos = [_.alignment.qual[_.qpos] for _ in passed_reads]
+                    
+                        mis_r = [_.alignment.seq[_.qpos] for _ in passed_mismatches if _.alignment.is_reverse]
+                        mis_f = [_.alignment.seq[_.qpos] for _ in passed_mismatches if not _.alignment.is_reverse]
+                        ma_r =  [_.alignment.seq[_.qpos] for _ in passed_matches if _.alignment.is_reverse]
+                        ma_f =  [_.alignment.seq[_.qpos] for _ in passed_matches if not _.alignment.is_reverse]
+                        
+                        print [_.qpos for _ in passed_reads]
+                        print [_.alignment.qend for _ in passed_mismatches]
+                        print [_.alignment.qstart for _ in passed_reads]
+                        #raise SystemExit
+                        
+                    if (positional_bias_p > self.params.stat_filter.sig_level
+                        or base_call_bias_p > self.params.stat_filter.sig_level
+                        or strand_bias_p > self.params.stat_filter.sig_level):
+                    
                         yield {
                             'chrom': bam_chrom,
                             'pos': pos,
@@ -287,7 +330,6 @@ class AlignmentStream(object):
                             'types': mutation_type,
                             'dp4': dp4
                         }
-                        #raise SystemExit("End")
                 
     def __resolve_coords(self, start, end, is_one_based):
         if is_one_based:
@@ -369,11 +411,27 @@ class AlignmentStream(object):
                 alt_f = (A_f+T_f+G_f)
             return tuple([ref_r, ref_f, alt_r, alt_f])
 
-
         else:
             raise RuntimeError(
                 'Could not able to define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
                 .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
+
+
+
+    def fasta_info(self):
+        # info. for fasta
+        print "### info. for fasfile object ###"
+        print "filename: %s" % self.fafile.filename
+
+    def sam_info(self):
+        # info. for loaded samfile
+        print "### info. for samfile object from given Bam header @SQ ###"
+        print "Sam file: %s" % self.samfile.filename
+        print "lengths: %s" % [_ for _ in self.samfile.lengths]
+        print "mapped %d: " % self.samfile.mapped
+        print "N_references: %s" % self.samfile.nreferences
+        print "references: %s" % [_ for _ in self.samfile.references]
+        print "unmapped: %s" % self.samfile.unmapped
             
 def _is_pileup(bam, fa):
     # validate bam and fa file, if sorted/indexed or not
@@ -411,6 +469,7 @@ def _resolve_chrom_name(bam_chr=None, fa_chr=None):
         return 'chr' + fa_chr
     else:
         return fa_chr
+
 
     
 if __name__ == '__main__':
