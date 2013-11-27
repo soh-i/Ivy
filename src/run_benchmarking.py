@@ -13,8 +13,12 @@ __status__ = 'development'
 def run():
     args = parse_bench_opts()
     _prepare_required_data(args.sp)
-    result = _call_bench(args.vcf_file, sp=args.sp, source=args.source)
-    
+
+    if args.vcf_file:
+        result = _call_bench(args.vcf_file, sp=args.sp, source=args.source, mode='vcf')
+    elif args.csv_file:
+        result = _call_bench(args.csv_file, sp=args.sp, source=args.source, mode='csv')
+
     if args.out:
         _write_result(filename=args.out, content=result, is_file=True)
     elif not args.out:
@@ -44,15 +48,18 @@ def _prepare_required_data(species):
         except DarnedDataGeneratorParseError as e:
             raise SystemExit('[{cls}]: {e}'.format(cls=e.__class__.__name__, e=e))
 
-def _call_bench(vcf_files, sp=None, source=None):
+def _call_bench(vcf_files, sp=None, source=None, mode=None):
     precisions, recalls, f_measures = [0, 0, 0]
     content = str()
     ans = DarnedReader(sp=sp, source=source)
     
     for v in vcf_files:
-        vcf = VCFReader(v)
+        if mode == 'vcf':
+            pred = VCFReader(v)
+        elif mode == 'csv':
+            pred = __CSVReader()
         try:
-            bench = Benchmark(answer=ans.db, predict=vcf.db)
+            bench = Benchmark(answer=ans.db, predict=pred.db)
         except BenchmarkIOException as e:
             raise SystemExit('[{0}]: {1}'.format(e.__class__.__name__, e))
             
@@ -65,12 +72,12 @@ def _call_bench(vcf_files, sp=None, source=None):
                     species=ans.sp()[0],
                     source=source,
                     db_name=ans.db_name(),
-                    vcf_file=vcf.vcf_name(),
+                    vcf_file=pred.name(),
                     precision=p,
                     recall=r,
                     f_measure=f,
-                    ag_count=vcf.ag_count(),
-                    other_count=vcf.other_mutations_count(),
+                    ag_count=pred.ag_count(),
+                    other_count=pred.other_mutations_count(),
                     ans_size=ans.size()))
     return content
         
