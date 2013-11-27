@@ -1,7 +1,7 @@
 from Ivy.version import __version__
 from Ivy.utils import die
 from Ivy.alignment.stream import AlignmentStream
-from Ivy.parse_opt import CommandLineParser
+from Ivy.commandline.parse_ivy_opts import CommandLineParser
 from Ivy.annotation.writer import VCFWriteHeader
 import pprint
 
@@ -9,6 +9,7 @@ __program__ = 'run_ivy'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
+__version__ = __version__
 
 
 class Ivy(object):
