@@ -13,16 +13,12 @@ __status__ = 'development'
 def run():
     args = parse_bench_opts()
     _prepare_required_data(args.sp)
-
-    if args.vcf_file and args.sp:
-        result = _call_bench(args.vcf_file, sp=args.sp, source=args.source)
-        
-    header = "Species,Source,DB,VCF,Precision,Recall,F-measure,AGs,Others,AnsCount\n"
+    result = _call_bench(args.vcf_file, sp=args.sp, source=args.source)
+    
     if args.out:
-        _write_result(args.out, header, result)
+        _write_result(filename=args.out, content=result, is_file=True)
     elif not args.out:
-        sys.stdout.write(header)
-        sys.stdout.write(result)
+        _write_result(content=result, is_file=False)
         
     if args.plot:
         _plot(precisions, recalls, args.csv_file)
@@ -77,11 +73,16 @@ def _call_bench(vcf_files, sp=None, source=None):
                     ans_size=ans.size()))
         return content
         
-def _write_result(filename, header, content):
-    f = open(filename, 'w')
-    f.write(header)
-    f.write(content)
-    f.close()
+def _write_result(is_file=False, **data):
+    header = "Species,Source,DB,VCF,Precision,Recall,F-measure,AGs,Others,AnsCount\n"
+    if is_file is False:
+        sys.stdout.write(header)
+        sys.stdout.write(data['content'])
+    elif is_file is True:
+        f = open(data['filename'], 'w')
+        f.write(header)
+        f.write(data['content'])
+        f.close()
     
 def _use_csv():
     print "Species,Source,DB,CSV,Precision,Recall,F-measure,PredCount,AnsCount"
