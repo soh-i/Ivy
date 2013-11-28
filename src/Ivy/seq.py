@@ -59,9 +59,13 @@ class Fasta(object):
                      'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20',
                      'chr21', 'chr22', 'chrX', 'chrY']
         
-        num_threads = 9
+        num_threads = cpus
         chr_size = len(human_chr)
-        div, mod = divmod(chr_size, num_threads)
+        try:
+            div, mod = divmod(chr_size, num_threads)
+        except ZeroDivisionError as e:
+            raise SystemExit(e)
+            
         start = 0
         end = div
             
@@ -96,12 +100,20 @@ class Fasta(object):
                 if index < len(over[0]):
                     norm[index].append(over[0][index])
             return norm
-        return __merge_list(result, overflow)
+
+        if len(overflow) > 0:
+            return __merge_list(result, overflow)
+        elif len(overflow) == 0:
+            return result
 
         
 if __name__ == '__main__':
     fasta = Fasta(fa="/Users/yukke/dev/data/genome.fa")
     #print fasta.fasta_header()
     #print fasta.split_by_chr)
+
+    for i in range(1,30):
+        l = fasta.split_by_cpus(i)
+        pp = pprint.PrettyPrinter(indent=5)
+        pp.pprint(l)
     
-    print fasta.split_by_cpus(5)
