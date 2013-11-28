@@ -2,7 +2,7 @@ import string
 import re
 import os.path
 import os
-import multiprocessing
+from multiprocessing import Pool, Process
 import pysam
 import pprint
 
@@ -28,16 +28,16 @@ class Fasta(object):
         Args:
          lists(list): block of splited chromosome
         '''
-        save_path = './block_fasta/'
-        if not os.path.isdir(save_path):
-            os.mkdir(save_path)
+        self.save_path = './block_fasta/'
+        if not os.path.isdir(self.save_path):
+            os.mkdir(self.save_path)
             
         count = 0
         block_size = len(lists)
         for block in lists:
             for chrom in block:
                 name = "-".join(block)
-                out = open(save_path + str(block_size) + '_' + name + '.fa', 'w')
+                out = open(self.save_path + str(block_size) + '_' + name + '.fa', 'w')
                 fa = open(self.filename, 'r')
                 
                 for line in fa:
@@ -120,14 +120,20 @@ class Fasta(object):
         elif len(overflow) == 0:
             return result
 
-        
+def func(fa):
+    path = './block_fasta/'
+    fafile = pysam.Fastafile(path+fa)
+    return fafile
+
 if __name__ == '__main__':
-    #fasta = Fasta(fa="/Users/yukke/dev/data/genome.fa")
-    fasta = Fasta(fa="seq.fa")
-    blocks = fasta.generate_chrom_blocks(4)
-    fasta.split_by_blocks(blocks)
+    worker = 2
     
-    
+    fa = Fasta(fa="seq.fa")
+    fa.split_by_blocks(fa.generate_chrom_blocks(worker))
+    path = './block_fasta/'
+    fasta_files = os.listdir(path)
+        
+    pool = Pool(processes=2)
+    pool.map(func, fasta_files)
     
 
-    
