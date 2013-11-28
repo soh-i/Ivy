@@ -3,24 +3,38 @@ import re
 import os.path
 
 class Fasta(object):
-    def __init__(self, fa=None):
+    def __init__(self, fa=''):
         if os.path.isfile(fa):
             self.filename = fa
         else:
-            raise RuntimeError("{fa:s} is not found".format(fa=fastafile))
+            raise RuntimeError("{:s} is not found".format(fa))
     
     def fasta_header(self):
+        header = []
+        with open(self.filename, 'r') as f:
+            #head = [line.replace('>', '', 1).rstrip() for line in f if line.startswith('>')]
+            for line in f:
+                if line.startswith('>'):
+                    head = line.replace('>', '', 1).rstrip()
+                    header.append(head)
+            return header
+
+    def split_by_chr(self):
         flag = False
         count = 0
-        header = []
         with open(self.filename, 'r') as f:
             for line in f:
                 if line.startswith('>'):
-                    header.append(line.rstrip())
                     count += 1
+                    head = line.replace('>', '', 1).rstrip()
+                    out = open(head + '.fa', 'w')
                     flag = True
-        return header
-
+                if flag:
+                    out.write(line)
+                elif not flag:
+                    continue
+        return None
+                
     def split_fasta(self, num):
         for i in range(1, num):
             f = open(str(i)+'_'+str(self.filename), 'w')
@@ -32,7 +46,6 @@ class Fasta(object):
         
 
 if __name__ == '__main__':
-    fa = Fasta(fa="seq.fa")
-    print fa.filename
-    print fa.fasta_header()
-    print fa.split_fasta(4)
+    fasta = Fasta(fa="/Users/yukke/dev/data/genome.fa")
+    print fasta.fasta_header()
+    print fasta.split_by_chr()
