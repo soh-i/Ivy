@@ -65,7 +65,7 @@ if __name__ == '__main__':
                  'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20',
                  'chr21', 'chr22', 'chrX', 'chrY']
     
-    num_threads = 2
+    num_threads = 3
     chr_size = len(human_chr)
     div, mod = divmod(chr_size, num_threads)
     result = []
@@ -73,14 +73,14 @@ if __name__ == '__main__':
     start = 0
     end = div
     for i in range(0, chr_size):
-        if num_threads > step:
-            step += num_threads
-            print human_chr[start:end]
+        if len(human_chr[start:end]):
+            #print human_chr[start:end]
+            result.append(human_chr[start:end])
             end += div
-            start +=1
-        
-    
-    #print automatically(24)
+            start += div
+
+    print result
+    print len(result)
 
 
 
