@@ -2,6 +2,7 @@ import string
 import re
 import os.path
 import multiprocessing
+import pprint
 
 class Fasta(object):
     def __init__(self, fa=''):
@@ -65,22 +66,47 @@ if __name__ == '__main__':
                  'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20',
                  'chr21', 'chr22', 'chrX', 'chrY']
     
-    num_threads = 3
+    num_threads = 7
     chr_size = len(human_chr)
     div, mod = divmod(chr_size, num_threads)
     result = []
     
     start = 0
     end = div
+    print "num threads: ", num_threads
+    print "div: ", div
+    print "mod: ", mod
+
+    overflow = []
+    counter = num_threads
     for i in range(0, chr_size):
         if len(human_chr[start:end]):
-            #print human_chr[start:end]
-            result.append(human_chr[start:end])
-            end += div
-            start += div
-
-    print result
-    print len(result)
+            if mod == 0:
+                result.append(human_chr[start:end])
+                end += div
+                start += div
+            elif mod >= 1:
+                if counter > 0:
+                    # divisible
+                    result.append(human_chr[start:end])
+                    start += div
+                    end += div
+                elif counter == 0:
+                    # mod
+                    overflow.append(human_chr[start:end])
+                    
+            counter -= 1
+                
+                
+                
+    pp = pprint.PrettyPrinter(indent=5)
+    if len(result):
+        pp.pprint(result)
+        print len(result)
+    if len(overflow):
+        pp.pprint(overflow)
+        print len(overflow)
+           
 
 
 
