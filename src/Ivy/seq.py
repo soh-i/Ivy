@@ -47,8 +47,6 @@ class Fasta(object):
             f.close()
         
     def split_by_cpus(self, cpus):
-        debug = True
-        
         #MAX_CPUs = multiprocessing.cpu_count()
         MAX_CPUs = 24
         if cpus > MAX_CPUs:
@@ -68,16 +66,9 @@ class Fasta(object):
             
         start = 0
         end = div
-            
-        result = []
-        overflow = []
-        
-        if debug:
-            print "Num threads: ", num_threads
-            print "div: ", div
-            print "mod: ", mod
-            
+        result, overflow = [], []
         counter = num_threads
+        
         for i in range(0, chr_size):
             if len(human_chr[start:end]):
                 if mod == 0:
@@ -88,11 +79,6 @@ class Fasta(object):
                 elif mod >= 1:
                     if counter > 0:
                         result.append(human_chr[start:end])
-                        start += div
-                        end += div
-                        counter -= 1
-                    elif counter == 0:
-                        overflow.append(human_chr[start:end])
                         start += div
                         end += div
                         counter -= 1
@@ -123,16 +109,10 @@ if __name__ == '__main__':
     #print fasta.fasta_header()
     #print fasta.split_by_chr)
 
-    #for i in range(1, 25):
-    #    l = fasta.split_by_cpus(i)
-    #    
-    #    pp.pprint(l)
-    #
-    i = 25
-    l = fasta.split_by_cpus(i)
-    pp.pprint(l)
-    print "length:", len(l)
-
+    for i in range(1, 25):
+        l = fasta.split_by_cpus(i)
+        pp.pprint(l)
+    
 
 
     
