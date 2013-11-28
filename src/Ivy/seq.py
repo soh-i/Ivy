@@ -132,8 +132,10 @@ if __name__ == '__main__':
     fa.split_by_blocks(fa.generate_chrom_blocks(worker))
     path = './block_fasta/'
     fasta_files = os.listdir(path)
-        
-    pool = Pool(processes=2)
+
+    # TODO:
+    # DO NOT WORK...
+    pool = Pool(processes=worker)
     pool.map(func, fasta_files)
     
 
