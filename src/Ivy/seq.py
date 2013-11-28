@@ -27,17 +27,19 @@ class Fasta(object):
         
         for block in lists:
             for chrom in block:
-                out = open(str(block_size)+'.fa', 'w')
+                name = "-".join(block)
+                out = open(str(block_size)+'_'+name+'.fa', 'w')
                 fa = open(self.filename, 'r')
+                
                 for line in fa:
                     if line.startswith('>'):
                         head = line.replace('>', '', 1).rstrip()
                     if head in block:
                         out.write(line)
                 break
+                out.close()
+                fa.close()
             block_size -= 1
-            
-        return None
 
     def chr_size(self):
         return len(self.fasta_header())
