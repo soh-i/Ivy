@@ -1,6 +1,7 @@
 import string
 import re
 import os.path
+import multiprocessing
 
 class Fasta(object):
     def __init__(self, fa=''):
@@ -35,17 +36,28 @@ class Fasta(object):
                     continue
         return None
                 
-    def split_fasta(self, num):
+    def split_by_length(self, length):
         for i in range(1, num):
             f = open(str(i)+'_'+str(self.filename), 'w')
             f.write(str(i))
             f.close()
         
     def get_fasta_length(self):
-        raise NotImplementedError()
+        pass
+
+def automatically(cpus):
+    #MAX_CPUs = multiprocessing.cpu_count()
+    MAX_CPUs = 24
+    if cpus > MAX_CPUs:
+        raise RuntimeError("Over the number of cpus are given")
         
 
 if __name__ == '__main__':
     fasta = Fasta(fa="/Users/yukke/dev/data/genome.fa")
-    print fasta.fasta_header()
-    print fasta.split_by_chr()
+    #print fasta.fasta_header()
+    #print fasta.split_by_chr()
+
+    
+    print automatically(24)
+
+    
