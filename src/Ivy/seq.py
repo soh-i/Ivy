@@ -21,18 +21,21 @@ class Fasta(object):
                     header.append(head)
             return header
 
-    def split_by_chr(self):
+    def split_by_blocks(self, lists):
         flag = False
         count = 0
+        print lists
+        
         with open(self.filename, 'r') as f:
             for line in f:
                 if line.startswith('>'):
                     count += 1
                     head = line.replace('>', '', 1).rstrip()
-                    out = open(head + '.fa', 'w')
+                    out = open(str(count) + ".fa", 'w')
                     flag = True
                 if flag:
-                    out.write(line)
+                    #out.write(line)
+                    print line,
                 elif not flag:
                     continue
         return None
@@ -41,12 +44,17 @@ class Fasta(object):
         return len(self.fasta_header())
     
     def split_by_length(self, length):
-        for i in range(1, num):
-            f = open(str(i)+'_'+str(self.filename), 'w')
-            f.write(str(i))
-            f.close()
+        pass
+
+    def generate_chrom_blocks(self, cpus):
+        '''
+        Args:
+         cpus(int): number of cpus
+
+        Returns:
+         chrom(list): splited chromsome by cpus
+        '''
         
-    def split_by_cpus(self, cpus):
         #MAX_CPUs = multiprocessing.cpu_count()
         MAX_CPUs = 24
         if cpus > MAX_CPUs:
@@ -104,15 +112,10 @@ class Fasta(object):
 
         
 if __name__ == '__main__':
-    fasta = Fasta(fa="/Users/yukke/dev/data/genome.fa")
-    pp = pprint.PrettyPrinter(indent=5)
-    #print fasta.fasta_header()
-    #print fasta.split_by_chr)
-
-    for i in range(1, 25):
-        l = fasta.split_by_cpus(i)
-        pp.pprint(l)
+    #fasta = Fasta(fa="/Users/yukke/dev/data/genome.fa")
+    fasta = Fasta(fa="seq.fa")
+    blocks = fasta.generate_chrom_blocks(5)
+    fasta.split_by_blocks(blocks)
     
-
 
     
