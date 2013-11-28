@@ -22,22 +22,21 @@ class Fasta(object):
             return header
 
     def split_by_blocks(self, lists):
-        flag = False
         count = 0
-        print lists
+        block_size = len(lists)
         
-        with open(self.filename, 'r') as f:
-            for line in f:
-                if line.startswith('>'):
-                    count += 1
-                    head = line.replace('>', '', 1).rstrip()
-                    out = open(str(count) + ".fa", 'w')
-                    flag = True
-                if flag:
-                    #out.write(line)
-                    print line,
-                elif not flag:
-                    continue
+        for block in lists:
+            for chrom in block:
+                out = open(str(block_size)+'.fa', 'w')
+                fa = open(self.filename, 'r')
+                for line in fa:
+                    if line.startswith('>'):
+                        head = line.replace('>', '', 1).rstrip()
+                    if head in block:
+                        out.write(line)
+                break
+            block_size -= 1
+            
         return None
 
     def chr_size(self):
@@ -115,6 +114,7 @@ if __name__ == '__main__':
     #fasta = Fasta(fa="/Users/yukke/dev/data/genome.fa")
     fasta = Fasta(fa="seq.fa")
     blocks = fasta.generate_chrom_blocks(5)
+    #print blocks
     fasta.split_by_blocks(blocks)
     
 
