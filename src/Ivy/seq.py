@@ -92,23 +92,37 @@ if __name__ == '__main__':
                     start += div
                     end += div
                 elif counter == 0:
-                    # mod
+                    # has mod
                     overflow.append(human_chr[start:end])
                     
             counter -= 1
-                
-                
-                
+
     pp = pprint.PrettyPrinter(indent=5)
     if len(result):
+        print "Divisible"
         pp.pprint(result)
         print len(result)
+        
     if len(overflow):
+        print "Overflow"
         pp.pprint(overflow)
-        print len(overflow)
-           
+        print "\n"
+        
+        for index, elem in enumerate(result):
+            if index < 3:
+                result[index].append(overflow[0][index])
+            
+    pp.pprint(result)
 
 
+    
+def merge_list(norm, over):
+    for index, elem in enumerate(norm):
+        if index < 3:
+            norm[index].append(over[0][index])
+    return norm
+            
+                                 
 
 
     
