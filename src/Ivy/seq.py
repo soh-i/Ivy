@@ -84,21 +84,31 @@ class Fasta(object):
                     result.append(human_chr[start:end])
                     end += div
                     start += div
+                    counter -= 1
                 elif mod >= 1:
                     if counter > 0:
-                        # divisible
                         result.append(human_chr[start:end])
                         start += div
                         end += div
+                        counter -= 1
                     elif counter == 0:
-                        # has mod
                         overflow.append(human_chr[start:end])
-                counter -= 1
-        
+                        start += div
+                        end += div
+                        counter -= 1
+                    else:
+                        overflow.append(human_chr[start:end])
+                        start += div
+                        end += div
+                        counter -= 1
+                        
         def __merge_list(norm, over):
-            for index, elem in enumerate(norm):
-                if index < len(over[0]):
-                    norm[index].append(over[0][index])
+            flatten = reduce(lambda x, y: x + y, over)
+            for i, _ in enumerate(norm):
+                for j, _ in enumerate(flatten):
+                    norm[i].append(flatten[j])
+                    del flatten[j]
+                    break
             return norm
 
         if len(overflow) > 0:
@@ -109,11 +119,20 @@ class Fasta(object):
         
 if __name__ == '__main__':
     fasta = Fasta(fa="/Users/yukke/dev/data/genome.fa")
+    pp = pprint.PrettyPrinter(indent=5)
     #print fasta.fasta_header()
     #print fasta.split_by_chr)
 
-    for i in range(1,30):
-        l = fasta.split_by_cpus(i)
-        pp = pprint.PrettyPrinter(indent=5)
-        pp.pprint(l)
+    #for i in range(1, 25):
+    #    l = fasta.split_by_cpus(i)
+    #    
+    #    pp.pprint(l)
+    #
+    i = 25
+    l = fasta.split_by_cpus(i)
+    pp.pprint(l)
+    print "length:", len(l)
+
+
+
     
