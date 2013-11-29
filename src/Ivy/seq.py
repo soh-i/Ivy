@@ -70,11 +70,12 @@ class Fasta(object):
         if cpus > MAX_CPUs:
             raise RuntimeError("Over the number of cpus are given")
             
-        human_chr = ['chrM', 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6',
-                     'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
-                     'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20',
-                     'chr21', 'chr22', 'chrX', 'chrY']
+        #human_chr = ['chrM', 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6',
+        #             'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
+        #             'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20',
+        #             'chr21', 'chr22', 'chrX', 'chrY']
         
+        human_chr = self.fasta_header()
         num_threads = cpus
         chr_size = len(human_chr)
         try:
@@ -126,16 +127,10 @@ def func(fa):
     return fafile
 
 if __name__ == '__main__':
-    worker = 2
+    cpus = 3
+    fa = Fasta(fa="test.fa")
+    chrom_blocks = fa.generate_chrom_blocks(cpus)
+    fa.split_by_blocks(chrom_blocks)
     
-    fa = Fasta(fa="seq.fa")
-    fa.split_by_blocks(fa.generate_chrom_blocks(worker))
-    path = './block_fasta/'
-    fasta_files = os.listdir(path)
-
-    # TODO:
-    # DO NOT WORK...
-    pool = Pool(processes=worker)
-    pool.map(func, fasta_files)
     
-
+    
