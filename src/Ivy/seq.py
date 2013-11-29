@@ -154,24 +154,24 @@ if __name__ == '__main__':
     if os.path.isdir(path):
         shutil.rmtree(path)
 
-    cpus = 3
+    cpus = 4
     file = "/Users/yukke/dev/data/genome.fa"
     fa = Fasta(fa=file)
     fa.split_by_blocks(n=cpus)
     fas = os.listdir(path)
 
-    #start = time.clock()
-    #p = multiprocessing.Pool(3)
-    #p.map(worker, fas)
-    #end = time.clock()
-    #print end - start
-
     start = time.clock()
-    for f in fas:
-        fafile = pysam.Fastafile(path+f)
-        seq = fafile.fetch(reference=decode_chr_name(f),start=1, end=100000)
-        print fafile.filename
-        #print seq
+    p = multiprocessing.Pool(3)
+    p.map(worker, fas)
     end = time.clock()
     print end - start
-        
+
+   # start = time.clock()
+   # for f in fas:
+   #     fafile = pysam.Fastafile(path+f)
+   #     seq = fafile.fetch(reference=decode_chr_name(f),start=1, end=100000)
+   #     print fafile.filename
+   #     #print seq
+   # end = time.clock()
+   # print end - start
+   #     
