@@ -2,9 +2,11 @@ import string
 import re
 import os.path
 import os
-from multiprocessing import Pool, Process
+import shutil
+import multiprocessing
 import pysam
 import pprint
+import time
 
 class Fasta(object):
     def __init__(self, fa=''):
@@ -126,15 +128,27 @@ class Fasta(object):
         elif len(overflow) == 0:
             return result
 
-def func(fa):
+def func(n):
+    return n**3**n
+
+def worker(fa):
     path = './block_fasta/'
     fafile = pysam.Fastafile(path+fa)
-    return fafile
-
+    print multiprocessing.current_process()
+    print fafile.filename
+    time.sleep(2)
+    print fafile.fetch(reference="chr1", start=1, end=10)
+    
 if __name__ == '__main__':
+    path = './block_fasta/'
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+
     cpus = 3
     fa = Fasta(fa="test.fa")
     fa.split_by_blocks(n=cpus)
+    fas = os.listdir(path)
     
+    p = multiprocessing.Pool(3)
     
-    
+    p.map(worker, fas)
