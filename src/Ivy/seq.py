@@ -23,18 +23,23 @@ class Fasta(object):
                     header.append(head)
             return header
 
-    def split_by_blocks(self, lists):
+    def split_by_blocks(self, n=0):
         '''
         Args:
          lists(list): block of splited chromosome
         '''
+        
         self.save_path = './block_fasta/'
         if not os.path.isdir(self.save_path):
             os.mkdir(self.save_path)
             
+        block_list = self.generate_chrom_blocks(n)
         count = 0
-        block_size = len(lists)
-        for block in lists:
+        block_size = len(block_list)
+        if block_size < 0:
+            raise ValueError("Block size must be greater than 1")
+        
+        for block in block_list:
             for chrom in block:
                 name = "-".join(block)
                 out = open(self.save_path + str(block_size) + '_' + name + '.fa', 'w')
@@ -129,8 +134,7 @@ def func(fa):
 if __name__ == '__main__':
     cpus = 3
     fa = Fasta(fa="test.fa")
-    chrom_blocks = fa.generate_chrom_blocks(cpus)
-    fa.split_by_blocks(chrom_blocks)
+    fa.split_by_blocks(n=cpus)
     
     
     
