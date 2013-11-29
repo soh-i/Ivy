@@ -131,13 +131,23 @@ class Fasta(object):
 def func(n):
     return n**3**n
 
+def decode_chr_name(chroms):
+    _, chrom = chroms.split('_')
+    base, _ = os.path.splitext(chrom)
+    return base
+    
 def worker(fa):
+    print multiprocessing.current_process()
     path = './block_fasta/'
     fafile = pysam.Fastafile(path+fa)
-    print multiprocessing.current_process()
+    
+    #time.sleep(1)
     print fafile.filename
-    time.sleep(2)
-    print fafile.fetch(reference="chr1", start=1, end=10)
+    c = decode_chr_name(fa)
+    seq = fafile.fetch(reference=c, start=1, end=100000)
+    return seq
+    #return fafile
+    
     
 if __name__ == '__main__':
     path = './block_fasta/'
@@ -145,10 +155,23 @@ if __name__ == '__main__':
         shutil.rmtree(path)
 
     cpus = 3
-    fa = Fasta(fa="test.fa")
+    file = "/Users/yukke/dev/data/genome.fa"
+    fa = Fasta(fa=file)
     fa.split_by_blocks(n=cpus)
     fas = os.listdir(path)
-    
-    p = multiprocessing.Pool(3)
-    
-    p.map(worker, fas)
+
+    #start = time.clock()
+    #p = multiprocessing.Pool(3)
+    #p.map(worker, fas)
+    #end = time.clock()
+    #print end - start
+
+    start = time.clock()
+    for f in fas:
+        fafile = pysam.Fastafile(path+f)
+        seq = fafile.fetch(reference=decode_chr_name(f),start=1, end=100000)
+        print fafile.filename
+        #print seq
+    end = time.clock()
+    print end - start
+        
