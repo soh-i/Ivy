@@ -157,7 +157,7 @@ def decode_chr_name_from_file(chroms):
                     decode.append(chrm)
     return decode
                 
-def worker(fa):
+def fetch_seq(fa):
     print multiprocessing.current_process()
     
     path = './block_fasta/'
@@ -167,29 +167,45 @@ def worker(fa):
     for c in chroms:
         print "fetching {0}...".format(c)
         seq.append(fafile.fetch(reference=c, start=1, end=1000000))
-        
     return seq
-    
-if __name__ == '__main__':
-    path = './block_fasta/'
-    if os.path.isdir(path):
-        shutil.rmtree(path)
-    
-    cpus = 4
-    fasta_file = "/Users/yukke/dev/data/genome.fa"
-    #fasta_file = 'seq.fa'
-    fa = Fasta(fa=fasta_file)
-    fa.split_by_blocks(n=cpus)
-    fas = os.listdir(path)
-    #print decode_chr_name_from_file(fas)
-    
+
+def run(cpus, fas):
     start = time.clock()
     p = multiprocessing.Pool(cpus)
-    p.map(worker, fas)
+    print p.map(fetch_seq, fas)
     end = time.clock()
     print end - start
 
-    #start = time.clock()
+def get_fa_list(path):
+    fa = []
+    for _ in os.listdir(path):
+        if _.endswith(".fa"):
+            fa.append(_)
+    return fa
+
+    
+if __name__ == '__main__':
+    path = './block_fasta/'
+    fasta_file = "seq.fa"
+    cpus = 4
+    
+    # create directory
+    if not os.path.isdir(path):
+        os.mkdir(path)
+    fas = get_fa_list(path)
+    if len([_ for _ in fas if _.endswith(".fa")]) != cpus:
+        print "Remove old blocks and generates new blocks"
+        shutil.rmtree(path)
+        fa = Fasta(fa=fasta_file)
+        fa.split_by_blocks(n=cpus)
+        run(cpus, get_fa_list(path))
+        
+    elif len([_ for _ in fas if _.endswith(".fa")]) == cpus:
+        print "Used existing block"
+        run(cpus, get_fa_list(path))
+
+    
+    ##start = time.clock()
     #for f in fas:
     #    fafile = pysam.Fastafile(path+f)
     #    seq = fafile.fetch(reference=decode_chr_name(f),start=1, end=100000)
