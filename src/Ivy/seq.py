@@ -2,9 +2,11 @@ import string
 import re
 import os.path
 import os
-from multiprocessing import Pool, Process
+import shutil
+import multiprocessing
 import pysam
 import pprint
+import time
 
 class Fasta(object):
     def __init__(self, fa=''):
@@ -23,18 +25,23 @@ class Fasta(object):
                     header.append(head)
             return header
 
-    def split_by_blocks(self, lists):
+    def split_by_blocks(self, n=0):
         '''
         Args:
          lists(list): block of splited chromosome
         '''
+        
         self.save_path = './block_fasta/'
         if not os.path.isdir(self.save_path):
             os.mkdir(self.save_path)
             
+        block_list = self.generate_chrom_blocks(n)
         count = 0
-        block_size = len(lists)
-        for block in lists:
+        block_size = len(block_list)
+        if block_size < 0:
+            raise ValueError("Block size must be greater than 1")
+        
+        for block in block_list:
             for chrom in block:
                 name = "-".join(block)
                 out = open(self.save_path + str(block_size) + '_' + name + '.fa', 'w')
@@ -70,11 +77,12 @@ class Fasta(object):
         if cpus > MAX_CPUs:
             raise RuntimeError("Over the number of cpus are given")
             
-        human_chr = ['chrM', 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6',
-                     'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
-                     'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20',
-                     'chr21', 'chr22', 'chrX', 'chrY']
+        #human_chr = ['chrM', 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6',
+        #             'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
+        #             'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20',
+        #             'chr21', 'chr22', 'chrX', 'chrY']
         
+        human_chr = self.fasta_header()
         num_threads = cpus
         chr_size = len(human_chr)
         try:
@@ -120,22 +128,50 @@ class Fasta(object):
         elif len(overflow) == 0:
             return result
 
-def func(fa):
+def func(n):
+    return n**3**n
+
+def decode_chr_name(chroms):
+    _, chrom = chroms.split('_')
+    base, _ = os.path.splitext(chrom)
+    return base
+    
+def worker(fa):
+    print multiprocessing.current_process()
     path = './block_fasta/'
     fafile = pysam.Fastafile(path+fa)
-    return fafile
-
+    
+    #time.sleep(1)
+    print fafile.filename
+    c = decode_chr_name(fa)
+    seq = fafile.fetch(reference=c, start=1, end=100000)
+    return seq
+    #return fafile
+    
+    
 if __name__ == '__main__':
-    worker = 2
-    
-    fa = Fasta(fa="seq.fa")
-    fa.split_by_blocks(fa.generate_chrom_blocks(worker))
     path = './block_fasta/'
-    fasta_files = os.listdir(path)
+    if os.path.isdir(path):
+        shutil.rmtree(path)
 
-    # TODO:
-    # DO NOT WORK...
-    pool = Pool(processes=worker)
-    pool.map(func, fasta_files)
-    
+    cpus = 4
+    file = "/Users/yukke/dev/data/genome.fa"
+    fa = Fasta(fa=file)
+    fa.split_by_blocks(n=cpus)
+    fas = os.listdir(path)
 
+    start = time.clock()
+    p = multiprocessing.Pool(3)
+    p.map(worker, fas)
+    end = time.clock()
+    print end - start
+
+   # start = time.clock()
+   # for f in fas:
+   #     fafile = pysam.Fastafile(path+f)
+   #     seq = fafile.fetch(reference=decode_chr_name(f),start=1, end=100000)
+   #     print fafile.filename
+   #     #print seq
+   # end = time.clock()
+   # print end - start
+   #     
