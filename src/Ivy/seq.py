@@ -158,6 +158,11 @@ def decode_chr_name_from_file(chroms):
     return decode
                 
 def fetch_seq(fa):
+    '''
+    Args:
+     fasta(list): Path to fasta file
+    '''
+    
     print multiprocessing.current_process()
     
     path = './block_fasta/'
@@ -170,6 +175,12 @@ def fetch_seq(fa):
     return seq
 
 def run(cpus, fas):
+    '''
+    Args:
+     cpus(int): Number of cpus
+     fasta(list): Path to fasta files
+    '''
+    
     start = time.clock()
     p = multiprocessing.Pool(cpus)
     print p.map(fetch_seq, fas)
@@ -177,6 +188,14 @@ def run(cpus, fas):
     print end - start
 
 def get_fa_list(path):
+    '''
+    Args:
+     path(str): blocked fasta contained directory
+    
+    Returns:
+     files(list): only .fa file which located in given path 
+    '''
+    
     fa = []
     for _ in os.listdir(path):
         if _.endswith(".fa"):
@@ -193,14 +212,14 @@ if __name__ == '__main__':
     if not os.path.isdir(path):
         os.mkdir(path)
     fas = get_fa_list(path)
-    if len([_ for _ in fas if _.endswith(".fa")]) != cpus:
+    if len(fas) != cpus:
         print "Remove old blocks and generates new blocks"
         shutil.rmtree(path)
         fa = Fasta(fa=fasta_file)
         fa.split_by_blocks(n=cpus)
         run(cpus, get_fa_list(path))
         
-    elif len([_ for _ in fas if _.endswith(".fa")]) == cpus:
+    elif len(get_fa_list(path)) == cpus:
         print "Used existing block"
         run(cpus, get_fa_list(path))
 
