@@ -170,8 +170,10 @@ def fetch_seq(fa):
     chroms = decode_chr_name_from_file([fa])
     seq = []
     for c in chroms:
-        print "fetching {0}...".format(c)
-        seq.append(fafile.fetch(reference=c, start=1, end=1000000))
+        #print "fetching {0}...".format(c)
+        l = len(fafile.fetch(reference=c, start=1, end=1000000000))
+        print "Chr: %s, Length: %d" % (c, l)
+        
     return seq
 
 def run(cpus, fas):
@@ -181,31 +183,41 @@ def run(cpus, fas):
      fasta(list): Path to fasta files
     '''
     
-    start = time.clock()
     p = multiprocessing.Pool(cpus)
-    print p.map(fetch_seq, fas)
-    end = time.clock()
-    print end - start
+    seq = p.map(fetch_seq, fas)
+    return seq
 
 def get_fa_list(path):
     '''
     Args:
      path(str): blocked fasta contained directory
-    
+
     Returns:
      files(list): only .fa file which located in given path 
     '''
-    
+
     fa = []
     for _ in os.listdir(path):
         if _.endswith(".fa"):
             fa.append(_)
     return fa
 
+class Timer(object):
+    def __init__(self, verbose=True):
+        self.verbose = verbose
+        
+    def __enter__(self):
+        self.start = time.time()
+
+    def __exit__(self, *args):
+        self.end = time.time()
+        self.secs = self.end - self.start
+        if self.verbose:
+            print '=> Elapsed time: {:f} (sec)'.format(self.secs)
     
 if __name__ == '__main__':
     path = './block_fasta/'
-    fasta_file = "seq.fa"
+    fasta_file = "../../../data/genome.fa"
     cpus = 4
     
     # create directory
@@ -217,13 +229,15 @@ if __name__ == '__main__':
         shutil.rmtree(path)
         fa = Fasta(fa=fasta_file)
         fa.split_by_blocks(n=cpus)
-        run(cpus, get_fa_list(path))
+        
+        with Timer() as t:
+            run(cpus, get_fa_list(path))
         
     elif len(get_fa_list(path)) == cpus:
         print "Used existing block"
-        run(cpus, get_fa_list(path))
-
-    
+        with Timer() as t:
+            run(cpus, get_fa_list(path))
+            
     ##start = time.clock()
     #for f in fas:
     #    fafile = pysam.Fastafile(path+f)
