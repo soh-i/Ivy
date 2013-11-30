@@ -159,16 +159,16 @@ def decode_chr_name_from_file(chroms):
                 
 def worker(fa):
     print multiprocessing.current_process()
+    
     path = './block_fasta/'
     fafile = pysam.Fastafile(path+fa)
-    
-    #time.sleep(1)
-    print fafile.filename
-    c = decode_chr_name(fa)
-    seq = fafile.fetch(reference=c, start=1, end=100000)
+    chroms = decode_chr_name_from_file([fa])
+    seq = []
+    for c in chroms:
+        print "fetching {0}...".format(c)
+        seq.append(fafile.fetch(reference=c, start=1, end=1000000))
+        
     return seq
-    #return fafile
-    
     
 if __name__ == '__main__':
     path = './block_fasta/'
@@ -176,20 +176,18 @@ if __name__ == '__main__':
         shutil.rmtree(path)
     
     cpus = 4
-    #file = "/Users/yukke/dev/data/genome.fa"
-    fasta_file = 'seq.fa'
+    fasta_file = "/Users/yukke/dev/data/genome.fa"
+    #fasta_file = 'seq.fa'
     fa = Fasta(fa=fasta_file)
     fa.split_by_blocks(n=cpus)
     fas = os.listdir(path)
-    print decode_chr_name_from_file(fas)
+    #print decode_chr_name_from_file(fas)
     
-    
-    # 
-    #start = time.clock()
-    #p = multiprocessing.Pool(3)
-    #p.map(worker, fas)
-    #end = time.clock()
-    #print end - start
+    start = time.clock()
+    p = multiprocessing.Pool(cpus)
+    p.map(worker, fas)
+    end = time.clock()
+    print end - start
 
     #start = time.clock()
     #for f in fas:
