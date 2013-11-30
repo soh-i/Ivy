@@ -1,5 +1,6 @@
 import string
 import re
+import string
 import os.path
 import os
 import shutil
@@ -128,14 +129,34 @@ class Fasta(object):
         elif len(overflow) == 0:
             return result
 
-def func(n):
-    return n**3**n
 
-def decode_chr_name(chroms):
-    _, chrom = chroms.split('_')
-    base, _ = os.path.splitext(chrom)
-    return base
-    
+def decode_chr_name_from_file(chroms):
+    '''
+    Args:
+     blocked fasta file, 1_chr18-chr19-chr20.fa
+    Returns:
+     chromosome name(list): [chr18, chr19, chr20]
+    '''
+    decode = []
+    files = [f.split("-") for f in chroms]
+    for i in files:
+        for chrm in i:
+            # remove prefix
+            p = re.compile(r'(^\d+_)(.+)')
+            match = p.match(chrm)
+            if match:
+                decode.append(match.group(0).replace(match.group(1), '', 1))
+            else:
+                # remove suffix
+                p = re.compile(r'(.+)\.{1}fa$')
+                match = p.match(chrm)
+                if match:
+                    decode.append(match.group(1))
+                else:
+                    # normal
+                    decode.append(chrm)
+    return decode
+                
 def worker(fa):
     print multiprocessing.current_process()
     path = './block_fasta/'
@@ -153,25 +174,29 @@ if __name__ == '__main__':
     path = './block_fasta/'
     if os.path.isdir(path):
         shutil.rmtree(path)
-
+    
     cpus = 4
-    file = "/Users/yukke/dev/data/genome.fa"
-    fa = Fasta(fa=file)
+    #file = "/Users/yukke/dev/data/genome.fa"
+    fasta_file = 'seq.fa'
+    fa = Fasta(fa=fasta_file)
     fa.split_by_blocks(n=cpus)
     fas = os.listdir(path)
+    print decode_chr_name_from_file(fas)
+    
+    
+    # 
+    #start = time.clock()
+    #p = multiprocessing.Pool(3)
+    #p.map(worker, fas)
+    #end = time.clock()
+    #print end - start
 
-    start = time.clock()
-    p = multiprocessing.Pool(3)
-    p.map(worker, fas)
-    end = time.clock()
-    print end - start
-
-   # start = time.clock()
-   # for f in fas:
-   #     fafile = pysam.Fastafile(path+f)
-   #     seq = fafile.fetch(reference=decode_chr_name(f),start=1, end=100000)
-   #     print fafile.filename
-   #     #print seq
-   # end = time.clock()
-   # print end - start
-   #     
+    #start = time.clock()
+    #for f in fas:
+    #    fafile = pysam.Fastafile(path+f)
+    #    seq = fafile.fetch(reference=decode_chr_name(f),start=1, end=100000)
+    #    print fafile.filename
+    #    #print seq
+    #end = time.clock()
+    #print end - start
+    #    
