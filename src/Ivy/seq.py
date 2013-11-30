@@ -77,11 +77,6 @@ class Fasta(object):
         MAX_CPUs = 24
         if cpus > MAX_CPUs:
             raise RuntimeError("Over the number of cpus are given")
-            
-        #human_chr = ['chrM', 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6',
-        #             'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
-        #             'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20',
-        #             'chr21', 'chr22', 'chrX', 'chrY']
         
         human_chr = self.fasta_header()
         num_threads = cpus
@@ -187,6 +182,16 @@ def run(cpus, fas):
     seq = p.map(fetch_seq, fas)
     return seq
 
+def as_single(genome):
+    human_chr = ['chrM', 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6',
+                 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
+                 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20',
+                 'chr21', 'chr22', 'chrX', 'chrY']
+    fafile = pysam.Fastafile(genome)
+    for c in human_chr:
+        l = len(fafile.fetch(reference=c, start=1, end=1000000000))
+        print "Chr: %s, Length: %d" % (c, l)
+
 def get_fa_list(path):
     '''
     Args:
@@ -224,6 +229,11 @@ if __name__ == '__main__':
     if not os.path.isdir(path):
         os.mkdir(path)
     fas = get_fa_list(path)
+
+    fa = Fasta(fa=fasta_file)
+    with Timer() as t:
+        as_single(fasta_file)
+    
     if len(fas) != cpus:
         print "Remove old blocks and generates new blocks"
         shutil.rmtree(path)
@@ -237,13 +247,5 @@ if __name__ == '__main__':
         print "Used existing block"
         with Timer() as t:
             run(cpus, get_fa_list(path))
-            
-    ##start = time.clock()
-    #for f in fas:
-    #    fafile = pysam.Fastafile(path+f)
-    #    seq = fafile.fetch(reference=decode_chr_name(f),start=1, end=100000)
-    #    print fafile.filename
-    #    #print seq
-    #end = time.clock()
-    #print end - start
-    #    
+
+    
