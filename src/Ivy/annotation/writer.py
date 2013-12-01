@@ -1,5 +1,5 @@
 import sys
-from Ivy.parse_opt import CommandLineParser
+from Ivy.commandline.parse_ivy_opts import CommandLineParserk
 from Ivy.utils import AttrDict
 import datetime
 
