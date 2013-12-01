@@ -31,7 +31,7 @@ if __name__ == '__main__':
                 'edit_bench = Ivy.run_editbench:run',
             ],
         },
-        install_requires=['pysam==0.7.5', 'PyVCF==0.6.4', 'matplotlib==1.3.1', 'fisher'],
+        install_requires=['fisher', 'pysam==0.7.5', 'PyVCF==0.6.4', 'matplotlib==1.3.1'],
         test_suite='Ivy.tests',
         license='not yet',
         )
