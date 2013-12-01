@@ -11,29 +11,24 @@ __license__ = ''
 __status__ = 'development'
 __version__ = __version__
 
+def run():
+    pp = pprint.PrettyPrinter(indent=6)
+    parse = CommandLineParser()
+    params = parse.ivy_parse_options()
+    vcf = VCFWriteHeader(params)
+    stream = AlignmentStream(params)
+    vcf.make_vcf_header()
 
-class Ivy(object):
-    def __init__(self):
-        pass
+    #with open(params.outname, 'w') as f:
+    #f.write()
+            
+    for rna in stream.pileup_stream():
         
-    def run(self):
-        pp = pprint.PrettyPrinter(indent=6)
-        parse = CommandLineParser()
-        params = parse.ivy_parse_options()
-        vcf = VCFWriteHeader(params)
-        stream = AlignmentStream(params)
-        vcf.make_vcf_header()
-
-        #with open(params.outname, 'w') as f:
-        #f.write()
-            
-        for rna in stream.pileup_stream():
-            
-            print '{chrom}\t{pos:d}\t{ref:s}\t{alt:s}\tDP={coverage:d};DP4={dp4:s};MIS_RATIO={mismatch_ratio:0.4f}'.format(
-                chrom=rna['chrom'],
-                pos=rna['pos'],
-                ref=rna['ref'],
-                alt=rna['alt'],
-                mismatch_ratio=rna['mismatch_ratio'],
-                coverage=rna['coverage'],
-                dp4=",".join([str(_) for _ in rna['dp4']]))
+        print '{chrom}\t{pos:d}\t{ref:s}\t{alt:s}\tDP={coverage:d};DP4={dp4:s};MIS_RATIO={mismatch_ratio:0.4f}'.format(
+            chrom=rna['chrom'],
+            pos=rna['pos'],
+            ref=rna['ref'],
+            alt=rna['alt'],
+            mismatch_ratio=rna['mismatch_ratio'],
+            coverage=rna['coverage'],
+            dp4=",".join([str(_) for _ in rna['dp4']]))
