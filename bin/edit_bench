@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-import run_editbench
+import pkg_resources
+from Ivy.run_editbench import run
 
 if __name__ == '__main__':
-    run_editbench.run()
+    run()
     
