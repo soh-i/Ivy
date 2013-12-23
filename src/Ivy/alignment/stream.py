@@ -127,8 +127,6 @@ class AlignmentStream(AlignmentReadsFilter):
          params:
         '''
         
-        print dir(self)
-        
         ig = IvyLogger()
         self.logger = logging.getLogger(type(self).__name__)
         
@@ -230,7 +228,7 @@ class AlignmentStream(AlignmentReadsFilter):
                 and self.params.basic_filter.rm_insertion):
                 if params_debug:
                     self.params.show(self.params.basic_filter)
-                    raise SystemExit("Called methods: {1:s}".format(self.params.basic_filter, self.reads_filter_by_all_params.__name__))
+                    raise SystemExit("Called methods: {0:s}".format(self.reads_filter_by_all_params.__name__))
                     
                 passed_reads, passed_matches, passed_mismatches = self.reads_filter_by_all_params(col.pileup, ref_base)
                 
