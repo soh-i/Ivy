@@ -11,6 +11,7 @@ import pysam
 
 from Ivy.utils import die, AttrDict, IvyLogger
 from Ivy.alignment.filters import strand_bias_filter
+from Ivy.alignment.stats import AlignmentReadsStats
 
 __program__ = 'stream'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -18,129 +19,6 @@ __license__ = ''
 __status__ = 'development'
 
 DEBUG = False
-
-
-class AlignmentReadsStats(object):
-    '''
-    Utility class provides methods to streaming/filtering reads processing as staticmethods,
-    This class can NOT to handle the Pysam object.
-    
-    Example:
-     >>> import AlignmentUtils
-     >>> AlignmentUtils.mismatch_frequency(match, mismatch)
-    '''
-    
-    @staticmethod
-    def quals_in_pos(reads):
-        return [ord(_.alignment.qual[_.qpos])-33 for _ in reads]
-        
-    @staticmethod
-    def reads_coverage(reads):
-        return  len(reads)
-        
-    @staticmethod
-    def average_base_quality(reads):
-        q_pos = AlignmentUtils.quals_in_pos(reads)
-        try:
-            return math.ceil(sum(q_pos)/len(q_pos))
-        except ZeroDivisionError:
-            return .0
-
-    @staticmethod
-    def average_mapq(reads):
-        mapqs_in_pos = [_.alignment.mapq for _ in reads]
-        try:
-            return math.ceil(sum(mapqs_in_pos) / len(mapqs_in_pos))
-        except ZeroDivisionError:
-            return .0
-
-    @staticmethod
-    def mismatch_frequency(match, mismatch):
-        try:
-            return len(mismatch) / (len(match) + len(mismatch))
-        except ZeroDivisionError:
-            return .0
-            
-    @staticmethod
-    def a_to_g_frequency(a, g):
-        try:
-            return len(g) / (len(a) + len(g))
-        except ZeroDivisionError:
-            return .0
-               
-    def average_baq(self, baq):
-        return (sum([ord(_)-33 for _ in baq]) / len(baq))
-
-    @staticmethod
-    def define_allele(base, ref=None):
-        if base and ref:
-            [_.upper() for _ in base]
-            ref.upper()
-        
-        c = Counter(base)
-        comm = c.most_common()
-
-        __allele = {}
-        for base in comm:
-            if base[0] != ref:
-                __allele.update({base[0]:base[1]})
-        defined = ()
-        for j in __allele:
-            for k in __allele:
-                # single alllele is found
-                if j == k:
-                    return tuple([j, __allele[j]])
-                    
-                # most common varinat with a allele type alone
-                elif __allele[k] == __allele[j] and k != j:
-                    return tuple(__allele.items())
-                    
-                # most common variant if has many allele
-                elif __allele[k] != __allele[j] and k != j:
-                    m = max(__allele[k], __allele[j])
-                    if m == __allele[k]:
-                        return tuple([k, __allele[k]])
-                    elif m == __allele[j]:
-                        return tuple([j, __allele[j]])
-        else:
-            # allele is not found
-            return '.'
-
-    @staticmethod
-    def compute_dp4(ref, A_f, A_r, T_f, T_r, G_f, G_r, C_f, C_r):
-        #if len(alt): TODO:  here is bug # TypeError: object of type 'NoneType' has no len()
-        if True: # TODO: set any condition(s)
-            ref_r = 0
-            ref_f = 0
-            alt_r = 0
-            alt_f = 0
-            
-            if ref == 'A':
-                ref_r = (A_r)
-                ref_f = (A_f)
-                alt_r = (G_f+C_f+T_f)
-                alt_f = (G_r+C_r+T_r)
-            elif ref == 'T':
-                ref_r = (T_r)
-                ref_f = (T_f)
-                alt_r = (G_r+C_r+A_r)
-                alt_f = (G_f+C_f+A_f)
-            elif ref == 'G':
-                ref_r = (G_r)
-                ref_f = (G_f)
-                alt_r = (C_r+T_r+A_r)
-                alt_f = (C_f+C_f+C_r)
-            elif ref == 'C':
-                ref_r = (C_r)
-                ref_f = (C_f)
-                alt_r = (A_r+T_r+G_r)
-                alt_f = (A_f+T_f+G_f)
-            return tuple([ref_r, ref_f, alt_r, alt_f])
-
-        else:
-            raise RuntimeError(
-                'Could not able to define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
-                .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
 
             
 class FilteredAlignmentReadsGenerator(object):
@@ -283,7 +161,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             else:
                 # explore all region if self.params.region.* is None
                 pass
-        if _is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
+        if  _is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
             pass
         else:
             raise ValueError("Invalid chromosome name")
@@ -387,14 +265,14 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             ### Basic filters in reads ###
             ##############################
             # --min-rna-baq
-            quals_in_pos = AlignmentUtils.quals_in_pos(passed_reads)
-            average_baq = AlignmentUtils.average_base_quality(passed_reads)
+            quals_in_pos = AlignmentReadsStats.quals_in_pos(passed_reads)
+            average_baq = AlignmentReadsStats.average_base_quality(passed_reads)
             
             # --min-rna-cov
-            coverage = AlignmentUtils.reads_coverage(passed_reads)
+            coverage = AlignmentReadsStats.reads_coverage(passed_reads)
 
             # --min-rna-mapq
-            average_mapq = AlignmentUtils.average_mapq(passed_reads)
+            average_mapq = AlignmentReadsStats.average_mapq(passed_reads)
 
             A, T, G, C = self.retrieve_reads_each_base_type(passed_reads)
             self.retrieve_base_string_each_base_type(A,T,G,C)
@@ -404,8 +282,8 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                 and self.params.basic_filter.min_baq_rna <= average_baq):
                 
                 # --min-mis-frequency
-                allele_freq= AlignmentUtils.mismatch_frequency(passed_matches, passed_mismatches)
-                ag_freq = AlignmentUtils.a_to_g_frequency(A, G)
+                allele_freq= AlignmentReadsStats.mismatch_frequency(passed_matches, passed_mismatches)
+                ag_freq = AlignmentReadsStats.a_to_g_frequency(A, G)
                 
                 # --num-allow-type
                 mutation_type = {}
@@ -432,7 +310,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     
                     # define allele
                     _all_base = Ab + Gb + Cb + Tb
-                    alt = AlignmentUtils.define_allele(_all_base, ref=ref_base)
+                    alt = AlignmentReadsStats.define_allele(_all_base, ref=ref_base)
                 
                     # Array in seq with read strand information
                     G_base_r = [_.alignment.seq[_.qpos] for _ in G
@@ -455,7 +333,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     C_base_f = [_.alignment.seq[_.qpos] for _ in C
                                 if not _.alignment.is_reverse]
 
-                    dp4 = (AlignmentUtils.compute_dp4(ref_base,
+                    dp4 = (AlignmentReadsStats.compute_dp4(ref_base,
                                             len(A_base_r), len(A_base_f),
                                             len(T_base_r), len(T_base_f),
                                             len(G_base_r), len(G_base_f),
@@ -586,11 +464,16 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         print "N_references: %s" % self.samfile.nreferences
         print "references: %s" % [_ for _ in self.samfile.references]
         print "unmapped: %s" % self.samfile.unmapped
+
+
+def _parse_faidx(filename):
+    fasta_chrom_name = []
+    with open(filename, 'r') as fh:
+        for row in fh:
+            data = row.split('\t')
+            fasta_chrom_name.append(data[0])
+    return fasta_chrom_name
             
-def _is_pileup(bam, fa):
-    # validate bam and fa file, if sorted/indexed or not
-    pass
-    
 def _is_same_chromosome_name(bam=None, fa=None):
     __bam = pysam.Samfile(os.path.abspath(bam), 'rb')
     __fa = pysam.Fastafile(os.path.abspath(fa))
@@ -604,26 +487,17 @@ def _is_same_chromosome_name(bam=None, fa=None):
                 return True
             else:
                 return False
-    else:
-        raise RuntimeError('{filename:s} of faidx file is not found'.
-                           format(filename=fa_dx_filename))
-        
-def _parse_faidx(filename):
-    fasta_chrom_name = []
-    with open(filename, 'r') as fh:
-        for row in fh:
-            data = row.split('\t')
-            fasta_chrom_name.append(data[0])
-    return fasta_chrom_name
-
+        else:
+            raise RuntimeError('{filename:s} of faidx file is not found'.
+                               format(filename=fa_dx_filename))
+            
 def _resolve_chrom_name(bam_chr=None, fa_chr=None):
     raise NotImplementedError()
-    
     if not fa_chr.startswith('chr'):
         return 'chr' + fa_chr
     else:
         return fa_chr
-
+            
 if __name__ == '__main__':
     align = AlignmentStream("params")
     
