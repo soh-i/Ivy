@@ -42,9 +42,6 @@ class AlignmentReadsFilter(object):
          NOT deletion reads
          NOT fail to quality check reads
         '''
-        
-        if not hasattr(pileup_obj, 'col'):
-            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup_obj.__class__.__name__))
                 
         _reads = [_ for _ in pileup_obj
                   if (_.alignment.is_proper_pair
@@ -52,8 +49,8 @@ class AlignmentReadsFilter(object):
                       and not _.alignment.is_duplicate
                       and not _.alignment.is_unmapped
                       and not _.is_del)]
-        _matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
-        _mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
+        _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
+        _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
             
     def reads_filter_without_pp(self, pileup_obj, ref_base):
@@ -66,17 +63,14 @@ class AlignmentReadsFilter(object):
          NOT deletion reads
         '''
         
-        if not hasattr(pileup_obj, 'col'):
-            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup_obj.__class__.__name__))
-            
         _reads = [_ for _ in pileup_obj
                   if (_.alignment.is_proper_pair
                       and not _.alignment.is_qcfail
                       and not _.alignment.is_duplicate
                       and not _.alignment.is_unmapped
                       and not _.is_del)]
-        _mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
-        _matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
+        _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
+        _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
         return _reads, _matches, _mismatches
         
     def reads_allow_duplication(self, pileup_obj, ref_base):
@@ -88,26 +82,21 @@ class AlignmentReadsFilter(object):
          NOT deletion reads
         '''
         
-        if not hasattr(pileup_obj, 'col'):
-            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup_obj.__class__.__name__))
-            
         _reads = [_ for _ in col.pileups
                   if (_.alignment.is_proper_pair
                       and not _.alignment.is_qcfail
                       and not _.alignment.is_unmapped
                       and not _.is_del)]
-        _matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
-        _mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
+        _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
+        _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
             
     def reads_without_filter(self, pileup_obj, ref_base):
         '''All reads are passed through under this filter'''
-        if not hasattr(pileup_obj, 'Pysam'):
-            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup_obj.__class__.__name__))
-            
-        _reads = [_ for _ in _col.pileups if (not _.alignment.is_unmapped)]
-        _mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
-        _matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
+        
+        _reads = [_ for _ in pileup_obj if (not _.alignment.is_unmapped)]
+        _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
+        _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
         return _reads, _matches, _mismatches
         
     def reads_allow_insertion(self):
@@ -238,32 +227,29 @@ class AlignmentStream(AlignmentReadsFilter):
             if (self.params.basic_filter.rm_duplicated
                 and self.params.basic_filter.rm_deletion
                 and self.params.basic_filter.rm_insertion):
-                reads, matches, mismatches = self.reads_filter_by_all_params(pileup)
+                reads, matches, mismatches = self.reads_filter_by_all_params(col.pileup, ref_base)
                 
             # allow duplicated containing reads
             elif (not self.params.basic_filter.rm_duplicated
                   and self.params.basic_filter.rm_deletion
                   and self.params.basic_filter.rm_insertion):
-                reads, matches, mismaches = self.reads_allow_duplication(pileup)
+                reads, matches, mismaches = self.reads_allow_duplication(col.pileup, ref_base)
                 
             # allow deletions containing reads
             elif (not self.params.basic_filter.rm_deletion
                   and self.params.basic_filter.rm_insertion
                   and self.params.basic_filter.rm_duplicated):
-                reads, match, mismatch = self.reads_allow_deletion(pileup)
+                reads, match, mismatch = self.reads_allow_deletion(col.pileup, ref_base)
                 
             # allow insertion containing reads
             elif (not self.params.basic_filter.rm_insertion
                   and self.params.basic_filter.rm_deletion
                   and self.params.basic_filterf.rm_duplicated):
-                self.reads_filter_allow_insertion(pileup)
+                self.reads_filter_allow_insertion(col.pileup, ref_base)
 
             # no filter
             else:
-                reads, matches, mismatches = self.reads_without_filter(pileup)
-                
-                
-            
+                passed_reads, passed_matches, passed_mismatches = self.reads_without_filter(col.pileups, ref_base)
             
             ##############################
             ### Basic filters in reads ###
@@ -377,25 +363,25 @@ class AlignmentStream(AlignmentReadsFilter):
                     if (self.params.stat_filter.baq_bias):
                         base_call_bias_p = 0
                         
-                    if pos == 47721228:
-                        print ref_base, pos
-                        print  coverage
-                        #qpos = [_.alignment.qual[_.qpos] for _ in passed_reads]
-                    
-                        mis_r = [_.alignment.seq[_.qpos] for _ in passed_mismatches if _.alignment.is_reverse]
-                        mis_f = [_.alignment.seq[_.qpos] for _ in passed_mismatches if not _.alignment.is_reverse]
-                        ma_r =  [_.alignment.seq[_.qpos] for _ in passed_matches if _.alignment.is_reverse]
-                        ma_f =  [_.alignment.seq[_.qpos] for _ in passed_matches if not _.alignment.is_reverse]
-                        
-                        print [_.qpos for _ in passed_reads]
-                        print [_.alignment.qend for _ in passed_mismatches]
-                        print [_.alignment.qstart for _ in passed_reads]
-                        #raise SystemExit
-                        
-                    if (positional_bias_p > self.params.stat_filter.sig_level
-                        or base_call_bias_p > self.params.stat_filter.sig_level
-                        or strand_bias_p > self.params.stat_filter.sig_level):
-                    
+                    #if pos == 47721228:
+                    #    print ref_base, pos
+                    #    print  coverage
+                    #    #qpos = [_.alignment.qual[_.qpos] for _ in passed_reads]
+                    # 
+                    #    mis_r = [_.alignment.seq[_.qpos] for _ in passed_mismatches if _.alignment.is_reverse]
+                    #    mis_f = [_.alignment.seq[_.qpos] for _ in passed_mismatches if not _.alignment.is_reverse]
+                    #    ma_r =  [_.alignment.seq[_.qpos] for _ in passed_matches if _.alignment.is_reverse]
+                    #    ma_f =  [_.alignment.seq[_.qpos] for _ in passed_matches if not _.alignment.is_reverse]
+                    #    
+                    #    print [_.qpos for _ in passed_reads]
+                    #    print [_.alignment.qend for _ in passed_mismatches]
+                    #    print [_.alignment.qstart for _ in passed_reads]
+                    #    #raise SystemExit
+                    #    
+                    #if (positional_bias_p > self.params.stat_filter.sig_level
+                    #    or base_call_bias_p > self.params.stat_filter.sig_level
+                    #    or strand_bias_p > self.params.stat_filter.sig_level):
+                    if 1: 
                         yield {
                             'chrom': bam_chrom,
                             'pos': pos,
@@ -549,7 +535,7 @@ def _resolve_chrom_name(bam_chr=None, fa_chr=None):
 
 if __name__ == '__main__':
     align = AlignmentStream("params")
-
+    
     
     
     #conf = AlignmentConfig()
