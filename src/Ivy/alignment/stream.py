@@ -29,12 +29,11 @@ class AlignmentReadsFilter(object):
     
     Args:
      Pysam.pileup object (common of all methods)
-    
     Returns:
      reads(list), matches(list), mismatches(list)
     '''
-    
-    def reads_filter_by_all_params(self, pileup):
+
+    def reads_filter_by_all_params(self, pileup_obj, ref_base):
         '''
         Required attributes:
          proper pair reads
@@ -44,10 +43,10 @@ class AlignmentReadsFilter(object):
          NOT fail to quality check reads
         '''
         
-        if not hasattr(__params, 'Pysam'):
-            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup.__class__.__name__))
+        if not hasattr(pileup_obj, 'col'):
+            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup_obj.__class__.__name__))
                 
-        _reads = [_ for _ in col.pileups
+        _reads = [_ for _ in pileup_obj
                   if (_.alignment.is_proper_pair
                       and not _.alignment.is_qcfail
                       and not _.alignment.is_duplicate
@@ -57,7 +56,7 @@ class AlignmentReadsFilter(object):
         _mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
             
-    def reads_filter_without_pp(self, pileup):
+    def reads_filter_without_pp(self, pileup_obj, ref_base):
         '''
         Required attributes:
          proper pair reads
@@ -66,10 +65,11 @@ class AlignmentReadsFilter(object):
          NOT unmapped reads
          NOT deletion reads
         '''
-        if not hasattr(__params, 'Pysam'):
-            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup.__class__.__name__))
+        
+        if not hasattr(pileup_obj, 'col'):
+            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup_obj.__class__.__name__))
             
-        _reads = [_ for _ in col.pileups
+        _reads = [_ for _ in pileup_obj
                   if (_.alignment.is_proper_pair
                       and not _.alignment.is_qcfail
                       and not _.alignment.is_duplicate
@@ -79,7 +79,7 @@ class AlignmentReadsFilter(object):
         _matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
         return _reads, _matches, _mismatches
         
-    def reads_allow_duplication(self, pileup):
+    def reads_allow_duplication(self, pileup_obj, ref_base):
         '''
         Required attributes:
          proper pair reads
@@ -88,8 +88,8 @@ class AlignmentReadsFilter(object):
          NOT deletion reads
         '''
         
-        if not hasattr(__params, 'Pysam'):
-            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup.__class__.__name__))
+        if not hasattr(pileup_obj, 'col'):
+            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup_obj.__class__.__name__))
             
         _reads = [_ for _ in col.pileups
                   if (_.alignment.is_proper_pair
@@ -100,22 +100,21 @@ class AlignmentReadsFilter(object):
         _mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
             
-    def reads_without_filter(self, pileup):
+    def reads_without_filter(self, pileup_obj, ref_base):
         '''All reads are passed through under this filter'''
-        
-        if not hasattr(__params, 'Pysam'):
-            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup.__class__.__name__))
+        if not hasattr(pileup_obj, 'Pysam'):
+            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup_obj.__class__.__name__))
             
         _reads = [_ for _ in _col.pileups if (not _.alignment.is_unmapped)]
         _mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
         _matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
         return _reads, _matches, _mismatches
         
-    def reads_allow_insertion(self, pileup):
+    def reads_allow_insertion(self):
         warnings.warn("Use --rm-insertion-reads is recommended", DeprecationWarning)
         return None
             
-    def reads_allow_deletion(self, pileup):
+    def reads_allow_deletion(self):
         warnings.warn("Use --rm-deletion-reads is recommended", DeprecationWarning)
         return None
 
