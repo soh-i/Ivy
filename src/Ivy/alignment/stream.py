@@ -223,32 +223,49 @@ class AlignmentStream(AlignmentReadsFilter):
             #####################################
             ### Loading alignment with params ###
             #####################################
-            # filter reads with all params
+            params_debug = True
+            #filter reads with all params
             if (self.params.basic_filter.rm_duplicated
                 and self.params.basic_filter.rm_deletion
                 and self.params.basic_filter.rm_insertion):
-                reads, matches, mismatches = self.reads_filter_by_all_params(col.pileup, ref_base)
+                if params_debug:
+                    self.params.show(self.params.basic_filter)
+                    raise SystemExit("Called methods: {1:s}".format(self.params.basic_filter, self.reads_filter_by_all_params.__name__))
+                    
+                passed_reads, passed_matches, passed_mismatches = self.reads_filter_by_all_params(col.pileup, ref_base)
                 
             # allow duplicated containing reads
             elif (not self.params.basic_filter.rm_duplicated
                   and self.params.basic_filter.rm_deletion
                   and self.params.basic_filter.rm_insertion):
-                reads, matches, mismaches = self.reads_allow_duplication(col.pileup, ref_base)
+                if params_debug:
+                    self.params.show(self.params.basic_filter)
+                    raise SystemExit("Called methods: {0:s}".format(self.reads_allow_duplication.__name__))
+                passed_reads, passed_matches, passed_mismaches = self.reads_allow_duplication(col.pileup, ref_base)
                 
             # allow deletions containing reads
             elif (not self.params.basic_filter.rm_deletion
                   and self.params.basic_filter.rm_insertion
                   and self.params.basic_filter.rm_duplicated):
-                reads, match, mismatch = self.reads_allow_deletion(col.pileup, ref_base)
+                if params_debug:
+                    self.params.show(self.params.basic_filter)
+                    raise SystemExit("Called methods: {0:s}".format(self.reads_allow_deletion.__name__))
+                passed_reads, passed_matches, passed_mismatches = self.reads_allow_deletion(col.pileup, ref_base)
                 
             # allow insertion containing reads
             elif (not self.params.basic_filter.rm_insertion
                   and self.params.basic_filter.rm_deletion
                   and self.params.basic_filterf.rm_duplicated):
-                self.reads_filter_allow_insertion(col.pileup, ref_base)
+                if params_debug:
+                    self.params.show(self.params.basic_filter)
+                    raise SystemExit("Called methods: {0:s}".format(self.params.basic_filter, self.reads_allow_insertion.__name__))
+                passed_reads, passed_mathces, passed_mismatches = self.reads_allow_insertion(col.pileup, ref_base)
 
             # no filter
             else:
+                if params_debug:
+                    self.params.show(self.params.basic_filter)
+                    raise SystemExit("Called methods: {0:s}".format(self.reads_without_filter.__name__))
                 passed_reads, passed_matches, passed_mismatches = self.reads_without_filter(col.pileups, ref_base)
             
             ##############################
