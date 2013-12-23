@@ -506,11 +506,26 @@ class AlignmentStream(AlignmentReadsFilter):
                         }
                         
     def retrieve_reads_with_specify_base(self, reads, base):
+        '''
+        Args:
+         pysam.csamtools.PileupRead(object)
+         Specify nucleotide base type(str)
+        Returns:
+         pysam.csamtools.PileupRead object
+        '''
+        
         if base not in  ['A', 'T', 'G', 'C']:
             raise ValueError()
         return [_ for _ in reads if _.alignment.seq[_.qpos] == base]
 
     def retrieve_reads_each_base_type(self, reads):
+        '''
+        Args:
+         pysam.csamtools.PileupRead objects(list)
+        Returns:
+         pysam.csamtools.PileupRead object
+        '''
+        
         A = [_ for _ in reads if _.alignment.seq[_.qpos] == 'A']
         T = [_ for _ in reads if _.alignment.seq[_.qpos] == 'T']
         C = [_ for _ in reads if _.alignment.seq[_.qpos] == 'C']
