@@ -20,7 +20,7 @@ __status__ = 'development'
 DEBUG = False
 
 
-class AlignmentUtils(object):
+class AlignmentReadsStats(object):
     '''
     Utility class provides methods to streaming/filtering reads processing as staticmethods,
     This class can NOT to handle the Pysam object.
@@ -143,7 +143,7 @@ class AlignmentUtils(object):
                 .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
 
             
-class AlignmentReadsFilter(object):
+class FilteredAlignmentReadsGenerator(object):
     '''
     AlignmentReadsFilter provides reads filter methods
     
@@ -228,7 +228,7 @@ class AlignmentReadsFilter(object):
         return None
 
         
-class AlignmentStream(AlignmentReadsFilter):
+class AlignmentStream(FilteredAlignmentReadsGenerator):
     def __init__(self, __params):
         '''
         Initialize for pileup bam files to explore RDD sites
@@ -397,7 +397,7 @@ class AlignmentStream(AlignmentReadsFilter):
             average_mapq = AlignmentUtils.average_mapq(passed_reads)
 
             A, T, G, C = self.retrieve_reads_each_base_type(passed_reads)
-            print self.retrieve_base_string_each_base_type(A,T,G,C)
+            self.retrieve_base_string_each_base_type(A,T,G,C)
             
             if (self.params.basic_filter.min_rna_cov <= coverage
                 and self.params.basic_filter.min_rna_mapq <= average_mapq
