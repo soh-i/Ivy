@@ -24,13 +24,24 @@ class AlignmentUtils(object):
 
     
 class AlignmentReadsFilter(object):
-    def __init__(self):
-        pass
-
+    '''
+    AlignmentReadsFilter provides reads filter methods
+    
+    Args:
+     Pysam.pileup object (common of all methods)
+    
+    Returns:
+     reads(list), matches(list), mismatches(list)
+    '''
+    
     def reads_filter_by_all_params(self, pileup):
         '''
-        Args: pileupo object
-        Returns: passed reads, matches, mismatches
+        Required attributes:
+         proper pair reads
+         NOT duplicated reads
+         NOT unmapped reads
+         NOT deletion reads
+         NOT fail to quality check reads
         '''
         
         if not hasattr(__params, 'Pysam'):
@@ -47,6 +58,14 @@ class AlignmentReadsFilter(object):
         return _reads, _matches, _mismatches
             
     def reads_filter_without_pp(self, pileup):
+        '''
+        Required attributes:
+         proper pair reads
+         NOT fail to quality check reads
+         NOT duplicated reads
+         NOT unmapped reads
+         NOT deletion reads
+        '''
         if not hasattr(__params, 'Pysam'):
             raise TypeError("{cls:s} is not Pysam object".format(cls=pileup.__class__.__name__))
             
@@ -61,6 +80,14 @@ class AlignmentReadsFilter(object):
         return _reads, _matches, _mismatches
         
     def reads_allow_duplication(self, pileup):
+        '''
+        Required attributes:
+         proper pair reads
+         NOT failt to quality check reads
+         NOT unmapped reads
+         NOT deletion reads
+        '''
+        
         if not hasattr(__params, 'Pysam'):
             raise TypeError("{cls:s} is not Pysam object".format(cls=pileup.__class__.__name__))
             
@@ -74,6 +101,8 @@ class AlignmentReadsFilter(object):
         return _reads, _matches, _mismatches
             
     def reads_without_filter(self, pileup):
+        '''All reads are passed through under this filter'''
+        
         if not hasattr(__params, 'Pysam'):
             raise TypeError("{cls:s} is not Pysam object".format(cls=pileup.__class__.__name__))
             
@@ -89,8 +118,8 @@ class AlignmentReadsFilter(object):
     def reads_allow_deletion(self, pileup):
         warnings.warn("Use --rm-deletion-reads is recommended", DeprecationWarning)
         return None
-        
 
+        
 class AlignmentStream(AlignmentReadsFilter):
     def __init__(self, __params):
         '''
@@ -110,7 +139,7 @@ class AlignmentStream(AlignmentReadsFilter):
          params:
         '''
         
-        raise SystemExit(dir(self))
+        print dir(self)
         
         ig = IvyLogger()
         self.logger = logging.getLogger(type(self).__name__)
@@ -118,7 +147,7 @@ class AlignmentStream(AlignmentReadsFilter):
         if hasattr(__params, 'AttrDict'):
             self.params = self.__add_preset(__params)
         else:
-            raise TypeError("Given param {prm:s} is {cls:s} class, not 'AttrDic' class"
+            raise TypeError("Given param {prm:s} is '{cls:s}' class, not 'AttrDic' class"
                             .format(prm=__params, cls=__params.__class__.__name__))
 
         self.samfile = pysam.Samfile(self.params.r_bams, 'rb', check_header=True, check_sq=True)
