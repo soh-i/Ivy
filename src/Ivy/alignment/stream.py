@@ -6,6 +6,7 @@ import re
 import math
 import pprint
 import logging
+import warnings
 import pysam
 
 from Ivy.utils import die, AttrDict, IvyLogger
@@ -18,8 +19,79 @@ __status__ = 'development'
 
 DEBUG = False
 
+class AlignmentUtils(object):
+    pass
+
     
-class AlignmentStream(object):
+class AlignmentReadsFilter(object):
+    def __init__(self):
+        pass
+
+    def reads_filter_by_all_params(self, pileup):
+        '''
+        Args: pileupo object
+        Returns: passed reads, matches, mismatches
+        '''
+        
+        if not hasattr(__params, 'Pysam'):
+            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup.__class__.__name__))
+                
+        _reads = [_ for _ in col.pileups
+                  if (_.alignment.is_proper_pair
+                      and not _.alignment.is_qcfail
+                      and not _.alignment.is_duplicate
+                      and not _.alignment.is_unmapped
+                      and not _.is_del)]
+        _matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
+        _mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
+        return _reads, _matches, _mismatches
+            
+    def reads_filter_without_pp(self, pileup):
+        if not hasattr(__params, 'Pysam'):
+            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup.__class__.__name__))
+            
+        _reads = [_ for _ in col.pileups
+                  if (_.alignment.is_proper_pair
+                      and not _.alignment.is_qcfail
+                      and not _.alignment.is_duplicate
+                      and not _.alignment.is_unmapped
+                      and not _.is_del)]
+        _mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
+        _matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
+        return _reads, _matches, _mismatches
+        
+    def reads_allow_duplication(self, pileup):
+        if not hasattr(__params, 'Pysam'):
+            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup.__class__.__name__))
+            
+        _reads = [_ for _ in col.pileups
+                  if (_.alignment.is_proper_pair
+                      and not _.alignment.is_qcfail
+                      and not _.alignment.is_unmapped
+                      and not _.is_del)]
+        _matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
+        _mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
+        return _reads, _matches, _mismatches
+            
+    def reads_without_filter(self, pileup):
+        if not hasattr(__params, 'Pysam'):
+            raise TypeError("{cls:s} is not Pysam object".format(cls=pileup.__class__.__name__))
+            
+        _reads = [_ for _ in _col.pileups if (not _.alignment.is_unmapped)]
+        _mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
+        _matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
+        return _reads, _matches, _mismatches
+        
+    def reads_allow_insertion(self, pileup):
+        warnings.warn("Use --rm-insertion-reads is recommended", DeprecationWarning)
+        return None
+            
+    def reads_allow_deletion(self, pileup):
+        warnings.warn("Use --rm-deletion-reads is recommended", DeprecationWarning)
+        return None
+        
+
+class AlignmentStream(AlignmentReadsFilter):
     def __init__(self, __params):
         '''
         Initialize for pileup bam files to explore RDD sites
@@ -37,6 +109,8 @@ class AlignmentStream(object):
          one_based:
          params:
         '''
+        
+        raise SystemExit(dir(self))
         
         ig = IvyLogger()
         self.logger = logging.getLogger(type(self).__name__)
@@ -77,7 +151,7 @@ class AlignmentStream(object):
         if _is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
             pass
         else:
-            raise RuntimeError("Invalid chrom name")
+            raise ValueError("Invalid chromosome name")
 
         if self.params.verbose:
             self.logger.debug(AttrDict.show(self.params))
@@ -85,6 +159,10 @@ class AlignmentStream(object):
         if DEBUG:
             _fasta_info()
             _sam_info()
+
+    def __configuration(self):
+        self.params.debug('Configuration...')
+        pass
     
     def __add_preset(self, __p):
         '''
@@ -102,6 +180,9 @@ class AlignmentStream(object):
         if self.params.verbose:
             self.logger.debug("Start pileup bam file...")
             
+        #for c in pileup_base_iter():
+        #   reads_filter_by_all(c.pileups)
+        
         for col in self.samfile.pileup(reference=self.params.region.chrom,
                                        start=self.params.region.start,
                                        end=self.params.region.end
@@ -111,11 +192,9 @@ class AlignmentStream(object):
                 pos = col.pos + 1
             else:
                 pos = col.pos
-                
             ref_base= self.fafile.fetch(reference=bam_chrom,
                                         start=col.pos,
                                         end=col.pos+1).upper()
-            #print ref_base
             if not ref_base:
                 # TODO: resolve difference name in fasta and bam
                 raise ValueError(
@@ -123,69 +202,41 @@ class AlignmentStream(object):
                         chrom=self.chrom, start=self.start, end=self.end))
             elif ref_base == 'N' or ref_base == 'n':
                 continue
-
+            
             #####################################
             ### Loading alignment with params ###
             #####################################
             # filter reads with all params
-            passed_reads = []
             if (self.params.basic_filter.rm_duplicated
                 and self.params.basic_filter.rm_deletion
                 and self.params.basic_filter.rm_insertion):
-                #print "# filter reads with all params"
-                passed_reads = [_ for _ in col.pileups
-                                if (_.alignment.is_proper_pair
-                                    and not _.alignment.is_qcfail
-                                    and not _.alignment.is_duplicate
-                                    and not _.alignment.is_unmapped
-                                    and not _.is_del)]
+                reads, matches, mismatches = self.reads_filter_by_all_params(pileup)
                 
-                passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
-                passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
-
-            # allow duplicated containing reasd
+            # allow duplicated containing reads
             elif (not self.params.basic_filter.rm_duplicated
                   and self.params.basic_filter.rm_deletion
                   and self.params.basic_filter.rm_insertion):
-                #print "# allow duplicated containing reads"
-                passed_reads = [_ for _ in col.pileups
-                                if (_.alignment.is_proper_pair
-                                    and not _.alignment.is_qcfail
-                                    and not _.alignment.is_unmapped
-                                    and not _.is_del)]
+                reads, matches, mismaches = self.reads_allow_duplication(pileup)
                 
-                passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
-                passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
-
-            # allow deletions containing reasd
+            # allow deletions containing reads
             elif (not self.params.basic_filter.rm_deletion
                   and self.params.basic_filter.rm_insertion
                   and self.params.basic_filter.rm_duplicated):
-                #print  "# allow deletions containing reads"
-                passed_reads = [_ for _ in col.pileups
-                                if (_.alignment.is_proper_pair
-                                    and not _.alignment.is_qcfail
-                                    and not _.alignment.is_unmapped)]
+                reads, match, mismatch = self.reads_allow_deletion(pileup)
                 
-                passed_mismatches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] != ref_base]
-                passed_matches = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == ref_base]
-             
             # allow insertion containing reads
             elif (not self.params.basic_filter.rm_insertion
                   and self.params.basic_filter.rm_deletion
                   and self.params.basic_filterf.rm_duplicated):
-                raise RuntimeError("Use --rm-insertion-reads is recommended")
-                
+                self.reads_filter_allow_insertion(pileup)
+
             # no filter
             else:
-                #print "No filter"
-                passed_reads = [_ for _ in col.pileups
-                                if (not _.alignment.is_unmapped)]
-                passed_mismatches = [_ for _ in passed_reads
-                                     if _.alignment.seq[_.qpos] != ref_base]
-                passed_matches = [_ for _ in passed_reads
-                                  if _.alignment.seq[_.qpos] == ref_base]
-
+                reads, matches, mismatches = self.reads_without_filter(pileup)
+                
+                
+            
+            
             ##############################
             ### Basic filters in reads ###
             ##############################
@@ -198,7 +249,7 @@ class AlignmentStream(object):
                 
             # --min-rna-cov
             coverage = len(quals_in_pos)
-            
+
             # --min-rna-mapq
             mapqs_in_pos = [_.alignment.mapq for _ in passed_reads]
             try:
@@ -416,8 +467,6 @@ class AlignmentStream(object):
                 'Could not able to define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
                 .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
 
-
-
     def fasta_info(self):
         # info. for fasta
         print "### info. for fasfile object ###"
@@ -470,11 +519,11 @@ def _resolve_chrom_name(bam_chr=None, fa_chr=None):
     else:
         return fa_chr
 
+if __name__ == '__main__':
+    align = AlignmentStream("params")
 
     
-if __name__ == '__main__':
-    pass
-
+    
     #conf = AlignmentConfig()
     #a = ['A', 'T', 'C', 'G']
     #b = ['C', 'G', 'G', 'G', 'A', 'A', 'A']
