@@ -510,9 +510,7 @@ class AlignmentStream(AlignmentReadsFilter):
             raise ValueError()
         return [_ for _ in reads if _.alignment.seq[_.qpos] == base]
 
-    def retrieve_reads_each_base_type(reads):
-        if base not in  ['A', 'T', 'G', 'C']:
-            raise ValueError()
+    def retrieve_reads_each_base_type(self, reads):
         A = [_ for _ in reads if _.alignment.seq[_.qpos] == 'A']
         T = [_ for _ in reads if _.alignment.seq[_.qpos] == 'T']
         C = [_ for _ in reads if _.alignment.seq[_.qpos] == 'C']
