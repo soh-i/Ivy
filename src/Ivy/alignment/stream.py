@@ -388,6 +388,7 @@ class AlignmentStream(AlignmentReadsFilter):
             average_mapq = AlignmentUtils.average_mapq(passed_reads)
 
             A, T, G, C = self.retrieve_reads_each_base_type(passed_reads)
+            print self.retrieve_base_string_each_base_type(A,T,G,C)
             
             if (self.params.basic_filter.min_rna_cov <= coverage
                 and self.params.basic_filter.min_rna_mapq <= average_mapq
@@ -413,6 +414,8 @@ class AlignmentStream(AlignmentReadsFilter):
                     and allele_freq >= self.params.basic_filter.min_mut_freq):
                     
                     # Array in four type of sequence
+                    
+                    
                     Gb =  [_.alignment.seq[_.qpos] for _ in G]
                     Ab =  [_.alignment.seq[_.qpos] for _ in A]
                     Tb =  [_.alignment.seq[_.qpos] for _ in T]
@@ -531,7 +534,22 @@ class AlignmentStream(AlignmentReadsFilter):
         C = [_ for _ in reads if _.alignment.seq[_.qpos] == 'C']
         G = [_ for _ in reads if _.alignment.seq[_.qpos] == 'G']
         return A, T, G, C
-            
+
+    def retrieve_base_string_each_base_type(self, A, T, G, C):
+        '''
+        Array in four type of sequence
+        
+        Args:
+         pysam.csamtools.PileupRead object(list)
+        Returns:
+         4type of base strings(list)
+        '''
+        Gb =  [_.alignment.seq[_.qpos] for _ in G]
+        Ab =  [_.alignment.seq[_.qpos] for _ in A]
+        Tb =  [_.alignment.seq[_.qpos] for _ in T]
+        Cb =  [_.alignment.seq[_.qpos] for _ in C]
+        return Ab, Gb, Cb, Tb
+
     def __resolve_coords(self, start, end, is_one_based):
         if is_one_based:
             if start is not None:
