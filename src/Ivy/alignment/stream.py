@@ -59,6 +59,80 @@ class AlignmentUtils(object):
         except ZeroDivisionError:
             return .0
                
+    def average_baq(self, baq):
+        return (sum([ord(_)-33 for _ in baq]) / len(baq))
+
+    @staticmethod
+    def define_allele(base, ref=None):
+        if base and ref:
+            [_.upper() for _ in base]
+            ref.upper()
+        
+        c = Counter(base)
+        comm = c.most_common()
+
+        __allele = {}
+        for base in comm:
+            if base[0] != ref:
+                __allele.update({base[0]:base[1]})
+        defined = ()
+        for j in __allele:
+            for k in __allele:
+                # single alllele is found
+                if j == k:
+                    return tuple([j, __allele[j]])
+                    
+                # most common varinat with a allele type alone
+                elif __allele[k] == __allele[j] and k != j:
+                    return tuple(__allele.items())
+                    
+                # most common variant if has many allele
+                elif __allele[k] != __allele[j] and k != j:
+                    m = max(__allele[k], __allele[j])
+                    if m == __allele[k]:
+                        return tuple([k, __allele[k]])
+                    elif m == __allele[j]:
+                        return tuple([j, __allele[j]])
+        else:
+            # allele is not found
+            return '.'
+
+    @staticmethod
+    def compute_dp4(ref, A_f, A_r, T_f, T_r, G_f, G_r, C_f, C_r):
+        #if len(alt): TODO:  here is bug # TypeError: object of type 'NoneType' has no len()
+        if True: # TODO: set any condition(s)
+            ref_r = 0
+            ref_f = 0
+            alt_r = 0
+            alt_f = 0
+            
+            if ref == 'A':
+                ref_r = (A_r)
+                ref_f = (A_f)
+                alt_r = (G_f+C_f+T_f)
+                alt_f = (G_r+C_r+T_r)
+            elif ref == 'T':
+                ref_r = (T_r)
+                ref_f = (T_f)
+                alt_r = (G_r+C_r+A_r)
+                alt_f = (G_f+C_f+A_f)
+            elif ref == 'G':
+                ref_r = (G_r)
+                ref_f = (G_f)
+                alt_r = (C_r+T_r+A_r)
+                alt_f = (C_f+C_f+C_r)
+            elif ref == 'C':
+                ref_r = (C_r)
+                ref_f = (C_f)
+                alt_r = (A_r+T_r+G_r)
+                alt_f = (A_f+T_f+G_f)
+            return tuple([ref_r, ref_f, alt_r, alt_f])
+
+        else:
+            raise RuntimeError(
+                'Could not able to define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
+                .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
+
             
 class AlignmentReadsFilter(object):
     '''
@@ -352,7 +426,7 @@ class AlignmentStream(AlignmentReadsFilter):
                     
                     # define allele
                     _all_base = Ab + Gb + Cb + Tb
-                    alt = self.define_allele(_all_base, ref=ref_base)
+                    alt = AlignmentUtils.define_allele(_all_base, ref=ref_base)
                 
                     # Array in seq with read strand information
                     G_base_r = [_.alignment.seq[_.qpos] for _ in G
@@ -375,7 +449,7 @@ class AlignmentStream(AlignmentReadsFilter):
                     C_base_f = [_.alignment.seq[_.qpos] for _ in C
                                 if not _.alignment.is_reverse]
 
-                    dp4 = (self.compute_dp4(ref_base,
+                    dp4 = (AlignmentUtils.compute_dp4(ref_base,
                                             len(A_base_r), len(A_base_f),
                                             len(T_base_r), len(T_base_f),
                                             len(G_base_r), len(G_base_f),
@@ -449,79 +523,7 @@ class AlignmentStream(AlignmentReadsFilter):
                 None
         return int(start), int(end)
 
-    def average_baq(self, baq):
-        return (sum([ord(_)-33 for _ in baq]) / len(baq))
-
-    @classmethod
-    def define_allele(self, base, ref=None):
-        if base and ref:
-            [_.upper() for _ in base]
-            ref.upper()
-        
-        c = Counter(base)
-        comm = c.most_common()
-
-        __allele = {}
-        for base in comm:
-            if base[0] != ref:
-                __allele.update({base[0]:base[1]})
-        defined = ()
-        for j in __allele:
-            for k in __allele:
-                # single alllele is found
-                if j == k:
-                    return tuple([j, __allele[j]])
-                    
-                # most common varinat with a allele type alone
-                elif __allele[k] == __allele[j] and k != j:
-                    return tuple(__allele.items())
-                    
-                # most common variant if has many allele
-                elif __allele[k] != __allele[j] and k != j:
-                    m = max(__allele[k], __allele[j])
-                    if m == __allele[k]:
-                        return tuple([k, __allele[k]])
-                    elif m == __allele[j]:
-                        return tuple([j, __allele[j]])
-        else:
-            # allele is not found
-            return '.'
-
-    def compute_dp4(self, ref, A_f, A_r, T_f, T_r, G_f, G_r, C_f, C_r):
-        #if len(alt): TODO:  here is bug # TypeError: object of type 'NoneType' has no len()
-        if True: # TODO: set any condition(s)
-            ref_r = 0
-            ref_f = 0
-            alt_r = 0
-            alt_f = 0
-            
-            if ref == 'A':
-                ref_r = (A_r)
-                ref_f = (A_f)
-                alt_r = (G_f+C_f+T_f)
-                alt_f = (G_r+C_r+T_r)
-            elif ref == 'T':
-                ref_r = (T_r)
-                ref_f = (T_f)
-                alt_r = (G_r+C_r+A_r)
-                alt_f = (G_f+C_f+A_f)
-            elif ref == 'G':
-                ref_r = (G_r)
-                ref_f = (G_f)
-                alt_r = (C_r+T_r+A_r)
-                alt_f = (C_f+C_f+C_r)
-            elif ref == 'C':
-                ref_r = (C_r)
-                ref_f = (C_f)
-                alt_r = (A_r+T_r+G_r)
-                alt_f = (A_f+T_f+G_f)
-            return tuple([ref_r, ref_f, alt_r, alt_f])
-
-        else:
-            raise RuntimeError(
-                'Could not able to define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
-                .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
-
+    
     def fasta_info(self):
         # info. for fasta
         print "### info. for fasfile object ###"
