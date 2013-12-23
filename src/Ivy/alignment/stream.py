@@ -21,6 +21,15 @@ DEBUG = False
 
 
 class AlignmentUtils(object):
+    '''
+    Utility class provides methods to streaming/filtering reads processing as staticmethods,
+    This class can NOT to handle the Pysam object.
+    
+    Example:
+     >>> import AlignmentUtils
+     >>> AlignmentUtils.mismatch_frequency(match, mismatch)
+    '''
+    
     @staticmethod
     def quals_in_pos(reads):
         return [ord(_.alignment.qual[_.qpos])-33 for _ in reads]
