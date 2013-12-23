@@ -217,6 +217,7 @@ class AlignmentReadsFilter(object):
     def reads_allow_deletion(self, pileup_obj, ref_base):
         print "Use --rm-deletion-reads is recommended"
         return None
+
         
 class AlignmentStream(AlignmentReadsFilter):
     def __init__(self, __params):
@@ -304,9 +305,6 @@ class AlignmentStream(AlignmentReadsFilter):
     def pileup_stream(self):
         if self.params.verbose:
             self.logger.debug("Start pileup bam file...")
-            
-        #for c in pileup_base_iter():
-        #   reads_filter_by_all(c.pileups)
         
         for col in self.samfile.pileup(reference=self.params.region.chrom,
                                        start=self.params.region.start,
@@ -388,16 +386,12 @@ class AlignmentStream(AlignmentReadsFilter):
 
             # --min-rna-mapq
             average_mapq = AlignmentUtils.average_mapq(passed_reads)
-            
+
+            A, T, G, C = self.retrieve_reads_each_base_type(passed_reads)
             
             if (self.params.basic_filter.min_rna_cov <= coverage
                 and self.params.basic_filter.min_rna_mapq <= average_mapq
                 and self.params.basic_filter.min_baq_rna <= average_baq):
-                
-                A = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'A']
-                C = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'C']
-                T = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'T']
-                G = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'G']
                 
                 # --min-mis-frequency
                 allele_freq= AlignmentUtils.mismatch_frequency(passed_matches, passed_mismatches)
@@ -510,7 +504,21 @@ class AlignmentStream(AlignmentReadsFilter):
                             'types': mutation_type,
                             'dp4': dp4
                         }
-                
+                        
+    def retrieve_reads_with_specify_base(self, reads, base):
+        if base not in  ['A', 'T', 'G', 'C']:
+            raise ValueError()
+        return [_ for _ in reads if _.alignment.seq[_.qpos] == base]
+
+    def retrieve_reads_each_base_type(reads):
+        if base not in  ['A', 'T', 'G', 'C']:
+            raise ValueError()
+        A = [_ for _ in reads if _.alignment.seq[_.qpos] == 'A']
+        T = [_ for _ in reads if _.alignment.seq[_.qpos] == 'T']
+        C = [_ for _ in reads if _.alignment.seq[_.qpos] == 'C']
+        G = [_ for _ in reads if _.alignment.seq[_.qpos] == 'G']
+        return A, T, G, C
+            
     def __resolve_coords(self, start, end, is_one_based):
         if is_one_based:
             if start is not None:
