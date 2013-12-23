@@ -36,6 +36,15 @@ class AlignmentUtils(object):
             return math.ceil(sum(q_pos)/len(q_pos))
         except ZeroDivisionError:
             return .0
+
+    @staticmethod
+    def average_mapq(reads):
+        mapqs_in_pos = [_.alignment.mapq for _ in reads]
+        try:
+            return math.ceil(sum(mapqs_in_pos) / len(mapqs_in_pos))
+        except ZeroDivisionError:
+            return .0
+
             
 class AlignmentReadsFilter(object):
     '''
@@ -284,20 +293,13 @@ class AlignmentStream(AlignmentReadsFilter):
             ##############################
             # --min-rna-baq
             quals_in_pos = AlignmentUtils.quals_in_pos(passed_reads)
-            try:
-                average_baq = math.ceil(sum(quals_in_pos)/len(quals_in_pos))
-            except ZeroDivisionError:
-                average_baq = 0
-                
+            average_baq = AlignmentUtils.average_base_quality(passed_reads)
+            
             # --min-rna-cov
-            coverage = len(quals_in_pos)
+            coverage = AlignmentUtils.coverage(passed_reads)
 
             # --min-rna-mapq
-            mapqs_in_pos = [_.alignment.mapq for _ in passed_reads]
-            try:
-                average_mapq = math.ceil(sum(mapqs_in_pos) / len(mapqs_in_pos))
-            except ZeroDivisionError:
-                average_mapq = 0
+            mapqs_in_pos = AlignmentUtils.average_mapq(passed_reads)
             
             if (self.params.basic_filter.min_rna_cov <= coverage
                 and self.params.basic_filter.min_rna_mapq <= average_mapq
