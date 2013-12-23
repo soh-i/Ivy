@@ -19,10 +19,24 @@ __status__ = 'development'
 
 DEBUG = False
 
-class AlignmentUtils(object):
-    pass
 
-    
+class AlignmentUtils(object):
+    @staticmethod
+    def quals_in_pos(reads):
+        return [ord(_.alignment.qual[_.qpos])-33 for _ in reads]
+        
+    @staticmethod
+    def reads_coverage(reads):
+        return len(reads)
+
+    @staticmethod
+    def average_base_quality(reads):
+        q_pos = self.quals_in_pos(reads)
+        try:
+            return math.ceil(sum(q_pos)/len(q_pos))
+        except ZeroDivisionError:
+            return .0
+            
 class AlignmentReadsFilter(object):
     '''
     AlignmentReadsFilter provides reads filter methods
@@ -100,13 +114,12 @@ class AlignmentReadsFilter(object):
         return _reads, _matches, _mismatches
         
     def reads_allow_insertion(self):
-        warnings.warn("Use --rm-insertion-reads is recommended", DeprecationWarning)
+        print "Use --rm-insertion-reads is recommended"
         return None
             
-    def reads_allow_deletion(self):
-        warnings.warn("Use --rm-deletion-reads is recommended", DeprecationWarning)
+    def reads_allow_deletion(self, pileup_obj, ref_base):
+        print "Use --rm-deletion-reads is recommended"
         return None
-
         
 class AlignmentStream(AlignmentReadsFilter):
     def __init__(self, __params):
@@ -221,7 +234,7 @@ class AlignmentStream(AlignmentReadsFilter):
             #####################################
             ### Loading alignment with params ###
             #####################################
-            params_debug = True
+            params_debug = False
             #filter reads with all params
             if (self.params.basic_filter.rm_duplicated
                 and self.params.basic_filter.rm_deletion
@@ -265,12 +278,12 @@ class AlignmentStream(AlignmentReadsFilter):
                     self.params.show(self.params.basic_filter)
                     raise SystemExit("Called methods: {0:s}".format(self.reads_without_filter.__name__))
                 passed_reads, passed_matches, passed_mismatches = self.reads_without_filter(col.pileups, ref_base)
-            
+
             ##############################
             ### Basic filters in reads ###
             ##############################
             # --min-rna-baq
-            quals_in_pos = [ord(_.alignment.qual[_.qpos])-33 for _ in passed_reads]
+            quals_in_pos = AlignmentUtils.quals_in_pos(passed_reads)
             try:
                 average_baq = math.ceil(sum(quals_in_pos)/len(quals_in_pos))
             except ZeroDivisionError:
