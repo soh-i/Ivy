@@ -27,11 +27,11 @@ class AlignmentUtils(object):
         
     @staticmethod
     def reads_coverage(reads):
-        return len(reads)
-
+        return  len(reads)
+        
     @staticmethod
     def average_base_quality(reads):
-        q_pos = self.quals_in_pos(reads)
+        q_pos = AlignmentUtils.quals_in_pos(reads)
         try:
             return math.ceil(sum(q_pos)/len(q_pos))
         except ZeroDivisionError:
@@ -45,6 +45,20 @@ class AlignmentUtils(object):
         except ZeroDivisionError:
             return .0
 
+    @staticmethod
+    def mismatch_frequency(match, mismatch):
+        try:
+            return len(mismatch) / (len(match) + len(mismatch))
+        except ZeroDivisionError:
+            return .0
+            
+    @staticmethod
+    def a_to_g_frequency(a, g):
+        try:
+            return len(g) / (len(a) + len(g))
+        except ZeroDivisionError:
+            return .0
+               
             
 class AlignmentReadsFilter(object):
     '''
@@ -296,10 +310,11 @@ class AlignmentStream(AlignmentReadsFilter):
             average_baq = AlignmentUtils.average_base_quality(passed_reads)
             
             # --min-rna-cov
-            coverage = AlignmentUtils.coverage(passed_reads)
+            coverage = AlignmentUtils.reads_coverage(passed_reads)
 
             # --min-rna-mapq
-            mapqs_in_pos = AlignmentUtils.average_mapq(passed_reads)
+            average_mapq = AlignmentUtils.average_mapq(passed_reads)
+            
             
             if (self.params.basic_filter.min_rna_cov <= coverage
                 and self.params.basic_filter.min_rna_mapq <= average_mapq
@@ -311,13 +326,9 @@ class AlignmentStream(AlignmentReadsFilter):
                 G = [_ for _ in passed_reads if _.alignment.seq[_.qpos] == 'G']
                 
                 # --min-mis-frequency
-                try:
-                    allele_freq= len(passed_mismatches) / coverage
-                    ag_freq = len(G) / (len(G) + len(A))
-                except ZeroDivisionError:
-                    allele_freq = float(0)
-                    ag_freq = float(0)
-
+                allele_freq= AlignmentUtils.mismatch_frequency(passed_matches, passed_mismatches)
+                ag_freq = AlignmentUtils.a_to_g_frequency(A, G)
+                
                 # --num-allow-type
                 mutation_type = {}
                 if len(A) > 0 and ref_base != 'A':
