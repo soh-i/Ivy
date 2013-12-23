@@ -66,9 +66,6 @@ class AlignmentReadsStats(object):
         except ZeroDivisionError:
             return .0
                
-    def average_baq(self, baq):
-        return (sum([ord(_)-33 for _ in baq]) / len(baq))
-
     @staticmethod
     def define_allele(base, ref=None):
         if base and ref:
