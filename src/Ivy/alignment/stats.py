@@ -49,9 +49,9 @@ class AlignmentReadsStats(object):
             return .0
 
     @staticmethod
-    def mismatch_frequency(match, mismatch):
+    def mismatch_frequency(m=[], mis=[]):
         try:
-            return len(mismatch) / (len(match) + len(mismatch))
+            return len(mis) / (len(m) + len(mis))
         except ZeroDivisionError:
             return .0
             
