@@ -286,16 +286,8 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                 ag_freq = AlignmentReadsStats.a_to_g_frequency(A, G)
                 
                 # --num-allow-type
-                mutation_type = {}
-                if len(A) > 0 and ref_base != 'A':
-                    mutation_type.update({'A': len(A)})
-                elif len(T) > 0 and ref_base != 'T':
-                    mutation_type.update({'T': len(T)})
-                elif len(G) > 0 and ref_base != 'G':
-                    mutation_type.update({'G': len(G)})
-                elif len(C) > 0 and ref_base != 'C':
-                    mutation_type.update({'C': len(C)})
-                    
+                mutation_type = self.mutation_types(A, T, G, C, ref=ref_base)
+                
                 if (len(mutation_type) <= self.params.basic_filter.num_type
                     and len(mutation_type) != 0
                     and allele_freq >= self.params.basic_filter.min_mut_freq):
@@ -305,33 +297,23 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     _all_base = Abase + Gbase + Cbase + Tbase
                     alt = AlignmentReadsStats.define_allele(_all_base, ref=ref_base)
                 
-                    # Array in seq with read strand information
-                    #reads_strand_information(G, 'rev')
-                    G_base_r = [_.alignment.seq[_.qpos] for _ in G
-                                if _.alignment.is_reverse]
-                    G_base_f = [_.alignment.seq[_.qpos] for _ in G
-                                if not _.alignment.is_reverse]
+                    # Read strand information
+                    G_base_r = self.retrieve_base_string_with_strand(G, strand=0)
+                    G_base_f = self.retrieve_base_string_with_strand(G, strand=1)
                     
-                    A_base_r = [_.alignment.seq[_.qpos] for _ in A
-                                if _.alignment.is_reverse]
-                    A_base_f = [_.alignment.seq[_.qpos] for _ in A
-                                if not _.alignment.is_reverse]
-                
-                    T_base_r = [_.alignment.seq[_.qpos] for _ in T
-                                if _.alignment.is_reverse]
-                    T_base_f = [_.alignment.seq[_.qpos] for _ in T
-                                if not _.alignment.is_reverse]
+                    A_base_r = self.retrieve_base_string_with_strand(A, strand=0)
+                    A_base_f = self.retrieve_base_string_with_strand(A, strand=1)
                     
-                    C_base_r = [_.alignment.seq[_.qpos] for _ in C
-                                if _.alignment.is_reverse]
-                    C_base_f = [_.alignment.seq[_.qpos] for _ in C
-                                if not _.alignment.is_reverse]
-
+                    T_base_r = self.retrieve_base_string_with_strand(T, strand=0)
+                    T_base_f = self.retrieve_base_string_with_strand(T, strand=1)
+                    
+                    C_base_r = self.retrieve_base_string_with_strand(C, strand=0)
+                    C_base_f = self.retrieve_base_string_with_strand(C, strand=0)
+                    
                     dp4 = (AlignmentReadsStats.compute_dp4(ref_base,
-                                            len(A_base_r), len(A_base_f),
-                                            len(T_base_r), len(T_base_f),
-                                            len(G_base_r), len(G_base_f),
-                                            len(C_base_r), len(C_base_f)))
+                                                           len(A_base_r), len(A_base_f),len(T_base_r), len(T_base_f),
+                                                           len(G_base_r), len(G_base_f),
+                                                           len(C_base_r), len(C_base_f)))
                     ## TODO:
                     ## comapre speed by __len__() and count()
                     #Ac = [_.alignment.seq[_.qpos] for _ in A].count('A')
@@ -389,6 +371,18 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                             'dp4': dp4
                         }
                         
+    def mutation_types(self, A, T, G, C, ref=None):
+        mutation_types = {}
+        if len(A) > 0 and ref != 'A':
+            mutation_types.update({'A': len(A)})
+        elif len(T) > 0 and ref != 'T':
+            mutation_types.update({'T': len(T)})
+        elif len(G) > 0 and ref != 'G':
+            mutation_types.update({'G': len(G)})
+        elif len(C) > 0 and ref != 'C':
+            mutation_types.update({'C': len(C)})
+        return mutation_types
+        
     def retrieve_reads_with_specify_base(self, reads, base):
         '''
         Args:
@@ -441,14 +435,12 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
          bases with specify strand
         '''
         
-        forward = [_.alignment.seq[_.qpos] for _ in G
-                   if _.alignment.is_reverse]
-        reverse = [_.alignment.seq[_.qpos] for _ in G
-                   if not _.alignment.is_reverse]
-        if strnad == 1:
-            return forward
+        if strand == 1:
+            return [_.alignment.seq[_.qpos] for _ in base
+                    if _.alignment.is_reverse]
         elif strand == 0:
-            return reverse
+            return [_.alignment.seq[_.qpos] for _ in base
+                    if not _.alignment.is_reverse]
         else:
             return None
             
