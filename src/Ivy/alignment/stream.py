@@ -185,6 +185,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         Returns:
          AttrDic object
         '''
+        
         __p.preset_params._skip_N = True
         __p.preset_params._skip_has_many_allele = True
         return __p
@@ -275,7 +276,6 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             average_mapq = AlignmentReadsStats.average_mapq(passed_reads)
 
             A, T, G, C = self.retrieve_reads_each_base_type(passed_reads)
-            self.retrieve_base_string_each_base_type(A,T,G,C)
             
             if (self.params.basic_filter.min_rna_cov <= coverage
                 and self.params.basic_filter.min_rna_mapq <= average_mapq
@@ -300,19 +300,13 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     and len(mutation_type) != 0
                     and allele_freq >= self.params.basic_filter.min_mut_freq):
                     
-                    # Array in four type of sequence
-                    
-                    
-                    Gb =  [_.alignment.seq[_.qpos] for _ in G]
-                    Ab =  [_.alignment.seq[_.qpos] for _ in A]
-                    Tb =  [_.alignment.seq[_.qpos] for _ in T]
-                    Cb =  [_.alignment.seq[_.qpos] for _ in C]
-                    
                     # define allele
-                    _all_base = Ab + Gb + Cb + Tb
+                    Abase, Tbase, Gbase, Cbase = self.retrieve_base_string_each_base_type(A,T,G,C)
+                    _all_base = Abase + Gbase + Cbase + Tbase
                     alt = AlignmentReadsStats.define_allele(_all_base, ref=ref_base)
                 
                     # Array in seq with read strand information
+                    #reads_strand_information(G, 'rev')
                     G_base_r = [_.alignment.seq[_.qpos] for _ in G
                                 if _.alignment.is_reverse]
                     G_base_f = [_.alignment.seq[_.qpos] for _ in G
@@ -437,6 +431,27 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         Cb =  [_.alignment.seq[_.qpos] for _ in C]
         return Ab, Gb, Cb, Tb
 
+    def retrieve_base_string_with_strand(self, base, strand=None):
+        '''
+        Args:
+         base(list), e.g. data[pysam.csamtools.PileupRead object]
+         strand=1 or 0. 1 is forward strand, 0 is reverse strand.
+        
+        Returns:
+         bases with specify strand
+        '''
+        
+        forward = [_.alignment.seq[_.qpos] for _ in G
+                   if _.alignment.is_reverse]
+        reverse = [_.alignment.seq[_.qpos] for _ in G
+                   if not _.alignment.is_reverse]
+        if strnad == 1:
+            return forward
+        elif strand == 0:
+            return reverse
+        else:
+            return None
+            
     def __resolve_coords(self, start, end, is_one_based):
         if is_one_based:
             if start is not None:
