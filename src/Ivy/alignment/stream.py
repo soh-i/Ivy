@@ -20,6 +20,44 @@ __status__ = 'development'
 
 DEBUG = False
 
+class BaseStringGenerator(object):
+    @staticmethod
+    def retrieve_base_string_each_base_type(A, T, G, C):
+        '''
+        Array in four type of sequence
+        
+        Args:
+         pysam.csamtools.PileupRead object(list)
+        Returns:
+         4type of base strings(list)
+        '''
+        
+        Gb =  [_.alignment.seq[_.qpos] for _ in G]
+        Ab =  [_.alignment.seq[_.qpos] for _ in A]
+        Tb =  [_.alignment.seq[_.qpos] for _ in T]
+        Cb =  [_.alignment.seq[_.qpos] for _ in C]
+        return Ab, Gb, Cb, Tb
+
+    @staticmethod
+    def retrieve_base_string_with_strand(base, strand=None):
+        '''
+        Args:
+         base(list), e.g. data[pysam.csamtools.PileupRead object]
+         strand=1 or 0. 1 is forward strand, 0 is reverse strand.
+        
+        Returns:
+         bases with specify strand
+        '''
+        
+        if strand == 1:
+            return [_.alignment.seq[_.qpos] for _ in base
+                    if _.alignment.is_reverse]
+        elif strand == 0:
+            return [_.alignment.seq[_.qpos] for _ in base
+                    if not _.alignment.is_reverse]
+        else:
+            return None
+
             
 class FilteredAlignmentReadsGenerator(object):
     '''
@@ -225,7 +263,6 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                 if params_debug:
                     self.params.show(self.params.basic_filter)
                     raise SystemExit("Called methods: {0:s}".format(self.reads_filter_by_all_params.__name__))
-                    
                 passed_reads, passed_matches, passed_mismatches = self.reads_filter_by_all_params(col.pileup, ref_base)
                 
             # allow duplicated containing reads
@@ -235,7 +272,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                 if params_debug:
                     self.params.show(self.params.basic_filter)
                     raise SystemExit("Called methods: {0:s}".format(self.reads_allow_duplication.__name__))
-                passed_reads, passed_matches, passed_mismaches = self.reads_allow_duplication(col.pileup, ref_base)
+                passed_reads, passed_matches, passed_mismatches = self.reads_allow_duplication(col.pileup, ref_base)
                 
             # allow deletions containing reads
             elif (not self.params.basic_filter.rm_deletion
@@ -274,7 +311,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
 
             # --min-rna-mapq
             average_mapq = AlignmentReadsStats.average_mapq(passed_reads)
-
+            
             A, T, G, C = self.retrieve_reads_each_base_type(passed_reads)
             
             if (self.params.basic_filter.min_rna_cov <= coverage
@@ -282,7 +319,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                 and self.params.basic_filter.min_baq_rna <= average_baq):
                 
                 # --min-mis-frequency
-                allele_freq= AlignmentReadsStats.mismatch_frequency(passed_matches, passed_mismatches)
+                allele_freq= AlignmentReadsStats.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
                 ag_freq = AlignmentReadsStats.a_to_g_frequency(A, G)
                 
                 # --num-allow-type
@@ -410,39 +447,6 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         G = [_ for _ in reads if _.alignment.seq[_.qpos] == 'G']
         return A, T, G, C
 
-    def retrieve_base_string_each_base_type(self, A, T, G, C):
-        '''
-        Array in four type of sequence
-        
-        Args:
-         pysam.csamtools.PileupRead object(list)
-        Returns:
-         4type of base strings(list)
-        '''
-        Gb =  [_.alignment.seq[_.qpos] for _ in G]
-        Ab =  [_.alignment.seq[_.qpos] for _ in A]
-        Tb =  [_.alignment.seq[_.qpos] for _ in T]
-        Cb =  [_.alignment.seq[_.qpos] for _ in C]
-        return Ab, Gb, Cb, Tb
-
-    def retrieve_base_string_with_strand(self, base, strand=None):
-        '''
-        Args:
-         base(list), e.g. data[pysam.csamtools.PileupRead object]
-         strand=1 or 0. 1 is forward strand, 0 is reverse strand.
-        
-        Returns:
-         bases with specify strand
-        '''
-        
-        if strand == 1:
-            return [_.alignment.seq[_.qpos] for _ in base
-                    if _.alignment.is_reverse]
-        elif strand == 0:
-            return [_.alignment.seq[_.qpos] for _ in base
-                    if not _.alignment.is_reverse]
-        else:
-            return None
             
     def __resolve_coords(self, start, end, is_one_based):
         if is_one_based:
@@ -455,7 +459,6 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             else:
                 None
         return int(start), int(end)
-
     
     def fasta_info(self):
         # info. for fasta
@@ -498,50 +501,15 @@ def _is_same_chromosome_name(bam=None, fa=None):
             raise RuntimeError('{filename:s} of faidx file is not found'.
                                format(filename=fa_dx_filename))
             
-def _resolve_chrom_name(bam_chr=None, fa_chr=None):
-    raise NotImplementedError()
-    if not fa_chr.startswith('chr'):
-        return 'chr' + fa_chr
-    else:
-        return fa_chr
-            
+    def _resolve_chrom_name(self, bam_chr=None, fa_chr=None):
+        raise NotImplementedError()
+        if not fa_chr.startswith('chr'):
+            return 'chr' + fa_chr
+        else:
+            return fa_chr
+
+        
 if __name__ == '__main__':
     align = AlignmentStream("params")
-    
-    
-    
-    #conf = AlignmentConfig()
-    #a = ['A', 'T', 'C', 'G']
-    #b = ['C', 'G', 'G', 'G', 'A', 'A', 'A']
-    #c = ['A', 'T', 'C', 'G']
-    ##d = ['A', 'A', 'A', 'T', 'T', 'T', 'T', 'C', 'C', 'G']
-    # 
-    #d = ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'T']
-    #base = ['G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'T']
-    # 
-    ##print a, 'r:A',
-    #ref = ['A', 'T', 'G', 'C', 'N']
-    #print base
-    #for _ in ref:
-    #    print "ref:", _,
-    #    print AlignmentStream.define_allele(base, ref=_)
-    # 
-    ###print b, 'r:G',
-    ##print define_allele(b, ref='G') #=> A
-    ## 
-    ###print c, 'r:A',
-    ##print define_allele(c, ref='A')
-    ## 
-    ###print d, 'r:G',
-    ##print define_allele(d, ref='G')
-    
-class AlignmentStreamMerger(object):
-    def __init__(self, rna, dna):
-        raise NotImplementedError()
-        self.rna = rna
-        self.dna = dna
 
-    def merge_streaming(self):
-        dna_stream = AlignmentStream(conf)
-        rna_stream = AlignmentStream(conf)
 
