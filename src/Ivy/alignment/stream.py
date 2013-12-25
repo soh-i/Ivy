@@ -19,8 +19,8 @@ __license__ = ''
 __status__ = 'development'
 
 class BaseStringGenerator(object):
-    @staticmethod
-    def retrieve_base_string_each_base_type(A, T, G, C):
+    @classmethod
+    def retrieve_base_string_each_base_type(self, A, T, G, C):
         '''
         Array in four type of sequence
         
@@ -36,8 +36,8 @@ class BaseStringGenerator(object):
         Cb =  [_.alignment.seq[_.qpos] for _ in C]
         return Ab, Gb, Cb, Tb
 
-    @staticmethod
-    def retrieve_base_string_with_strand(base, strand=None):
+    @classmethod
+    def retrieve_base_string_with_strand(self, base, strand=None):
         '''
         Args:
          base(list), e.g. data[pysam.csamtools.PileupRead object]
@@ -329,23 +329,24 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     and allele_freq >= self.params.basic_filter.min_mut_freq):
                     
                     # define allele
-                    Abase, Tbase, Gbase, Cbase = BaseStringGenerator.retrieve_base_string_each_base_type(A,T,G,C)
+                    basegen = BaseStringGenerator()
+                    Abase, Tbase, Gbase, Cbase = basegen.retrieve_base_string_each_base_type(A,T,G,C)
                     
                     _all_base = Abase + Gbase + Cbase + Tbase
                     alt = AlignmentReadsStats.define_allele(_all_base, ref=ref_base)
                 
                     # Read strand information
-                    G_base_r = BaseStringGenerator.retrieve_base_string_with_strand(G, strand=0)
-                    G_base_f = BaseStringGenerator.retrieve_base_string_with_strand(G, strand=1)
+                    G_base_r = basegen.retrieve_base_string_with_strand(G, strand=0)
+                    G_base_f = basegen.retrieve_base_string_with_strand(G, strand=1)
                     
-                    A_base_r = BaseStringGenerator.retrieve_base_string_with_strand(A, strand=0)
-                    A_base_f = BaseStringGenerator.retrieve_base_string_with_strand(A, strand=1)
+                    A_base_r = basegen.retrieve_base_string_with_strand(A, strand=0)
+                    A_base_f = basegen.retrieve_base_string_with_strand(A, strand=1)
                     
-                    T_base_r = BaseStringGenerator.retrieve_base_string_with_strand(T, strand=0)
-                    T_base_f = BaseStringGenerator.retrieve_base_string_with_strand(T, strand=1)
+                    T_base_r = basegen.retrieve_base_string_with_strand(T, strand=0)
+                    T_base_f = basegen.retrieve_base_string_with_strand(T, strand=1)
                     
-                    C_base_r = BaseStringGenerator.retrieve_base_string_with_strand(C, strand=0)
-                    C_base_f = BaseStringGenerator.retrieve_base_string_with_strand(C, strand=0)
+                    C_base_r = basegen.retrieve_base_string_with_strand(C, strand=0)
+                    C_base_f = basegen.retrieve_base_string_with_strand(C, strand=0)
                     
                     dp4 = (AlignmentReadsStats.compute_dp4(ref_base,
                                                            len(A_base_r), len(A_base_f),len(T_base_r), len(T_base_f),
