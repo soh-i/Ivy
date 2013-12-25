@@ -324,7 +324,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                 
                 # --min-mis-frequency
                 allele_freq = alignstat.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
-                ag_freq = alignstat.a_to_g_frequency(A_reads, G_reads)
+                ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
                 
                 # --num-allow-type
                 mutation_type = self.mutation_types(A_reads, T_reads, G_reads, C_reads, ref=ref_base)
@@ -335,6 +335,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     
                     basegen = BaseStringGenerator()
                     base = basegen.retrieve_base_string_each_base_type(a=A_reads, t=T_reads, g=G_reads, c=C_reads)
+                    
                     Abase = base.get('A')
                     Tbase = base.get('T')
                     Gbase = base.get('G')
@@ -342,8 +343,8 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     
                     _all_base = Abase + Gbase + Cbase + Tbase
                     alt = alignstat.define_allele(_all_base, ref=ref_base)
-                
-                    # Read strand information
+                    
+                    # Specific base string by read strand(forward/reverse)
                     G_base_r = basegen.retrieve_base_string_with_strand(G_reads, strand=0)
                     G_base_f = basegen.retrieve_base_string_with_strand(G_reads, strand=1)
                     
@@ -356,10 +357,11 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     C_base_r = basegen.retrieve_base_string_with_strand(C_reads, strand=0)
                     C_base_f = basegen.retrieve_base_string_with_strand(C_reads, strand=0)
                     
-                    dp4 = (alignstat.compute_dp4(ref_base,
-                                                 len(A_base_r), len(A_base_f),len(T_base_r), len(T_base_f),
-                                                 len(G_base_r), len(G_base_f),
-                                                 len(C_base_r), len(C_base_f)))
+                    dp4 = (alignstat.compute_dp4(ref=ref_base,
+                                                 ar=len(A_base_r), af=len(A_base_f),
+                                                 tr=len(T_base_r), tf=len(T_base_f),
+                                                 gr=len(G_base_r), gf=len(G_base_f),
+                                                 cr=len(C_base_r), cf=len(C_base_f)))
                     ## TODO:
                     ## comapre speed by __len__() and count()
                     #Ac = [_.alignment.seq[_.qpos] for _ in A].count('A')
@@ -402,41 +404,56 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     #if (positional_bias_p > self.params.stat_filter.sig_level
                     #    or base_call_bias_p > self.params.stat_filter.sig_level
                     #    or strand_bias_p > self.params.stat_filter.sig_level):
-                    
-                    assert len(Abase) == len(A_base_r + A_base_f), "Difference between sum and forward/rev in A"
-                    assert len(Tbase) == len(T_base_r + T_base_f), "Difference between sum and forward/rev in T"
-                    assert len(Gbase) == len(G_base_r + G_base_f), "Difference between sum and forward/rev in G"
-                    assert len(Cbase) == len(C_base_r + C_base_f), "Difference between sum and forward/rev in C"
-                    
+
+                    # Failtal error if diff. in len(N) != (len(Nr)+len(Nf))
+                    if len(Abase) != len(A_base_r + A_base_f):
+                        raise ValueError, ("All{all:0}, for{f:1}, rev{r:1}".format(
+                            all=len(Abase), f=len(A_base_f), r=len(A_base_r)))
+                        
+                    if len(Tbase) != len(T_base_r + T_base_f):
+                        raise ValueError, ("All{all:0}, for{f:1}, rev{r:1}".format(
+                            all=len(Tbase), f=len(T_base_f), r=len(T_base_r)))
+                        
+                    if len(Gbase) != len(G_base_r + G_base_f):
+                        raise ValueError, ("All{all:0}, for{f:1}, rev{r:1}".format(
+                            all=len(Gbase), f=len(G_base_f), r=len(G_base_r)))
+
+                    if len(Cbase) != len(C_base_r + C_base_f):
+                        #print _all_base
+                        #$print len(Cbase), len(C_base_r+C_base_f)
+                        #$nprint basegen.retrieve_base_string_each_base_type(a=A_reads, t=T_reads, g=G_reads, c=C_reads)
+                        raise ValueError, ("All: {all:0}, for: {f:1}, rev: {r:1} at {pos:2}, {ref:3}, {m:4}".format(
+                            all=len(Cbase), f=len(C_base_f), r=len(C_base_r), pos=pos, ref=ref_base, m=mutation_type))
+                        
                     d =  {
                         'chrom': bam_chrom,
                         'pos': pos,
                         'ref': ref_base,
-                        #'alt': alt,
-                        #'coverage': len(passed_reads),
+                        #'alt': alt[0],
+                        'coverage': len(passed_reads),
                         #'mismatches': len(passed_mismatches),
                         #'matches': len(passed_matches),
-                        #'cov': coverage,
-                        #'mismatch_ratio': allele_freq,
+                        #'allele_freq': allele_freq,
                         #'ag_freq': ag_freq,
                         #'types': mutation_type,
                         #'dp4': dp4,
                         #'average_baq': average_baq,
                         #'average_mapq': average_mapq,
                         #'qual_in_pos': quals_in_pos,
-                        #'mutation_type': mutation_type,
+                        #'raw_quals': [_.alignment.qual[_.qpos] for _ in passed_reads],
+                        'mutation_type': mutation_type,
                         'A': Abase,
-                        #'G': Gbase,
+                        'G': Gbase,
                         'T': Tbase,
-                        #'C': Cbase,
+                        'C': Cbase,
                         'A_f': A_base_f,
                         'A_r': A_base_r,
-                        #'G_f': G_base_f,
-                        #'G_r': G_base_r,
+                        'G_f': G_base_f,
+                        'G_r': G_base_r,
                         'T_f': T_base_f,
                         'T_r': T_base_r,
-                        #'C_f': C_base_f,
-                        #'C_r': C_base_r,
+                        'C_f': C_base_f,
+                        'C_r': C_base_r,
                         }
                     yield d
 
