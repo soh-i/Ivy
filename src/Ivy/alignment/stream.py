@@ -10,7 +10,7 @@ import warnings
 import pysam
 
 from Ivy.utils import die, AttrDict, IvyLogger
-from Ivy.alignment.filters import strand_bias_filter
+from Ivy.alignment.filters import strand_bias_filter, positional_bias_filter
 from Ivy.alignment.stats import AlignmentReadsStats
 
 __program__ = 'stream'
@@ -82,6 +82,7 @@ class FilteredAlignmentReadsGenerator(object):
                       and not _.alignment.is_qcfail
                       and not _.alignment.is_duplicate
                       and not _.alignment.is_unmapped
+                      and not _.alignment.is_secondary
                       and not _.is_del)]
         _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
         _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
@@ -362,13 +363,6 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                                                  tr=len(T_base_r), tf=len(T_base_f),
                                                  gr=len(G_base_r), gf=len(G_base_f),
                                                  cr=len(C_base_r), cf=len(C_base_f)))
-                    ## TODO:
-                    ## comapre speed by __len__() and count()
-                    #Ac = [_.alignment.seq[_.qpos] for _ in A].count('A')
-                    #Tc = [_.alignment.seq[_.qpos] for _ in T].count('T')
-                    #Gc = [_.alignment.seq[_.qpos] for _ in G].count('G')
-                    # G_base_count = G_base_r + G_base_f
-                    #Cc = [_.alignment.seq[_.qpos] for _ in C].count('C')
                     
                     ###########################
                     ### Statistical filsher ###
@@ -376,36 +370,21 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     strand_bias_p = float()
                     positional_bias_p = float()
                     base_call_bias_p = float()
+                    
                     if (self.params.stat_filter.strand_bias):
                         strand_bias_p = strand_bias_filter(passed_matches, passed_mismatches)
                         if strand_bias_p > self.params.stat_filter.sig_level:
                             pass
-                            
+
+                    positional_bias_p = positional_bias_filter(m=passed_matches, mis=passed_mismatches)
                     if (self.params.stat_filter.pos_bias):
-                        positional_bias_p = 0
+                        pass
+                        
                     if (self.params.stat_filter.baq_bias):
                         base_call_bias_p = 0
                         
-                    #if pos == 47721228:
-                    #    print ref_base, pos
-                    #    print  coverage
-                    #    #qpos = [_.alignment.qual[_.qpos] for _ in passed_reads]
-                    # 
-                    #    mis_r = [_.alignment.seq[_.qpos] for _ in passed_mismatches if _.alignment.is_reverse]
-                    #    mis_f = [_.alignment.seq[_.qpos] for _ in passed_mismatches if not _.alignment.is_reverse]
-                    #    ma_r =  [_.alignment.seq[_.qpos] for _ in passed_matches if _.alignment.is_reverse]
-                    #    ma_f =  [_.alignment.seq[_.qpos] for _ in passed_matches if not _.alignment.is_reverse]
-                    #    
-                    #    print [_.qpos for _ in passed_reads]
-                    #    print [_.alignment.qend for _ in passed_mismatches]
-                    #    print [_.alignment.qstart for _ in passed_reads]
-                    #    #raise SystemExit
-                    #    
-                    #if (positional_bias_p > self.params.stat_filter.sig_level
-                    #    or base_call_bias_p > self.params.stat_filter.sig_level
-                    #    or strand_bias_p > self.params.stat_filter.sig_level):
-
-                    # Failtal error if diff. in len(N) != (len(Nr)+len(Nf))
+                    # Faital error if diff. in len(N) != (len(Nr)+len(Nf))
+                    # TODO: Wrapp *Error class in error.py
                     if len(Abase) != len(A_base_r + A_base_f):
                         raise ValueError, ("All{all:0}, for{f:1}, rev{r:1}".format(
                             all=len(Abase), f=len(A_base_f), r=len(A_base_r)))
@@ -419,41 +398,41 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                             all=len(Gbase), f=len(G_base_f), r=len(G_base_r)))
 
                     if len(Cbase) != len(C_base_r + C_base_f):
-                        #print _all_base
-                        #$print len(Cbase), len(C_base_r+C_base_f)
-                        #$nprint basegen.retrieve_base_string_each_base_type(a=A_reads, t=T_reads, g=G_reads, c=C_reads)
                         raise ValueError, ("All: {all:0}, for: {f:1}, rev: {r:1} at {pos:2}, {ref:3}, {m:4}".format(
                             all=len(Cbase), f=len(C_base_f), r=len(C_base_r), pos=pos, ref=ref_base, m=mutation_type))
-                        
-                    d =  {
+
+                    #assert False, ([_.alignment.tlen for _ in passed_mismatches])
+                    
+                    d = {
                         'chrom': bam_chrom,
                         'pos': pos,
                         'ref': ref_base,
-                        #'alt': alt[0],
+                        'alt': alt[0],
                         'coverage': len(passed_reads),
-                        #'mismatches': len(passed_mismatches),
-                        #'matches': len(passed_matches),
-                        #'allele_freq': allele_freq,
+                        'mismatches': len(passed_mismatches),
+                        'matches': len(passed_matches),
+                        'allele_freq': allele_freq,
+                        'positiona_bias': positional_bias_p,
                         #'ag_freq': ag_freq,
                         #'types': mutation_type,
                         #'dp4': dp4,
                         #'average_baq': average_baq,
                         #'average_mapq': average_mapq,
-                        #'qual_in_pos': quals_in_pos,
+                        #qual_in_pos': quals_in_pos,
                         #'raw_quals': [_.alignment.qual[_.qpos] for _ in passed_reads],
-                        'mutation_type': mutation_type,
-                        'A': Abase,
-                        'G': Gbase,
-                        'T': Tbase,
-                        'C': Cbase,
-                        'A_f': A_base_f,
-                        'A_r': A_base_r,
-                        'G_f': G_base_f,
-                        'G_r': G_base_r,
-                        'T_f': T_base_f,
-                        'T_r': T_base_r,
-                        'C_f': C_base_f,
-                        'C_r': C_base_r,
+                        #'mutation_type': mutation_type,
+                        #'A': Abase,
+                        #'G': Gbase,
+                        #'T': Tbase,
+                        #'C': Cbase,
+                        #'A_f': A_base_f,
+                        #'A_r': A_base_r,
+                        #'G_f': G_base_f,
+                        #'G_r': G_base_r,
+                        #'T_f': T_base_f,
+                        #'T_r': T_base_r,
+                        #'C_f': C_base_f,
+                        #'C_r': C_base_r,
                         }
                     yield d
 
