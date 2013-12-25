@@ -302,14 +302,15 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             ### Basic filters in reads ###
             ##############################
             # --min-rna-baq
-            quals_in_pos = AlignmentReadsStats.quals_in_pos(passed_reads)
-            average_baq = AlignmentReadsStats.average_base_quality(passed_reads)
+            alignstat = AlignmentReadsStats()
+            quals_in_pos = alignstat.quals_in_pos(passed_reads)
+            average_baq = alignstat.average_base_quality(passed_reads)
             
             # --min-rna-cov
-            coverage = AlignmentReadsStats.reads_coverage(passed_reads)
+            coverage = alignstat.reads_coverage(passed_reads)
 
             # --min-rna-mapq
-            average_mapq = AlignmentReadsStats.average_mapq(passed_reads)
+            average_mapq = alignstat.average_mapq(passed_reads)
             
             A, T, G, C = self.retrieve_reads_each_base_type(passed_reads)
             
@@ -318,8 +319,8 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                 and self.params.basic_filter.min_baq_rna <= average_baq):
                 
                 # --min-mis-frequency
-                allele_freq= AlignmentReadsStats.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
-                ag_freq = AlignmentReadsStats.a_to_g_frequency(A, G)
+                allele_freq= alignstat.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
+                ag_freq = alignstat.a_to_g_frequency(A, G)
                 
                 # --num-allow-type
                 mutation_type = self.mutation_types(A, T, G, C, ref=ref_base)
@@ -333,7 +334,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     Abase, Tbase, Gbase, Cbase = basegen.retrieve_base_string_each_base_type(A,T,G,C)
                     
                     _all_base = Abase + Gbase + Cbase + Tbase
-                    alt = AlignmentReadsStats.define_allele(_all_base, ref=ref_base)
+                    alt = alignstat.define_allele(_all_base, ref=ref_base)
                 
                     # Read strand information
                     G_base_r = basegen.retrieve_base_string_with_strand(G, strand=0)
@@ -348,10 +349,10 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     C_base_r = basegen.retrieve_base_string_with_strand(C, strand=0)
                     C_base_f = basegen.retrieve_base_string_with_strand(C, strand=0)
                     
-                    dp4 = (AlignmentReadsStats.compute_dp4(ref_base,
-                                                           len(A_base_r), len(A_base_f),len(T_base_r), len(T_base_f),
-                                                           len(G_base_r), len(G_base_f),
-                                                           len(C_base_r), len(C_base_f)))
+                    dp4 = (alignstat.compute_dp4(ref_base,
+                                                 len(A_base_r), len(A_base_f),len(T_base_r), len(T_base_f),
+                                                 len(G_base_r), len(G_base_f),
+                                                 len(C_base_r), len(C_base_f)))
                     ## TODO:
                     ## comapre speed by __len__() and count()
                     #Ac = [_.alignment.seq[_.qpos] for _ in A].count('A')
