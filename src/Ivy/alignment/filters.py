@@ -23,22 +23,6 @@ def positional_bias_filter(m=None, mis=None):
     except ZeroDivisionError:
         p = .0
     return p
-        
-    
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
+def base_call_bias(m=None, mis=None):
+    pass
