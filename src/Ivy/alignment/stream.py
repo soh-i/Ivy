@@ -289,7 +289,8 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                   and self.params.basic_filterf.rm_duplicated):
                 if params_debug:
                     self.params.show(self.params.basic_filter)
-                    raise SystemExit("Called methods: {0:s}".format(self.params.basic_filter, self.reads_allow_insertion.__name__))
+                    raise SystemExit("Called methods: {0:s}".format(
+                        self.params.basic_filter, self.reads_allow_insertion.__name__))
                 passed_reads, passed_mathces, passed_mismatches = self.reads_allow_insertion(col.pileup, ref_base)
 
             # no filter
@@ -393,7 +394,6 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     if self.params.stat_filter.strand_bias:
                         strand_bias_p = strand_bias_filter(m=passed_matches, mis=passed_mismatches)
                         if strand_bias_p < self.params.stat_filter.sig_level:
-                            
                             stat_flag = False
                             
                     positional_bias_p = .0
@@ -419,26 +419,26 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                             'matches': len(passed_matches),
                             'allele_freq': allele_freq,
                             'positiona_bias': positional_bias_p,
-                            #'ag_freq': ag_freq,
-                            #'types': mutation_type,
-                            #'dp4': dp4,
-                            #'average_baq': average_baq,
-                            #'average_mapq': average_mapq,
-                            #qual_in_pos': quals_in_pos,
-                            #'raw_quals': [_.alignment.qual[_.qpos] for _ in passed_reads],
-                            #'mutation_type': mutation_type,
-                            #'A': Abase,
-                            #'G': Gbase,
-                            #'T': Tbase,
-                            #'C': Cbase,
-                            #'A_f': A_base_f,
-                            #'A_r': A_base_r,
-                            #'G_f': G_base_f,
-                            #'G_r': G_base_r,
-                            #'T_f': T_base_f,
-                            #'T_r': T_base_r,
-                            #'C_f': C_base_f,
-                            #'C_r': C_base_r,
+                            'ag_freq': ag_freq,
+                            'types': mutation_type,
+                            'dp4': dp4,
+                            'average_baq': average_baq,
+                            'average_mapq': average_mapq,
+                            'qual_in_pos': quals_in_pos,
+                            'raw_quals': [_.alignment.qual[_.qpos] for _ in passed_reads],
+                            'mutation_type': mutation_type,
+                            'A': Abase,
+                            'G': Gbase,
+                            'T': Tbase,
+                            'C': Cbase,
+                            'A_f': A_base_f,
+                            'A_r': A_base_r,
+                            'G_f': G_base_f,
+                            'G_r': G_base_r,
+                            'T_f': T_base_f,
+                            'T_r': T_base_r,
+                            'C_f': C_base_f,
+                            'C_r': C_base_r,
                         }
                         yield d
 
