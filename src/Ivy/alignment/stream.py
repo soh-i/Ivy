@@ -367,19 +367,18 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     ###########################
                     ### Statistical filsher ###
                     ###########################
-                    strand_bias_p = float()
-                    positional_bias_p = float()
-                    base_call_bias_p = float()
-                    
-                    if (self.params.stat_filter.strand_bias):
-                        strand_bias_p = strand_bias_filter(passed_matches, passed_mismatches)
+                    strand_bias_p = .0
+                    if self.params.stat_filter.strand_bias:
+                        strand_bias_p = strand_bias_filter(m=passed_matches, mis=passed_mismatches)
                         if strand_bias_p > self.params.stat_filter.sig_level:
-                            pass
-
+                        pass
+                        
+                    positional_bias_p = .0
                     positional_bias_p = positional_bias_filter(m=passed_matches, mis=passed_mismatches)
                     if (self.params.stat_filter.pos_bias):
                         pass
-                        
+
+                    base_call_bias_p = .0
                     if (self.params.stat_filter.baq_bias):
                         base_call_bias_p = 0
                         
