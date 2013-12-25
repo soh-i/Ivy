@@ -355,7 +355,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     T_base_f = basegen.retrieve_base_string_with_strand(T_reads, strand=1)
                     
                     C_base_r = basegen.retrieve_base_string_with_strand(C_reads, strand=0)
-                    C_base_f = basegen.retrieve_base_string_with_strand(C_reads, strand=0)
+                    C_base_f = basegen.retrieve_base_string_with_strand(C_reads, strand=1)
                     
                     dp4 = (alignstat.compute_dp4(ref=ref_base,
                                                  ar=len(A_base_r), af=len(A_base_f),
