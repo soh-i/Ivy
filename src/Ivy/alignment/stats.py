@@ -103,7 +103,11 @@ class AlignmentReadsStats(object):
         Args:
          number of base with specific direction(int)
         Returns:
-         dp4(tuple)
+         dp4(tuple) tuple has elements in
+          Number of 1) forward ref alleles
+                    2) reverse ref
+                    3) forward non-ref
+                    4) reverse non-ref alleles
         '''
         if af + ar + gf + gr + cf + cr + tf + tr != 0:
             ref_r = 0
