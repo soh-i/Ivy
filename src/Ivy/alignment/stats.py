@@ -98,39 +98,40 @@ class AlignmentReadsStats(object):
             return '.'
 
     @staticmethod
-    def compute_dp4(ref, A_f, A_r, T_f, T_r, G_f, G_r, C_f, C_r):
-        #if len(alt): TODO:  here is bug # TypeError: object of type 'NoneType' has no len()
-        if True: # TODO: set any condition(s)
+    def compute_dp4(ref=None, af=None, ar=None, tf=None, tr=None, gf=None, gr=None, cf=None, cr=None):
+        '''
+        Args:
+         number of base with specific direction(int)
+        Returns:
+         dp4(tuple)
+        '''
+        if af + ar + gf + gr + cf + cr + tf + tr != 0:
             ref_r = 0
             ref_f = 0
             alt_r = 0
             alt_f = 0
-            
             if ref == 'A':
-                ref_r = (A_r)
-                ref_f = (A_f)
-                alt_r = (G_f+C_f+T_f)
-                alt_f = (G_r+C_r+T_r)
+                ref_r = (ar)
+                ref_f = (af)
+                alt_f = (gf + tf + cf)
+                alt_r = (gr + tr + cr)
             elif ref == 'T':
-                ref_r = (T_r)
-                ref_f = (T_f)
-                alt_r = (G_r+C_r+A_r)
-                alt_f = (G_f+C_f+A_f)
+                ref_r = (tr)
+                ref_f = (tf)
+                alt_r = (gr + cr + ar)
+                alt_f = (gf + cf + af)
             elif ref == 'G':
-                ref_r = (G_r)
-                ref_f = (G_f)
-                alt_r = (C_r+T_r+A_r)
-                alt_f = (C_f+C_f+C_r)
+                ref_r = (gr)
+                ref_f = (gf)
+                alt_r = (cr + tr + ar)
+                alt_f = (cf + cf + af)
             elif ref == 'C':
-                ref_r = (C_r)
-                ref_f = (C_f)
-                alt_r = (A_r+T_r+G_r)
-                alt_f = (A_f+T_f+G_f)
+                ref_r = (cr)
+                ref_f = (cf)
+                alt_r = (ar + tr + gr)
+                alt_f = (af + tf + gf)
             return tuple([ref_r, ref_f, alt_r, alt_f])
-
         else:
-            raise RuntimeError(
-                'Could not able to define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
+            raise ValueError(
+                'Could not define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
                 .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
-
-
