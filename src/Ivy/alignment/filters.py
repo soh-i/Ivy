@@ -18,9 +18,12 @@ def strand_bias_filter(match, mismatch):
 def positional_bias_filter(m=None, mis=None):
     mismatch_pos = [_.alignment.qlen for _ in mis]
     match_pos = [_.alignment.qlen for _ in m]
-    p = stats.ttest_ind(match_pos, mismatch_pos)
-    #return (mean(match_pos), mean(mismatch_pos), stat[1])
+    try:
+        p = stats.ttest_ind(match_pos, mismatch_pos)[1]
+    except ZeroDivisionError:
+        p = .0
     return p
+        
     
 
 
