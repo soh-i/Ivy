@@ -40,6 +40,6 @@ def pprint(data, *args, **kwargs):
     
     print '{'
     for key in data:
-        print '{key}({types}): {val}'.format(
+        print '  {key}({types}): {val}'.format(
             key=key, val=data[key], types=type(data[key]).__name__)
     print '}'
