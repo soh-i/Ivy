@@ -270,7 +270,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                   and self.params.basic_filter.rm_insertion):
                 if params_debug:
                     self.params.show(self.params.basic_filter)
-                    raise SystemExit("Called methods: {0:s}".format(self.reads_allow_duplication.__name__))
+                    raise SystemExit("Called methods: '{0:s}'".format(self.reads_allow_duplication.__name__))
                 passed_reads, passed_matches, passed_mismatches = self.reads_allow_duplication(col.pileup, ref_base)
                 
             # allow deletions containing reads
@@ -295,7 +295,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             else:
                 if params_debug:
                     self.params.show(self.params.basic_filter)
-                    raise SystemExit("Called methods: {0:s}".format(self.reads_without_filter.__name__))
+                    raise SystemExit("Called methods: '{0:s}'".format(self.reads_without_filter.__name__))
                 passed_reads, passed_matches, passed_mismatches = self.reads_without_filter(col.pileups, ref_base)
 
             ##############################
@@ -308,11 +308,12 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             
             # --min-rna-cov
             coverage = alignstat.reads_coverage(passed_reads)
-
+            
             # --min-rna-mapq
             average_mapq = alignstat.average_mapq(passed_reads)
             
             A, T, G, C = self.retrieve_reads_each_base_type(passed_reads)
+            
             
             if (self.params.basic_filter.min_rna_cov <= coverage
                 and self.params.basic_filter.min_rna_mapq <= average_mapq
@@ -330,6 +331,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     and allele_freq >= self.params.basic_filter.min_mut_freq):
                     
                     # define allele
+
                     basegen = BaseStringGenerator()
                     Abase, Tbase, Gbase, Cbase = basegen.retrieve_base_string_each_base_type(A,T,G,C)
                     
@@ -395,20 +397,37 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     #if (positional_bias_p > self.params.stat_filter.sig_level
                     #    or base_call_bias_p > self.params.stat_filter.sig_level
                     #    or strand_bias_p > self.params.stat_filter.sig_level):
-                    if 1: 
-                        yield {
-                            'chrom': bam_chrom,
-                            'pos': pos,
-                            'ref': ref_base,
-                            'alt': alt,
-                            'coverage': len(passed_reads),
-                            'mismatches': len(passed_mismatches),
-                            'matches': len(passed_matches),
-                            'cov': coverage,
-                            'mismatch_ratio': allele_freq,
-                            'types': mutation_type,
-                            'dp4': dp4
+                    yield {
+                        'chrom': bam_chrom,
+                        'pos': pos,
+                        'ref': ref_base,
+                        'alt': alt,
+                        'coverage': len(passed_reads),
+                        'mismatches': len(passed_mismatches),
+                        'matches': len(passed_matches),
+                        'cov': coverage,
+                        'mismatch_ratio': allele_freq,
+                        'ag_freq': ag_freq,
+                        'types': mutation_type,
+                        'dp4': dp4,
+                        'average_baq': average_baq,
+                        'average_mapq': average_mapq,
+                        'qual_in_pos': quals_in_pos,
+                        'mutation_type': mutation_type,
+                        'A': Abase,
+                        'G': Gbase,
+                        'T': Tbase,
+                        'C': Cbase,
+                        'A_f': A_base_f,
+                        'A_r': A_base_r,
+                        'G_f': G_base_f,
+                        'G_r': G_base_r,
+                        'T_f': T_base_f,
+                        'T_r': T_base_r,
+                        'C_f': C_base_f,
+                        'C_r': C_base_r,
                         }
+
                         
     def mutation_types(self, A, T, G, C, ref=None):
         mutation_types = {}
@@ -448,7 +467,6 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         C = [_ for _ in reads if _.alignment.seq[_.qpos] == 'C']
         G = [_ for _ in reads if _.alignment.seq[_.qpos] == 'G']
         return A, T, G, C
-
             
     def __resolve_coords(self, start, end, is_one_based):
         if is_one_based:
