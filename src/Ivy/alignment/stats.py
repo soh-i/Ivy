@@ -49,18 +49,20 @@ class AlignmentReadsStats(object):
             return .0
 
     @staticmethod
-    def mismatch_frequency(m=[], mis=[]):
-        try:
-            return len(mis) / (len(m) + len(mis))
-        except ZeroDivisionError:
-            return .0
+    def mismatch_frequency(m=None, mis=None):
+        if isinstance(m, list) and isinstance(mis, list):
+            try:
+                return len(mis) / (len(m) + len(mis))
+            except ZeroDivisionError:
+                return .0
             
     @staticmethod
-    def a_to_g_frequency(a, g):
-        try:
-            return len(g) / (len(a) + len(g))
-        except ZeroDivisionError:
-            return .0
+    def a_to_g_frequency(a=None, g=None):
+        if isinstance(a, list) and isinstance(g, list):
+            try:
+                return len(g) / (len(a + g))
+            except ZeroDivisionError:
+                return .0
                
     @staticmethod
     def define_allele(base, ref=None):
@@ -134,7 +136,7 @@ class AlignmentReadsStats(object):
                 ref_f = (cf)
                 alt_r = (ar + tr + gr)
                 alt_f = (af + tf + gf)
-            return tuple([ref_r, ref_f, alt_r, alt_f])
+            return tuple([ref_f, ref_r, alt_f, alt_r])
         else:
             raise ValueError(
                 'Could not define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
