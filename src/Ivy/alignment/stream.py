@@ -312,8 +312,11 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             # --min-rna-mapq
             average_mapq = alignstat.average_mapq(passed_reads)
             
-            A, T, G, C = self.retrieve_reads_each_base_type(passed_reads)
-            
+            base = self.retrieve_reads_each_base_type(passed_reads)
+            A = base['A']
+            T = base['T']
+            G = base['G']
+            C = base['C']
             
             if (self.params.basic_filter.min_rna_cov <= coverage
                 and self.params.basic_filter.min_rna_mapq <= average_mapq
@@ -397,36 +400,37 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     #if (positional_bias_p > self.params.stat_filter.sig_level
                     #    or base_call_bias_p > self.params.stat_filter.sig_level
                     #    or strand_bias_p > self.params.stat_filter.sig_level):
-                    yield {
-                        'chrom': bam_chrom,
-                        'pos': pos,
-                        'ref': ref_base,
-                        'alt': alt,
-                        'coverage': len(passed_reads),
-                        'mismatches': len(passed_mismatches),
-                        'matches': len(passed_matches),
-                        'cov': coverage,
-                        'mismatch_ratio': allele_freq,
-                        'ag_freq': ag_freq,
-                        'types': mutation_type,
-                        'dp4': dp4,
-                        'average_baq': average_baq,
-                        'average_mapq': average_mapq,
-                        'qual_in_pos': quals_in_pos,
-                        'mutation_type': mutation_type,
+                    d =  {
+                        #'chrom': bam_chrom,
+                        #'pos': pos,
+                        #'ref': ref_base,
+                        #'alt': alt,
+                        #'coverage': len(passed_reads),
+                        #'mismatches': len(passed_mismatches),
+                        #'matches': len(passed_matches),
+                        #'cov': coverage,
+                        #'mismatch_ratio': allele_freq,
+                        #'ag_freq': ag_freq,
+                        #'types': mutation_type,
+                        #'dp4': dp4,
+                        #'average_baq': average_baq,
+                        #'average_mapq': average_mapq,
+                        #'qual_in_pos': quals_in_pos,
+                        #'mutation_type': mutation_type,
                         'A': Abase,
                         'G': Gbase,
                         'T': Tbase,
                         'C': Cbase,
-                        'A_f': A_base_f,
-                        'A_r': A_base_r,
-                        'G_f': G_base_f,
-                        'G_r': G_base_r,
-                        'T_f': T_base_f,
-                        'T_r': T_base_r,
-                        'C_f': C_base_f,
-                        'C_r': C_base_r,
+                        #'A_f': A_base_f,
+                        #'A_r': A_base_r,
+                        #'G_f': G_base_f,
+                        #'G_r': G_base_r,
+                        #'T_f': T_base_f,
+                        #'T_r': T_base_r,
+                        #'C_f': C_base_f,
+                        #'C_r': C_base_r,
                         }
+                    yield d
 
                         
     def mutation_types(self, A, T, G, C, ref=None):
@@ -466,7 +470,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         T = [_ for _ in reads if _.alignment.seq[_.qpos] == 'T']
         C = [_ for _ in reads if _.alignment.seq[_.qpos] == 'C']
         G = [_ for _ in reads if _.alignment.seq[_.qpos] == 'G']
-        return A, T, G, C
+        return {'A': A, 'T': T, 'G': G, 'C': C}
             
     def __resolve_coords(self, start, end, is_one_based):
         if is_one_based:
