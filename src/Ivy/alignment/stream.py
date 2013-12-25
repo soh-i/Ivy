@@ -20,22 +20,22 @@ __status__ = 'development'
 
 class BaseStringGenerator(object):
     @classmethod
-    def retrieve_base_string_each_base_type(self, A, T, G, C):
+    def retrieve_base_string_each_base_type(self, a=[], t=[], g=[], c=[]):
         '''
         Array in four type of sequence
         
         Args:
          pysam.csamtools.PileupRead object(list)
         Returns:
-         4type of base strings(list)
+         4type of base strings(dict)
         '''
         
-        Gb =  [_.alignment.seq[_.qpos] for _ in G]
-        Ab =  [_.alignment.seq[_.qpos] for _ in A]
-        Tb =  [_.alignment.seq[_.qpos] for _ in T]
-        Cb =  [_.alignment.seq[_.qpos] for _ in C]
-        return Ab, Gb, Cb, Tb
-
+        Gb =  [_.alignment.seq[_.qpos] for _ in g]
+        Ab =  [_.alignment.seq[_.qpos] for _ in a]
+        Tb =  [_.alignment.seq[_.qpos] for _ in t]
+        Cb =  [_.alignment.seq[_.qpos] for _ in c]
+        return {'A': Ab, 'T': Tb, 'G': Gb, 'C': Cb}
+            
     @classmethod
     def retrieve_base_string_with_strand(self, base, strand=None):
         '''
@@ -297,7 +297,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     self.params.show(self.params.basic_filter)
                     raise SystemExit("Called methods: '{0:s}'".format(self.reads_without_filter.__name__))
                 passed_reads, passed_matches, passed_mismatches = self.reads_without_filter(col.pileups, ref_base)
-
+            
             ##############################
             ### Basic filters in reads ###
             ##############################
@@ -312,47 +312,49 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             # --min-rna-mapq
             average_mapq = alignstat.average_mapq(passed_reads)
             
-            base = self.retrieve_reads_each_base_type(passed_reads)
-            A = base['A']
-            T = base['T']
-            G = base['G']
-            C = base['C']
+            specific_reads = self.retrieve_reads_each_base_type(passed_reads)
+            A_reads = specific_reads.get('A')
+            T_reads = specific_reads.get('T')
+            G_reads = specific_reads.get('G')
+            C_reads = specific_reads.get('C')
             
             if (self.params.basic_filter.min_rna_cov <= coverage
                 and self.params.basic_filter.min_rna_mapq <= average_mapq
                 and self.params.basic_filter.min_baq_rna <= average_baq):
                 
                 # --min-mis-frequency
-                allele_freq= alignstat.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
-                ag_freq = alignstat.a_to_g_frequency(A, G)
+                allele_freq = alignstat.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
+                ag_freq = alignstat.a_to_g_frequency(A_reads, G_reads)
                 
                 # --num-allow-type
-                mutation_type = self.mutation_types(A, T, G, C, ref=ref_base)
+                mutation_type = self.mutation_types(A_reads, T_reads, G_reads, C_reads, ref=ref_base)
                 
                 if (len(mutation_type) <= self.params.basic_filter.num_type
                     and len(mutation_type) != 0
                     and allele_freq >= self.params.basic_filter.min_mut_freq):
                     
-                    # define allele
-
                     basegen = BaseStringGenerator()
-                    Abase, Tbase, Gbase, Cbase = basegen.retrieve_base_string_each_base_type(A,T,G,C)
+                    base = basegen.retrieve_base_string_each_base_type(a=A_reads, t=T_reads, g=G_reads, c=C_reads)
+                    Abase = base.get('A')
+                    Tbase = base.get('T')
+                    Gbase = base.get('G')
+                    Cbase = base.get('C')
                     
                     _all_base = Abase + Gbase + Cbase + Tbase
                     alt = alignstat.define_allele(_all_base, ref=ref_base)
                 
                     # Read strand information
-                    G_base_r = basegen.retrieve_base_string_with_strand(G, strand=0)
-                    G_base_f = basegen.retrieve_base_string_with_strand(G, strand=1)
+                    G_base_r = basegen.retrieve_base_string_with_strand(G_reads, strand=0)
+                    G_base_f = basegen.retrieve_base_string_with_strand(G_reads, strand=1)
                     
-                    A_base_r = basegen.retrieve_base_string_with_strand(A, strand=0)
-                    A_base_f = basegen.retrieve_base_string_with_strand(A, strand=1)
+                    A_base_r = basegen.retrieve_base_string_with_strand(A_reads, strand=0)
+                    A_base_f = basegen.retrieve_base_string_with_strand(A_reads, strand=1)
                     
-                    T_base_r = basegen.retrieve_base_string_with_strand(T, strand=0)
-                    T_base_f = basegen.retrieve_base_string_with_strand(T, strand=1)
+                    T_base_r = basegen.retrieve_base_string_with_strand(T_reads, strand=0)
+                    T_base_f = basegen.retrieve_base_string_with_strand(T_reads, strand=1)
                     
-                    C_base_r = basegen.retrieve_base_string_with_strand(C, strand=0)
-                    C_base_f = basegen.retrieve_base_string_with_strand(C, strand=0)
+                    C_base_r = basegen.retrieve_base_string_with_strand(C_reads, strand=0)
+                    C_base_f = basegen.retrieve_base_string_with_strand(C_reads, strand=0)
                     
                     dp4 = (alignstat.compute_dp4(ref_base,
                                                  len(A_base_r), len(A_base_f),len(T_base_r), len(T_base_f),
@@ -400,10 +402,16 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     #if (positional_bias_p > self.params.stat_filter.sig_level
                     #    or base_call_bias_p > self.params.stat_filter.sig_level
                     #    or strand_bias_p > self.params.stat_filter.sig_level):
+                    
+                    assert len(Abase) == len(A_base_r + A_base_f), "Difference between sum and forward/rev in A"
+                    assert len(Tbase) == len(T_base_r + T_base_f), "Difference between sum and forward/rev in T"
+                    assert len(Gbase) == len(G_base_r + G_base_f), "Difference between sum and forward/rev in G"
+                    assert len(Cbase) == len(C_base_r + C_base_f), "Difference between sum and forward/rev in C"
+                    
                     d =  {
-                        #'chrom': bam_chrom,
-                        #'pos': pos,
-                        #'ref': ref_base,
+                        'chrom': bam_chrom,
+                        'pos': pos,
+                        'ref': ref_base,
                         #'alt': alt,
                         #'coverage': len(passed_reads),
                         #'mismatches': len(passed_mismatches),
@@ -418,15 +426,15 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                         #'qual_in_pos': quals_in_pos,
                         #'mutation_type': mutation_type,
                         'A': Abase,
-                        'G': Gbase,
+                        #'G': Gbase,
                         'T': Tbase,
-                        'C': Cbase,
-                        #'A_f': A_base_f,
-                        #'A_r': A_base_r,
+                        #'C': Cbase,
+                        'A_f': A_base_f,
+                        'A_r': A_base_r,
                         #'G_f': G_base_f,
                         #'G_r': G_base_r,
-                        #'T_f': T_base_f,
-                        #'T_r': T_base_r,
+                        'T_f': T_base_f,
+                        'T_r': T_base_r,
                         #'C_f': C_base_f,
                         #'C_r': C_base_r,
                         }
@@ -466,11 +474,11 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
          pysam.csamtools.PileupRead object
         '''
         
-        A = [_ for _ in reads if _.alignment.seq[_.qpos] == 'A']
-        T = [_ for _ in reads if _.alignment.seq[_.qpos] == 'T']
-        C = [_ for _ in reads if _.alignment.seq[_.qpos] == 'C']
-        G = [_ for _ in reads if _.alignment.seq[_.qpos] == 'G']
-        return {'A': A, 'T': T, 'G': G, 'C': C}
+        a = [_ for _ in reads if _.alignment.seq[_.qpos] == 'A']
+        t = [_ for _ in reads if _.alignment.seq[_.qpos] == 'T']
+        c = [_ for _ in reads if _.alignment.seq[_.qpos] == 'C']
+        g = [_ for _ in reads if _.alignment.seq[_.qpos] == 'G']
+        return {'A': a, 'T': t, 'G': g, 'C': c}
             
     def __resolve_coords(self, start, end, is_one_based):
         if is_one_based:
