@@ -143,6 +143,7 @@ class FilteredAlignmentReadsGenerator(object):
         return None
 
 DEBUG = False
+reads_filter_params_debug = False
 class AlignmentStream(FilteredAlignmentReadsGenerator):
 
     def __init__(self, __params):
@@ -252,53 +253,59 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             elif ref_base == 'N' or ref_base == 'n':
                 continue
             
-            #####################################
-            ### Loading alingnment with params ###
-            #####################################
-            params_debug = False
-            #filter reads with all params
+            ########################################
+            ### Filter alingnment read w/ params ###
+            ########################################
+            # filter reads with all params
             if (self.params.basic_filter.rm_duplicated
                 and self.params.basic_filter.rm_deletion
                 and self.params.basic_filter.rm_insertion):
-                if params_debug:
+                if reads_filter_params_debug:
                     self.params.show(self.params.basic_filter)
-                    raise SystemExit("Called methods: {0:s}".format(self.reads_filter_by_all_params.__name__))
-                passed_reads, passed_matches, passed_mismatches = self.reads_filter_by_all_params(col.pileup, ref_base)
+                    raise SystemExit("Method: {0:s}".format(
+                        self.reads_filter_by_all_params.__name__))
+                passed_reads, passed_matches, passed_mismatches = (
+                self.reads_filter_by_all_params(col.pileup, ref_base))
                 
             # allow duplicated containing reads
             elif (not self.params.basic_filter.rm_duplicated
                   and self.params.basic_filter.rm_deletion
                   and self.params.basic_filter.rm_insertion):
-                if params_debug:
+                if reads_filter_params_debug:
                     self.params.show(self.params.basic_filter)
-                    raise SystemExit("Called methods: '{0:s}'".format(self.reads_allow_duplication.__name__))
-                passed_reads, passed_matches, passed_mismatches = self.reads_allow_duplication(col.pileup, ref_base)
+                    raise SystemExit("Method: '{0:s}'".format(
+                        self.reads_allow_duplication.__name__))
+                passed_reads, passed_matches, passed_mismatches = (
+                self.reads_allow_duplication(col.pileup, ref_base))
                 
             # allow deletions containing reads
             elif (not self.params.basic_filter.rm_deletion
                   and self.params.basic_filter.rm_insertion
                   and self.params.basic_filter.rm_duplicated):
-                if params_debug:
+                if reads_filter_params_debug:
                     self.params.show(self.params.basic_filter)
-                    raise SystemExit("Called methods: {0:s}".format(self.reads_allow_deletion.__name__))
-                passed_reads, passed_matches, passed_mismatches = self.reads_allow_deletion(col.pileup, ref_base)
+                    raise SystemExit("Method: {0:s}".format(self.reads_allow_deletion.__name__))
+                passed_reads, passed_matches, passed_mismatches = (
+                self.reads_allow_deletion(col.pileup, ref_base))
                 
             # allow insertion containing reads
             elif (not self.params.basic_filter.rm_insertion
                   and self.params.basic_filter.rm_deletion
                   and self.params.basic_filterf.rm_duplicated):
-                if params_debug:
+                if reads_filter_params_debug:
                     self.params.show(self.params.basic_filter)
-                    raise SystemExit("Called methods: {0:s}".format(
+                    raise SystemExit("Method: {0:s}".format(
                         self.params.basic_filter, self.reads_allow_insertion.__name__))
-                passed_reads, passed_mathces, passed_mismatches = self.reads_allow_insertion(col.pileup, ref_base)
+                passed_reads, passed_mathces, passed_mismatches = (
+                self.reads_allow_insertion(col.pileup, ref_base))
 
             # no filter
             else:
-                if params_debug:
+                if reads_filter_params_debug:
                     self.params.show(self.params.basic_filter)
-                    raise SystemExit("Called methods: '{0:s}'".format(self.reads_without_filter.__name__))
-                passed_reads, passed_matches, passed_mismatches = self.reads_without_filter(col.pileups, ref_base)
+                    raise SystemExit("Method: '{0:s}'".format(self.reads_without_filter.__name__))
+                passed_reads, passed_matches, passed_mismatches = (
+                self.reads_without_filter(col.pileups, ref_base))
 
             ##############################
             ### Basic filters in reads ###
@@ -336,8 +343,10 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     and allele_freq >= self.params.basic_filter.min_mut_freq):
                     
                     basegen = BaseStringGenerator()
-                    base = basegen.retrieve_base_string_each_base_type(a=A_reads, t=T_reads, g=G_reads, c=C_reads)
-                    
+                    base = basegen.retrieve_base_string_each_base_type(a=A_reads,
+                                                                       t=T_reads,
+                                                                       g=G_reads,
+                                                                       c=C_reads)
                     Abase = base.get('A')
                     Tbase = base.get('T')
                     Gbase = base.get('G')
@@ -368,37 +377,39 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     # Faital error if diff. in len(N) != (len(Nr)+len(Nf))
                     # TODO: Wrapp *Error class in error.py
                     if len(Abase) != len(A_base_r + A_base_f):
-                        raise ValueError, ("All{all:0}, for{f:1}, rev{r:1}".format(
-                            all=len(Abase), f=len(A_base_f), r=len(A_base_r)))
+                        raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
+                            all=len(Abase), f=len(A_base_f), r=len(A_base_r), pos=pos))
                         
                     if len(Tbase) != len(T_base_r + T_base_f):
-                        raise ValueError, ("All{all:0}, for{f:1}, rev{r:1}".format(
-                            all=len(Tbase), f=len(T_base_f), r=len(T_base_r)))
+                        raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
+                            all=len(Tbase), f=len(T_base_f), r=len(T_base_r), pos=pos))
                         
                     if len(Gbase) != len(G_base_r + G_base_f):
-                        raise ValueError, ("All{all:0}, for{f:1}, rev{r:1}".format(
-                            all=len(Gbase), f=len(G_base_f), r=len(G_base_r)))
+                        raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
+                            all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
 
                     if len(Cbase) != len(C_base_r + C_base_f):
-                        raise ValueError, ("All: {all:0}, for: {f:1}, rev: {r:1} at {pos:2}, {ref:3}, {m:4}".format(
-                            all=len(Cbase), f=len(C_base_f), r=len(C_base_r), pos=pos, ref=ref_base, m=mutation_type))
+                        raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
+                            all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
 
                     ###########################
                     ### Statistical filsher ###
                     ###########################
-                    # all position is passed through in default,
+                    # All position is passed through in default,
                     # and False means p<sig_level location
                     stat_flag = True 
                     
                     strand_bias_p = .0
                     if self.params.stat_filter.strand_bias:
-                        strand_bias_p = strand_bias_filter(m=passed_matches, mis=passed_mismatches)
+                        strand_bias_p = strand_bias_filter(m=passed_matches,
+                                                           mis=passed_mismatches)
                         if strand_bias_p < self.params.stat_filter.sig_level:
                             stat_flag = False
                             
                     positional_bias_p = .0
                     if (self.params.stat_filter.pos_bias):
-                        positional_bias_p = positional_bias_filter(m=passed_matches, mis=passed_mismatches)
+                        positional_bias_p = positional_bias_filter(m=passed_matches,
+                                                                   mis=passed_mismatches)
                         if positional_bias_p < self.params.stat_filter.sig_level:
                             stat_flag = False
 
@@ -418,7 +429,9 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                             'mismatches': len(passed_mismatches),
                             'matches': len(passed_matches),
                             'allele_freq': allele_freq,
-                            'positiona_bias': positional_bias_p,
+                            'positional_bias': positional_bias_p,
+                            'strand_bias': strand_bias_p,
+                            'base_call_bias': base_call_bias_p,
                             'ag_freq': ag_freq,
                             'types': mutation_type,
                             'dp4': dp4,
@@ -444,6 +457,9 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
 
                     
     def mutation_types(self, A, T, G, C, ref=None):
+        '''
+        Define possible mutation types in given list in each base type
+        '''
         mutation_types = {}
         if len(A) > 0 and ref != 'A':
             mutation_types.update({'A': len(A)})
@@ -495,12 +511,12 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         return int(start), int(end)
     
     def fasta_info(self):
-        # info. for fasta
+        '''info. for fasta'''
         print "### info. for fasfile object ###"
         print "filename: %s" % self.fafile.filename
 
     def sam_info(self):
-        # info. for loaded samfile
+        '''info. for loaded samfile'''
         print "### info. for samfile object from given Bam header @SQ ###"
         print "Sam file: %s" % self.samfile.filename
         print "lengths: %s" % [_ for _ in self.samfile.lengths]
