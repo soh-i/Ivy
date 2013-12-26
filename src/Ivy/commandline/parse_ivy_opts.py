@@ -50,7 +50,7 @@ class CommandLineParser(object):
                                type='string',
                                help='RNA-seq file(s) [bam]',
                                )
-        self.parser.add_option('-b',
+        self.parser.add_option('-d',
                                metavar='',
                                dest='d_bams',
                                action='store',
@@ -351,7 +351,7 @@ class CommandLineParser(object):
             passed_params.r_bams = opt.r_bams
         elif not self._ok_file(opt.r_bams):
             self.parser.error(opt.r_bams + " is not found or writable file!")
-        
+            
         # output filename, -o
         if opt.outname:
             passed_params.outname = opt.outname
@@ -362,6 +362,10 @@ class CommandLineParser(object):
         ###########################
         ### Check basic options ###
         ###########################
+        # DNA-seq bam file, d_bams
+        if opt.d_bams:
+            passed_params.d_bams = opt.d_bams
+            
         # -l, regions
         if opt.regions == 'All':
             # default value: all, all_flag is 1

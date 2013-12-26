@@ -77,7 +77,7 @@ class AlignmentReadsStats(object):
         for base in comm:
             if base[0] != ref:
                 __allele.update({base[0]:base[1]})
-        defined = ()
+
         for j in __allele:
             for k in __allele:
                 # single alllele is found
