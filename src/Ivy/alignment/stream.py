@@ -151,6 +151,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         
         Args:
          Alignment parameters wrapped by AttrDic object
+         mol_type(str)='RNA' or 'DNA'
         
         Raises:
          TypeError:
@@ -176,6 +177,8 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             self.samfile = self.__load_bam(rna=True)
         elif mol_type == 'DNA':
             self.samfile = self.__load_bam(rna=False)
+        else:
+            raise RuntimeError("Molecular type(DNA/RNA) is None! then you specify mol_type=''")
         
         self.fafile = pysam.Fastafile(self.params.fasta)
         self.one_based = self.params.one_based
@@ -435,7 +438,7 @@ def _is_same_chromosome_name(bam=None, fa=None):
             
 class RNASeqAlignmentStream(AlignmentStream):
     def __init__(self, rna_params):
-        AlignmentStream.__init__(self, rna_params)
+        AlignmentStream.__init__(self, rna_params, mol_type='RNA')
         self.params = rna_params
     
     def filter_stream(self):
@@ -595,7 +598,7 @@ class RNASeqAlignmentStream(AlignmentStream):
                         
 class DNASeqAlignmentStream(AlignmentStream):
     def __init__(self, dna_params):
-        AlignmentStream.__init__(self, dna_params)
+        AlignmentStream.__init__(self, dna_params, mol_type='DNA')
         self.params = dna_params
         
     def filter_stream(self):
