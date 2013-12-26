@@ -558,6 +558,21 @@ def _is_same_chromosome_name(bam=None, fa=None):
         else:
             return fa_chr
 
+
+class RNASeqAlignmentStream(AlignmentStream):
+    def __init__(self):
+        AlignmentStream.__init__(self)
+        
+    def pileup_stream(self):
+        pass
+
+class DNASeqAlignmentStream(AlignmentStream):
+    def __init__(self):
+        AlignmentStream.__init__(self)
+        
+    def pileup_stream(self):
+        pass
+
         
 if __name__ == '__main__':
     align = AlignmentStream("params")
