@@ -4,6 +4,7 @@ from Ivy.alignment.stream import AlignmentStream, RNASeqAlignmentStream, DNASeqA
 from Ivy.commandline.parse_ivy_opts import CommandLineParser
 from Ivy.annotation.writer import VCFWriteHeader
 from  pprint import pprint as p
+import logging
 
 __program__ = 'run_ivy'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -12,14 +13,21 @@ __status__ = 'development'
 __version__ = __version__
 
 def run():
+    logger = logging.getLogger(__name__)
+
     parse = CommandLineParser()
     params = parse.ivy_parse_options()
     vcf = VCFWriteHeader(params)
     #stream = AlignmentStream(params)
-    rna_stream = RNASeqAlignmentStream(params)
-    dna_stream = DNASeqAlignmentStream(params)
+    if params.r_bams:
+        logger.debug("Loading RNA-seq bam file '{0}'".format(params.r_bams))
+        rna_stream = RNASeqAlignmentStream(params)
+    if params.d_bams:
+        logger.debug("Loading DNA-seq bam file '{0}'".format(params.d_bams))
+        dna_stream = DNASeqAlignmentStream(params)
+        
     vcf.make_vcf_header()
-
+    
     #with open(params.outname, 'w') as f:
     #f.write()
             
