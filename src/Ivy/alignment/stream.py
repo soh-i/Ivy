@@ -145,7 +145,6 @@ class FilteredAlignmentReadsGenerator(object):
 DEBUG = False
 reads_filter_params_debug = False
 class AlignmentStream(FilteredAlignmentReadsGenerator):
-
     def __init__(self, __params):
         '''
         Initialize for pileup bam files to explore RDD sites
@@ -172,7 +171,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         else:
             raise TypeError("Given param {prm:s} is '{cls:s}' class, not 'AttrDic' class"
                             .format(prm=__params, cls=__params.__class__.__name__))
-
+        
         self.samfile = pysam.Samfile(self.params.r_bams, 'rb', check_header=True, check_sq=True)
         self.fafile = pysam.Fastafile(self.params.fasta)
         self.one_based = self.params.one_based
@@ -265,7 +264,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     raise SystemExit("Method: {0:s}".format(
                         self.reads_filter_by_all_params.__name__))
                 passed_reads, passed_matches, passed_mismatches = (
-                self.reads_filter_by_all_params(col.pileup, ref_base))
+                    self.reads_filter_by_all_params(col.pileup, ref_base))
                 
             # allow duplicated containing reads
             elif (not self.params.basic_filter.rm_duplicated
@@ -276,7 +275,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     raise SystemExit("Method: '{0:s}'".format(
                         self.reads_allow_duplication.__name__))
                 passed_reads, passed_matches, passed_mismatches = (
-                self.reads_allow_duplication(col.pileup, ref_base))
+                    self.reads_allow_duplication(col.pileup, ref_base))
                 
             # allow deletions containing reads
             elif (not self.params.basic_filter.rm_deletion
@@ -286,7 +285,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     self.params.show(self.params.basic_filter)
                     raise SystemExit("Method: {0:s}".format(self.reads_allow_deletion.__name__))
                 passed_reads, passed_matches, passed_mismatches = (
-                self.reads_allow_deletion(col.pileup, ref_base))
+                    self.reads_allow_deletion(col.pileup, ref_base))
                 
             # allow insertion containing reads
             elif (not self.params.basic_filter.rm_insertion
@@ -297,7 +296,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     raise SystemExit("Method: {0:s}".format(
                         self.params.basic_filter, self.reads_allow_insertion.__name__))
                 passed_reads, passed_mathces, passed_mismatches = (
-                self.reads_allow_insertion(col.pileup, ref_base))
+                    self.reads_allow_insertion(col.pileup, ref_base))
 
             # no filter
             else:
@@ -305,8 +304,8 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     self.params.show(self.params.basic_filter)
                     raise SystemExit("Method: '{0:s}'".format(self.reads_without_filter.__name__))
                 passed_reads, passed_matches, passed_mismatches = (
-                self.reads_without_filter(col.pileups, ref_base))
-
+                    self.reads_without_filter(col.pileups, ref_base))
+            
             ##############################
             ### Basic filters in reads ###
             ##############################
@@ -512,11 +511,13 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
     
     def fasta_info(self):
         '''info. for fasta'''
+        
         print "### info. for fasfile object ###"
         print "filename: %s" % self.fafile.filename
 
     def sam_info(self):
         '''info. for loaded samfile'''
+        
         print "### info. for samfile object from given Bam header @SQ ###"
         print "Sam file: %s" % self.samfile.filename
         print "lengths: %s" % [_ for _ in self.samfile.lengths]
@@ -560,21 +561,23 @@ def _is_same_chromosome_name(bam=None, fa=None):
 
 
 class RNASeqAlignmentStream(AlignmentStream):
-    def __init__(self):
-        AlignmentStream.__init__(self)
+    def __init__(self, rna_params):
+        AlignmentStream.__init__(self, rna_params)
+        self.params = rna_params
         
     def pileup_stream(self):
-        pass
+        yield {"params": self.params}
 
+        
 class DNASeqAlignmentStream(AlignmentStream):
-    def __init__(self):
-        AlignmentStream.__init__(self)
+    def __init__(self, dna_params):
+        AlignmentStream.__init__(self, dna_params)
+        self.params = dna_params
         
     def pileup_stream(self):
-        pass
-
+        yield {'params': self.params}
+        
         
 if __name__ == '__main__':
     align = AlignmentStream("params")
-
-
+    
