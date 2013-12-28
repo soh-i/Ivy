@@ -468,7 +468,7 @@ class CommandLineParser(object):
 
         # --min-baq-dna
         if opt.min_dna_baq:
-            passed_params.basic_filter.min_baq_dba = opt.min_dna_baq
+            passed_params.basic_filter.min_dna_baq = opt.min_dna_baq
 
         ##################################
         ### Statistical filter options ###
