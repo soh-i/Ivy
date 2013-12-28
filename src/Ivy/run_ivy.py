@@ -1,10 +1,13 @@
-from Ivy.version import __version__
 from Ivy.alignment.stream import RNASeqAlignmentStream, DNASeqAlignmentStream
 from Ivy.commandline.parse_ivy_opts import CommandLineParser
 from Ivy.annotation.writer import VCFWriteHeader
 from Ivy.seq import Fasta
+from Ivy.version import __version__
 from pprint import pprint as p
+from multiprocessing import Pool
 import logging
+import string
+import os, os.path
 
 __program__ = 'run_ivy'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -16,10 +19,11 @@ def run():
     logger = logging.getLogger(__name__)    
     parse = CommandLineParser()
     params = parse.ivy_parse_options()
+    print params
     vcf = VCFWriteHeader(params)
     #vcf.make_vcf_header()
-
     logger.debug("Beginning Ivy run (v." + __version__ + ")" )
+    
     if params.r_bams:
         logger.debug("Loading RNA-seq bam file '{0}'".format(params.r_bams))
         rna_pileup_alignment = RNASeqAlignmentStream(params)
@@ -35,17 +39,57 @@ def run():
                 pos=dna.get('pos'),
                 ref=dna.get('ref'),
                 alt=dna.get('alt'))
-            
-
     #with open(params.outname, 'w') as f:
     #f.write()
 
+def __thread_ivy():
+    parse = CommandLineParser()
+    params = parse.ivy_parse_options()
+    vcf = VCFWriteHeader(params)
+    if params.r_bams:
+        pileup_iter = RNASeqAlignmentStream(params)
+        for pileup in pileup_iter.filter_stream():
+            print to_tab(pileup)
+    elif params.d_bams:
+        pileup_iter = DNASeqAlignmentStream(params)
+        for pileup in pileup_iter.filter_stream():
+            print to_tab(pileup)
     
+def __worker(cpus=1, seqs=None):
+    if cpus <= 1 and len(seqs) <= 1:
+        raise RuntimeError()
+    p = Pool(cpus)
+    seq = p.map(__thread_ivy, seqs)
+    return seq
+
+def thread_run():
+    parse = CommandLineParser()
+    params = parse.ivy_parse_options()
+    path = './block_fasta'
+    fasta_file = params.fasta
+    cpus = params.n_threads
+    
+    # create tmp directory
+    if not os.path.isdir(path):
+        os.mkdir(path)
+    fasta_files = [_ for _ in os.listdir(path) if _.endswith('.fa')]
+    
+    # generate worker
+    if len(fasta_files) != cpus:
+        print "Remove old splited fasta, and generate new..."
+        shutil.rmtree(path)
+        fa = Fasta(fa=fasta_file)
+        fa.split_by_blocks(n=cpus)
+        __worker(cpus=cpus, seqs=fasta_files)
+        
+    elif len(fasta_files):
+        print "Used existing splited fasta..."
+        __worker(cpus=cpus, seqs=fasta_files)
+        
 def pprint(data, *args, **kwargs):
     '''
     Simple pretty print yielded pileuped data
     '''
-    
     print '{'
     for key in data:
         print '  {key}({types}): {val}'.format(

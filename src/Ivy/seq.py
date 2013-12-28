@@ -247,5 +247,3 @@ if __name__ == '__main__':
         print "Used existing block"
         with Timer() as t:
             run(cpus, get_fa_list(path))
-
-    
