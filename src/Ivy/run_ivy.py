@@ -12,14 +12,15 @@ __status__ = 'development'
 __version__ = __version__
 
 def run():
-    logger = logging.getLogger(__name__)
-
+    logger = logging.getLogger(__name__)    
     parse = CommandLineParser()
     params = parse.ivy_parse_options()
     vcf = VCFWriteHeader(params)
-    vcf.make_vcf_header()
-    
+    #vcf.make_vcf_header()
+
+    logger.debug("Beginning Ivy run (v." + __version__ + ")" )
     if params.r_bams:
+        
         logger.debug("Loading RNA-seq bam file '{0}'".format(params.r_bams))
         rna_pileup_alignment = RNASeqAlignmentStream(params)
         for rna in rna_pileup_alignment.filter_stream():
