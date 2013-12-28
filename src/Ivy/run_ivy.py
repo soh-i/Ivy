@@ -2,6 +2,7 @@ from Ivy.version import __version__
 from Ivy.alignment.stream import RNASeqAlignmentStream, DNASeqAlignmentStream
 from Ivy.commandline.parse_ivy_opts import CommandLineParser
 from Ivy.annotation.writer import VCFWriteHeader
+from Ivy.seq import Fasta
 from pprint import pprint as p
 import logging
 
@@ -24,14 +25,17 @@ def run():
         rna_pileup_alignment = RNASeqAlignmentStream(params)
         for rna in rna_pileup_alignment.filter_stream():
             print to_tab(rna)
-            #print to_tsv(rna)
-
+            
     if params.d_bams:
         logger.debug("Loading DNA-seq bam file '{0}'".format(params.d_bams))
         dna_pileup_alignment = DNASeqAlignmentStream(params)
         for dna in dna_pileup_alignment.filter_stream():
-            #pprint(dna)
-            print to_tsv(dna)
+            print '{chrom:}\t{pos:}\t{ref:}\t{alt:}'.format(
+                chrom=dna.get('chrom'),
+                pos=dna.get('pos'),
+                ref=dna.get('ref'),
+                alt=dna.get('alt'))
+            
 
     #with open(params.outname, 'w') as f:
     #f.write()
@@ -67,5 +71,5 @@ def to_tab(data, *args, **kwargs):
         ref=data.get('ref'),
         alt=data.get('alt'),
         dp4=",".join([str(_) for _ in data.get('dp4')]))
+        
     
-            
