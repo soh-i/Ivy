@@ -603,80 +603,75 @@ class DNASeqAlignmentStream(AlignmentStream):
         
     def filter_stream(self):
         for data in self.pileup_stream():
+            passed_mismatches = data[2]
             if len(passed_mismatches) < 1:
                 continue
-                
             passed_reads = data[0]
             passed_matches = data[1]
-            passed_mismatches = data[2]
-
-            # --min-dna-baq
+            
             alignstat = AlignmentReadsStats()
-
-            quals_in_pos = alignstat.quals_in_pos(passed_reads)
-            average_baq = alignstat.average_base_quality(passed_reads)
-        
-            # --min-dn-cov
+            # --min-dna-cov
             coverage = alignstat.reads_coverage(passed_reads)
-        
+            if coverage <= self.params.basic_filter.min_dna_cov:
+                continue
+                
+            # --min-dna-baq
+            average_baq = alignstat.average_base_quality(passed_reads)
+            if average_baq <= self.params.basic_filter.min_dna_baq:
+                continue
+                
             # --min-dna-mapq
             average_mapq = alignstat.average_mapq(passed_reads)
-            
+            if average_mapq <= self.params.basic_filter.min_dna_mapq:
+                continue
+                
+            # --min-mis-frequency (it just mean as allele frequency in SNPs)
+            allele_freq = alignstat.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
+            if allele_freq <= self.params.basic_filter.min_mut_freq:
+                continue
+
+            # --num-allow-type
             specific_reads = self.retrieve_reads_each_base_type(passed_reads)
             A_reads = specific_reads.get('A')
             T_reads = specific_reads.get('T')
             G_reads = specific_reads.get('G')
             C_reads = specific_reads.get('C')
-            
-            if (self.params.basic_filter.min_rna_cov <= coverage
-                and self.params.basic_filter.min_rna_mapq <= average_mapq
-                and self.params.basic_filter.min_baq_rna <= average_baq):
-            
-                # --min-mis-frequency
-                allele_freq = alignstat.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
-                ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
-                
-                # --num-allow-type
-                mutation_type = self.mutation_types(A_reads, T_reads, G_reads, C_reads, ref=self.ref_base)
-                
-                if (len(mutation_type) <= self.params.basic_filter.num_type
-                    and len(mutation_type) != 0
-                    and allele_freq >= self.params.basic_filter.min_mut_freq):
-                    
-                    stat_flag = True
-                    if stat_flag:
-                        d = {
-                            'chrom': self.bam_chrom,
-                            'pos': self.pos,
-                            'ref': self.ref_base,
-                            #'coverage': len(passed_reads),
-                            #'mismatches': len(passed_mismatches),
-                            #'matches': len(passed_matches),
-                            #'allele_freq': allele_freq,
-                            #'positional_bias': positional_bias_p,
-                            #'strand_bias': strand_bias_p,
-                            #'base_call_bias': base_call_bias_p,
-                            #'ag_freq': ag_freq,
-                            #'types': mutation_type,
-                            #'dp4': dp4,
-                            #'average_baq': average_baq,
-                            #'average_mapq': average_mapq,
-                            #'qual_in_pos': quals_in_pos,
-                            #'raw_quals': [_.alignment.qual[_.qpos] for _ in passed_reads],
-                            #'mutation_type': mutation_type,
-                            #'A': Abase,
-                            #'G': Gbase,
-                            #'T': Tbase,
-                            #'C': Cbase,
-                            #'A_f': A_base_f,
-                            #'A_r': A_base_r,
-                            #'G_f': G_base_f,
-                            #'G_r': G_base_r,
-                            #'T_f': T_base_f,
-                            #'T_r': T_base_r,
-                            #'C_f': C_base_f,
-                            #'C_r': C_base_r,
-                        }
-                        yield d
+            mutation_type = self.mutation_types(A_reads, T_reads, G_reads, C_reads, ref=self.ref_base)
+            if len(mutation_type) == 0
+                continue
 
-                        
+            #ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
+                
+            d = {
+                'chrom': self.bam_chrom,
+                'pos': self.pos,
+                'ref': self.ref_base,
+                #'coverage': len(passed_reads),
+                #'mismatches': len(passed_mismatches),
+                #'matches': len(passed_matches),
+                #'allele_freq': allele_freq,
+                #'positional_bias': positional_bias_p,
+                #'strand_bias': strand_bias_p,
+                #'base_call_bias': base_call_bias_p,
+                #'ag_freq': ag_freq,
+                #'types': mutation_type,
+                #'dp4': dp4,
+                #'average_baq': average_baq,
+                #'average_mapq': average_mapq,
+                #'qual_in_pos': quals_in_pos,
+                #'raw_quals': [_.alignment.qual[_.qpos] for _ in passed_reads],
+                #'mutation_type': mutation_type,
+                #'A': Abase,
+                #'G': Gbase,
+                #'T': Tbase,
+                #'C': Cbase,
+                #'A_f': A_base_f,
+                #'A_r': A_base_r,
+                #'G_f': G_base_f,
+                #'G_r': G_base_r,
+                #'T_f': T_base_f,
+                #'T_r': T_base_r,
+                #'C_f': C_base_f,
+                #'C_r': C_base_r,
+            }
+            yield d
