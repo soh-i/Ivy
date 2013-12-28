@@ -20,26 +20,18 @@ def run():
 
     logger.debug("Beginning Ivy run (v." + __version__ + ")" )
     if params.r_bams:
-        
         logger.debug("Loading RNA-seq bam file '{0}'".format(params.r_bams))
         rna_pileup_alignment = RNASeqAlignmentStream(params)
         for rna in rna_pileup_alignment.filter_stream():
-            #pprint(rna)
-            print to_tsv(rna)
-            #print '{chrom}\t{pos:d}\t{ref:s}\t{alt:s}\tDP={coverage:d};DP4={dp4:s};MIS_RATIO={mismatch_ratio:0.4f}'.format(
-            #chrom=rna['chrom'],
-            #pos=rna['pos'],
-            #ref=rna['ref'],
-            #alt=rna['alt'],
-            #mismatch_ratio=rna['mismatch_ratio'],
-            #coverage=rna['coverage'],
-            #dp4=",".join([str(_) for _ in rna['dp4']]))
-            
+            print to_tab(rna)
+            #print to_tsv(rna)
+
     if params.d_bams:
         logger.debug("Loading DNA-seq bam file '{0}'".format(params.d_bams))
         dna_pileup_alignment = DNASeqAlignmentStream(params)
         for dna in dna_pileup_alignment.filter_stream():
-            pprint(dna)
+            #pprint(dna)
+            print to_tsv(dna)
 
     #with open(params.outname, 'w') as f:
     #f.write()
@@ -66,5 +58,14 @@ def to_tsv(data, *args, **kwargs):
         elif isinstance(data[key], tuple):
             entory += ','.join([str(_) for _ in data[key]]) + "\t"
     return entory
+    
+            
+def to_tab(data, *args, **kwargs):
+    return '{chrom:}\t{pos:}\t{ref:}\t{alt:}\t{dp4:}'.format(
+        chrom=data.get('chrom'),
+        pos=data.get('pos'),
+        ref=data.get('ref'),
+        alt=data.get('alt'),
+        dp4=",".join([str(_) for _ in data.get('dp4')]))
     
             
