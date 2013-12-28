@@ -610,6 +610,7 @@ class DNASeqAlignmentStream(AlignmentStream):
             passed_matches = data[1]
             
             alignstat = AlignmentReadsStats()
+            
             # --min-dna-cov
             coverage = alignstat.reads_coverage(passed_reads)
             if coverage <= self.params.basic_filter.min_dna_cov:
@@ -639,9 +640,9 @@ class DNASeqAlignmentStream(AlignmentStream):
             mutation_type = self.mutation_types(A_reads, T_reads, G_reads, C_reads, ref=self.ref_base)
             if len(mutation_type) == 0:
                 continue
-
-            #ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
                 
+            #ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
+            
             d = {
                 'chrom': self.bam_chrom,
                 'pos': self.pos,
