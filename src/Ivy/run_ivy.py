@@ -24,7 +24,8 @@ def run():
         logger.debug("Loading RNA-seq bam file '{0}'".format(params.r_bams))
         rna_pileup_alignment = RNASeqAlignmentStream(params)
         for rna in rna_pileup_alignment.filter_stream():
-            pprint(rna)
+            #pprint(rna)
+            print to_tsv(rna)
             #print '{chrom}\t{pos:d}\t{ref:s}\t{alt:s}\tDP={coverage:d};DP4={dp4:s};MIS_RATIO={mismatch_ratio:0.4f}'.format(
             #chrom=rna['chrom'],
             #pos=rna['pos'],
@@ -54,3 +55,16 @@ def pprint(data, *args, **kwargs):
         print '  {key}({types}): {val}'.format(
             key=key, val=data[key], types=type(data[key]).__name__)
     print '}'
+
+def to_tsv(data, *args, **kwargs):
+    entory = ''
+    for key in data:
+        if isinstance(data[key], str):
+            entory += data[key]+"\t"
+        elif isinstance(data[key], int) or isinstance(data[key], float):
+            entory += str(data[key])+"\t"
+        elif isinstance(data[key], tuple):
+            entory += ','.join([str(_) for _ in data[key]]) + "\t"
+    return entory
+    
+            
