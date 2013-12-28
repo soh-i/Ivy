@@ -637,7 +637,7 @@ class DNASeqAlignmentStream(AlignmentStream):
             G_reads = specific_reads.get('G')
             C_reads = specific_reads.get('C')
             mutation_type = self.mutation_types(A_reads, T_reads, G_reads, C_reads, ref=self.ref_base)
-            if len(mutation_type) == 0
+            if len(mutation_type) == 0:
                 continue
 
             #ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
