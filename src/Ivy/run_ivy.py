@@ -42,23 +42,27 @@ def run():
     #with open(params.outname, 'w') as f:
     #f.write()
 
-def __thread_ivy():
+def __thread_ivy(seqs):
     parse = CommandLineParser()
     params = parse.ivy_parse_options()
     vcf = VCFWriteHeader(params)
-    if params.r_bams:
-        pileup_iter = RNASeqAlignmentStream(params)
-        for pileup in pileup_iter.filter_stream():
-            print to_tab(pileup)
-    elif params.d_bams:
-        pileup_iter = DNASeqAlignmentStream(params)
-        for pileup in pileup_iter.filter_stream():
-            print to_tab(pileup)
+    seqs = fasta_list("block_fasta")
+    if params.r_bams: 
+        for seq in seqs:
+            print seq
+            # Update reference genome to splited fasta
+            params.fasta = "block_fasta/"+seq
+            pileup_iter = RNASeqAlignmentStream(params)
+            for pileup in pileup_iter.filter_stream():
+                print to_tab(pileup)
+                
+def fasta_list(path):
+    return  [_ for _ in os.listdir(path) if _.endswith('.fa')]
     
 def __worker(cpus=1, seqs=None):
     if cpus <= 1 and len(seqs) <= 1:
         raise RuntimeError()
-    p = Pool(cpus)
+    p = Pool(processes=cpus)
     seq = p.map(__thread_ivy, seqs)
     return seq
 
