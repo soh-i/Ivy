@@ -166,19 +166,20 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         
         ig = IvyLogger()
         self.logger = logging.getLogger(type(self).__name__)
-        
+
         if hasattr(__params, 'AttrDict'):
             self.params = self.__add_preset(__params)
         else:
             raise TypeError("Given param {prm:s} is '{cls:s}' class, not 'AttrDic' class"
                             .format(prm=__params, cls=__params.__class__.__name__))
 
+            
         if mol_type == 'RNA':
             self.samfile = self.__load_bam(rna=True)
         elif mol_type == 'DNA':
             self.samfile = self.__load_bam(rna=False)
         else:
-            raise RuntimeError("Molecular type(DNA/RNA) is None! then you specify mol_type=''")
+            raise ValueError("Molecular type(DNA/RNA) is None! then you specify mol_type=''")
         
         self.fafile = pysam.Fastafile(self.params.fasta)
         self.one_based = self.params.one_based
@@ -513,7 +514,6 @@ class RNASeqAlignmentStream(AlignmentStream):
             C_base_r = basegen.retrieve_base_string_with_strand(C_reads, strand=0)
             C_base_f = basegen.retrieve_base_string_with_strand(C_reads, strand=1)
                     
-                    
             # Faital error if diff. in len(N) != (len(Nr)+len(Nf))
             # TODO: Wrapp *Error class in error.py
             if len(Abase) != len(A_base_r + A_base_f):
@@ -640,13 +640,31 @@ class DNASeqAlignmentStream(AlignmentStream):
             mutation_type = self.mutation_types(A_reads, T_reads, G_reads, C_reads, ref=self.ref_base)
             if len(mutation_type) == 0:
                 continue
+
+            basegen = BaseStringGenerator()
+            base = basegen.retrieve_base_string_each_base_type(a=A_reads,
+                                                               t=T_reads,
+                                                               g=G_reads,
+                                                               c=C_reads)
+            Abase = base.get('A')
+            Tbase = base.get('T')
+            Gbase = base.get('G')
+            Cbase = base.get('C')
+            _all_base = Abase + Gbase + Cbase + Tbase
+            alt = alignstat.define_allele(_all_base, ref=self.ref_base)
                 
             #ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
-            
+            #try:
+            #    hoge = hoge
+            #except NameError as e:
+            #    print e.message
+            #    break
+            #    
             d = {
                 'chrom': self.bam_chrom,
                 'pos': self.pos,
                 'ref': self.ref_base,
+                'alt': alt[0],
                 #'coverage': len(passed_reads),
                 #'mismatches': len(passed_mismatches),
                 #'matches': len(passed_matches),
