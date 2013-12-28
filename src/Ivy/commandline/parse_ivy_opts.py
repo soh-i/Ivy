@@ -454,21 +454,21 @@ class CommandLineParser(object):
         if opt.min_rna_mapq:
             passed_params.basic_filter.min_rna_mapq = opt.min_rna_mapq
 
-        # --min-rna-mapq
+        # --min-dna-mapq
         if opt.min_dna_mapq:
-            passed_params.basic_filter.min_rna_mapq = opt.min_dna_mapq
+            passed_params.basic_filter.min_dna_mapq = opt.min_dna_mapq
 
         # --num-allow-type
         if opt.num_type:
             passed_params.basic_filter.num_type = opt.num_type
 
-        # --min-baq-rna
+        # --min-rna-baq
         if opt.min_rna_baq:
-            passed_params.basic_filter.min_baq_rna = opt.min_rna_baq
+            passed_params.basic_filter.min_rna_baq = opt.min_rna_baq
 
-        # --min-baq-dna
+        # --min-dna-baq
         if opt.min_dna_baq:
-            passed_params.basic_filter.min_baq_dba = opt.min_dna_baq
+            passed_params.basic_filter.min_dna_baq = opt.min_dna_baq
 
         ##################################
         ### Statistical filter options ###

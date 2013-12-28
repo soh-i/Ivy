@@ -166,19 +166,20 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         
         ig = IvyLogger()
         self.logger = logging.getLogger(type(self).__name__)
-        
+
         if hasattr(__params, 'AttrDict'):
             self.params = self.__add_preset(__params)
         else:
             raise TypeError("Given param {prm:s} is '{cls:s}' class, not 'AttrDic' class"
                             .format(prm=__params, cls=__params.__class__.__name__))
 
+            
         if mol_type == 'RNA':
             self.samfile = self.__load_bam(rna=True)
         elif mol_type == 'DNA':
             self.samfile = self.__load_bam(rna=False)
         else:
-            raise RuntimeError("Molecular type(DNA/RNA) is None! then you specify mol_type=''")
+            raise ValueError("Molecular type(DNA/RNA) is None! then you specify mol_type=''")
         
         self.fafile = pysam.Fastafile(self.params.fasta)
         self.one_based = self.params.one_based
@@ -443,158 +444,157 @@ class RNASeqAlignmentStream(AlignmentStream):
     
     def filter_stream(self):
         for data in self.pileup_stream():
+            #debug
+            #if self.pos == 543062:
+            #break
+            
+            passed_mismatches = data[2]
+            if passed_mismatches < 1:
+                continue
             passed_reads = data[0]
             passed_matches = data[1]
-            passed_mismatches = data[2]
             
             ##############################
             ### Basic filters in reads ###
             ##############################
-            # --min-rna-baq
             alignstat = AlignmentReadsStats()
-            quals_in_pos = alignstat.quals_in_pos(passed_reads)
-            average_baq = alignstat.average_base_quality(passed_reads)
-        
             # --min-rna-cov
             coverage = alignstat.reads_coverage(passed_reads)
-        
+            if coverage <= self.params.basic_filter.min_rna_cov:
+                continue
+            # --min-rna-baq
+            average_baq = alignstat.average_base_quality(passed_reads)
+            
             # --min-rna-mapq
             average_mapq = alignstat.average_mapq(passed_reads)
+            if average_mapq <= self.params.basic_filter.min_rna_mapq:
+                continue
+            #quals_in_pos = alignstat.quals_in_pos(passed_reads)
             
+            # --min-mis-frequency
+            allele_freq = alignstat.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
+            if allele_freq <= self.params.basic_filter.min_mut_freq:
+                continue
+                
+            # --num-allow-type
             specific_reads = self.retrieve_reads_each_base_type(passed_reads)
             A_reads = specific_reads.get('A')
             T_reads = specific_reads.get('T')
             G_reads = specific_reads.get('G')
             C_reads = specific_reads.get('C')
-            
-            if (self.params.basic_filter.min_rna_cov <= coverage
-                and self.params.basic_filter.min_rna_mapq <= average_mapq
-                and self.params.basic_filter.min_baq_rna <= average_baq):
-            
-                # --min-mis-frequency
-                allele_freq = alignstat.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
-                ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
-                
-                # --num-allow-type
-                mutation_type = self.mutation_types(A_reads, T_reads, G_reads, C_reads, ref=self.ref_base)
-                
-                if (len(mutation_type) <= self.params.basic_filter.num_type
-                    and len(mutation_type) != 0
-                    and allele_freq >= self.params.basic_filter.min_mut_freq):
-                
-                    basegen = BaseStringGenerator()
-                    base = basegen.retrieve_base_string_each_base_type(a=A_reads,
-                                                                       t=T_reads,
-                                                                       g=G_reads,
-                                                                       c=C_reads)
-                    Abase = base.get('A')
-                    Tbase = base.get('T')
-                    Gbase = base.get('G')
-                    Cbase = base.get('C')
-                    
-                    _all_base = Abase + Gbase + Cbase + Tbase
-                    alt = alignstat.define_allele(_all_base, ref=self.ref_base)
-                    
-                    # Specific base string by read strand(forward/reverse)
-                    G_base_r = basegen.retrieve_base_string_with_strand(G_reads, strand=0)
-                    G_base_f = basegen.retrieve_base_string_with_strand(G_reads, strand=1)
-                    
-                    A_base_r = basegen.retrieve_base_string_with_strand(A_reads, strand=0)
-                    A_base_f = basegen.retrieve_base_string_with_strand(A_reads, strand=1)
-                    
-                    T_base_r = basegen.retrieve_base_string_with_strand(T_reads, strand=0)
-                    T_base_f = basegen.retrieve_base_string_with_strand(T_reads, strand=1)
-                    
-                    C_base_r = basegen.retrieve_base_string_with_strand(C_reads, strand=0)
-                    C_base_f = basegen.retrieve_base_string_with_strand(C_reads, strand=1)
-                    
-                    dp4 = (alignstat.compute_dp4(ref=self.ref_base,
-                                                 ar=len(A_base_r), af=len(A_base_f),
-                                                 tr=len(T_base_r), tf=len(T_base_f),
-                                                 gr=len(G_base_r), gf=len(G_base_f),
-                                                 cr=len(C_base_r), cf=len(C_base_f)))
-                    
-                    # Faital error if diff. in len(N) != (len(Nr)+len(Nf))
-                    # TODO: Wrapp *Error class in error.py
-                    if len(Abase) != len(A_base_r + A_base_f):
-                        raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
-                            all=len(Abase), f=len(A_base_f), r=len(A_base_r), pos=pos))
-                        
-                    if len(Tbase) != len(T_base_r + T_base_f):
-                        raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
-                            all=len(Tbase), f=len(T_base_f), r=len(T_base_r), pos=pos))
-                        
-                    if len(Gbase) != len(G_base_r + G_base_f):
-                        raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
-                            all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
+            mutation_type = self.mutation_types(A_reads, T_reads, G_reads, C_reads, ref=self.ref_base)
+            if len(mutation_type) == 0:
+                continue
 
-                    if len(Cbase) != len(C_base_r + C_base_f):
-                        raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
-                            all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
-
-                    ###########################
-                    ### Statistical filsher ###
-                    ###########################
-                    # All position is passed through in default,
-                    # and False means p<sig_level location
-                    stat_flag = True 
+            #ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
+                
+            basegen = BaseStringGenerator()
+            base = basegen.retrieve_base_string_each_base_type(a=A_reads,
+                                                               t=T_reads,
+                                                               g=G_reads,
+                                                               c=C_reads)
+            Abase = base.get('A')
+            Tbase = base.get('T')
+            Gbase = base.get('G')
+            Cbase = base.get('C')
                     
-                    strand_bias_p = .0
-                    if self.params.stat_filter.strand_bias:
-                        strand_bias_p = strand_bias_filter(m=passed_matches,
-                                                           mis=passed_mismatches)
-                        if strand_bias_p < self.params.stat_filter.sig_level:
-                            stat_flag = False
-                            
-                    positional_bias_p = .0
-                    if (self.params.stat_filter.pos_bias):
-                        positional_bias_p = positional_bias_filter(m=passed_matches,
+            _all_base = Abase + Gbase + Cbase + Tbase
+            alt = alignstat.define_allele(_all_base, ref=self.ref_base)
+                    
+            # Specific base string by read strand(forward/reverse)
+            G_base_r = basegen.retrieve_base_string_with_strand(G_reads, strand=0)
+            G_base_f = basegen.retrieve_base_string_with_strand(G_reads, strand=1)
+                    
+            A_base_r = basegen.retrieve_base_string_with_strand(A_reads, strand=0)
+            A_base_f = basegen.retrieve_base_string_with_strand(A_reads, strand=1)
+                    
+            T_base_r = basegen.retrieve_base_string_with_strand(T_reads, strand=0)
+            T_base_f = basegen.retrieve_base_string_with_strand(T_reads, strand=1)
+                    
+            C_base_r = basegen.retrieve_base_string_with_strand(C_reads, strand=0)
+            C_base_f = basegen.retrieve_base_string_with_strand(C_reads, strand=1)
+                    
+            # Faital error if diff. in len(N) != (len(Nr)+len(Nf))
+            # TODO: Wrapp *Error class in error.py
+            if len(Abase) != len(A_base_r + A_base_f):
+                raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
+                    all=len(Abase), f=len(A_base_f), r=len(A_base_r), pos=pos))
+                        
+            if len(Tbase) != len(T_base_r + T_base_f):
+                raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
+                    all=len(Tbase), f=len(T_base_f), r=len(T_base_r), pos=pos))
+                        
+            if len(Gbase) != len(G_base_r + G_base_f):
+                raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
+                    all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
+
+            if len(Cbase) != len(C_base_r + C_base_f):
+                raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
+                    all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
+
+            ###########################
+            ### Statistical filsher ###
+            ###########################
+            # All position is passed through in default,
+            # and False means p<sig_level location
+            strand_bias_p = .0
+            if self.params.stat_filter.strand_bias:
+                strand_bias_p = strand_bias_filter(m=passed_matches,
+                                                   mis=passed_mismatches)
+                if strand_bias_p < self.params.stat_filter.sig_level:
+                    continue
+            positional_bias_p = .0
+            if (self.params.stat_filter.pos_bias):
+                positional_bias_p = positional_bias_filter(m=passed_matches,
                                                                    mis=passed_mismatches)
-                        if positional_bias_p < self.params.stat_filter.sig_level:
-                            stat_flag = False
-
-                    base_call_bias_p = .0
-                    if (self.params.stat_filter.baq_bias):
-                        base_call_bias_p = .0
-                        if base_call_bias_p < self.params.stat_filter.sig_level:
-                            stat_flag = False
-
-                    if stat_flag:
-                        d = {
-                            'chrom': self.bam_chrom,
-                            'pos': self.pos,
-                            'ref': self.ref_base,
-                            'alt': alt[0],
-                            'coverage': len(passed_reads),
-                            'mismatches': len(passed_mismatches),
-                            'matches': len(passed_matches),
-                            'allele_freq': allele_freq,
-                            'positional_bias': positional_bias_p,
-                            'strand_bias': strand_bias_p,
-                            #'base_call_bias': base_call_bias_p,
-                            #'ag_freq': ag_freq,
-                            #'types': mutation_type,
-                            'dp4': dp4,
-                            #'average_baq': average_baq,
-                            #'average_mapq': average_mapq,
-                            #'qual_in_pos': quals_in_pos,
-                            #'raw_quals': [_.alignment.qual[_.qpos] for _ in passed_reads],
-                            #'mutation_type': mutation_type,
-                            #'A': Abase,
-                            #'G': Gbase,
-                            #'T': Tbase,
-                            #'C': Cbase,
-                            #'A_f': A_base_f,
-                            #'A_r': A_base_r,
-                            #'G_f': G_base_f,
-                            #'G_r': G_base_r,
-                            #'T_f': T_base_f,
-                            #'T_r': T_base_r,
-                            #'C_f': C_base_f,
-                            #'C_r': C_base_r,
-                        }
-                        yield d
-
+                if positional_bias_p < self.params.stat_filter.sig_level:
+                    continue
+            base_call_bias_p = .0
+            if (self.params.stat_filter.baq_bias):
+                base_call_bias_p = .0
+                if base_call_bias_p < self.params.stat_filter.sig_level:
+                    continue
+                    
+            dp4 = (alignstat.compute_dp4(ref=self.ref_base,
+                                         ar=len(A_base_r), af=len(A_base_f),
+                                         tr=len(T_base_r), tf=len(T_base_f),
+                                         gr=len(G_base_r), gf=len(G_base_f),
+                                         cr=len(C_base_r), cf=len(C_base_f)))
+            d = {
+                'chrom': self.bam_chrom,
+                'pos': self.pos,
+                'ref': self.ref_base,
+                'alt': alt[0],
+                'coverage': len(passed_reads),
+                'mismatches': len(passed_mismatches),
+                'matches': len(passed_matches),
+                'allele_freq': allele_freq,
+                'positional_bias': positional_bias_p,
+                'strand_bias': strand_bias_p,
+                #'base_call_bias': base_call_bias_p,
+                #'ag_freq': ag_freq,
+                #'types': mutation_type,
+                'dp4': dp4,
+                #'average_baq': average_baq,
+                #'average_mapq': average_mapq,
+                #'qual_in_pos': quals_in_pos,
+                #'raw_quals': [_.alignment.qual[_.qpos] for _ in passed_reads],
+                #'mutation_type': mutation_type,
+                #'A': Abase,
+                #'G': Gbase,
+                #'T': Tbase,
+                #'C': Cbase,
+                #'A_f': A_base_f,
+                #'A_r': A_base_r,
+                #'G_f': G_base_f,
+                #'G_r': G_base_r,
+                #'T_f': T_base_f,
+                #'T_r': T_base_r,
+                #'C_f': C_base_f,
+                #'C_r': C_base_r,
+            }
+            yield d
+            
                         
 class DNASeqAlignmentStream(AlignmentStream):
     def __init__(self, dna_params):
@@ -603,76 +603,94 @@ class DNASeqAlignmentStream(AlignmentStream):
         
     def filter_stream(self):
         for data in self.pileup_stream():
+            passed_mismatches = data[2]
+            if len(passed_mismatches) < 1:
+                continue
             passed_reads = data[0]
             passed_matches = data[1]
-            passed_mismatches = data[2]
-
-            # --min-dna-baq
+            
             alignstat = AlignmentReadsStats()
-            quals_in_pos = alignstat.quals_in_pos(passed_reads)
-            average_baq = alignstat.average_base_quality(passed_reads)
-        
-            # --min-dn-cov
+            
+            # --min-dna-cov
             coverage = alignstat.reads_coverage(passed_reads)
-        
+            if coverage <= self.params.basic_filter.min_dna_cov:
+                continue
+                
+            # --min-dna-baq
+            average_baq = alignstat.average_base_quality(passed_reads)
+            if average_baq <= self.params.basic_filter.min_dna_baq:
+                continue
+                
             # --min-dna-mapq
             average_mapq = alignstat.average_mapq(passed_reads)
-            
+            if average_mapq <= self.params.basic_filter.min_dna_mapq:
+                continue
+                
+            # --min-mis-frequency (it just mean as allele frequency in SNPs)
+            allele_freq = alignstat.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
+            if allele_freq <= self.params.basic_filter.min_mut_freq:
+                continue
+
+            # --num-allow-type
             specific_reads = self.retrieve_reads_each_base_type(passed_reads)
             A_reads = specific_reads.get('A')
             T_reads = specific_reads.get('T')
             G_reads = specific_reads.get('G')
             C_reads = specific_reads.get('C')
-            
-            if (self.params.basic_filter.min_rna_cov <= coverage
-                and self.params.basic_filter.min_rna_mapq <= average_mapq
-                and self.params.basic_filter.min_baq_rna <= average_baq):
-            
-                # --min-mis-frequency
-                allele_freq = alignstat.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
-                ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
-                
-                # --num-allow-type
-                mutation_type = self.mutation_types(A_reads, T_reads, G_reads, C_reads, ref=self.ref_base)
-                
-                if (len(mutation_type) <= self.params.basic_filter.num_type
-                    and len(mutation_type) != 0
-                    and allele_freq >= self.params.basic_filter.min_mut_freq):
-                    
-                    stat_flag = True
-                    if stat_flag:
-                        d = {
-                            'chrom': self.bam_chrom,
-                            'pos': self.pos,
-                            'ref': self.ref_base,
-                            #'coverage': len(passed_reads),
-                            #'mismatches': len(passed_mismatches),
-                            #'matches': len(passed_matches),
-                            #'allele_freq': allele_freq,
-                            #'positional_bias': positional_bias_p,
-                            #'strand_bias': strand_bias_p,
-                            #'base_call_bias': base_call_bias_p,
-                            #'ag_freq': ag_freq,
-                            #'types': mutation_type,
-                            #'dp4': dp4,
-                            #'average_baq': average_baq,
-                            #'average_mapq': average_mapq,
-                            #'qual_in_pos': quals_in_pos,
-                            #'raw_quals': [_.alignment.qual[_.qpos] for _ in passed_reads],
-                            #'mutation_type': mutation_type,
-                            #'A': Abase,
-                            #'G': Gbase,
-                            #'T': Tbase,
-                            #'C': Cbase,
-                            #'A_f': A_base_f,
-                            #'A_r': A_base_r,
-                            #'G_f': G_base_f,
-                            #'G_r': G_base_r,
-                            #'T_f': T_base_f,
-                            #'T_r': T_base_r,
-                            #'C_f': C_base_f,
-                            #'C_r': C_base_r,
-                        }
-                        yield d
+            mutation_type = self.mutation_types(A_reads, T_reads, G_reads, C_reads, ref=self.ref_base)
+            if len(mutation_type) == 0:
+                continue
 
-                        
+            basegen = BaseStringGenerator()
+            base = basegen.retrieve_base_string_each_base_type(a=A_reads,
+                                                               t=T_reads,
+                                                               g=G_reads,
+                                                               c=C_reads)
+            Abase = base.get('A')
+            Tbase = base.get('T')
+            Gbase = base.get('G')
+            Cbase = base.get('C')
+            _all_base = Abase + Gbase + Cbase + Tbase
+            alt = alignstat.define_allele(_all_base, ref=self.ref_base)
+                
+            #ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
+            #try:
+            #    hoge = hoge
+            #except NameError as e:
+            #    print e.message
+            #    break
+            #    
+            d = {
+                'chrom': self.bam_chrom,
+                'pos': self.pos,
+                'ref': self.ref_base,
+                'alt': alt[0],
+                #'coverage': len(passed_reads),
+                #'mismatches': len(passed_mismatches),
+                #'matches': len(passed_matches),
+                #'allele_freq': allele_freq,
+                #'positional_bias': positional_bias_p,
+                #'strand_bias': strand_bias_p,
+                #'base_call_bias': base_call_bias_p,
+                #'ag_freq': ag_freq,
+                #'types': mutation_type,
+                #'dp4': dp4,
+                #'average_baq': average_baq,
+                #'average_mapq': average_mapq,
+                #'qual_in_pos': quals_in_pos,
+                #'raw_quals': [_.alignment.qual[_.qpos] for _ in passed_reads],
+                #'mutation_type': mutation_type,
+                #'A': Abase,
+                #'G': Gbase,
+                #'T': Tbase,
+                #'C': Cbase,
+                #'A_f': A_base_f,
+                #'A_r': A_base_r,
+                #'G_f': G_base_f,
+                #'G_r': G_base_r,
+                #'T_f': T_base_f,
+                #'T_r': T_base_r,
+                #'C_f': C_base_f,
+                #'C_r': C_base_r,
+            }
+            yield d

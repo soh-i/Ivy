@@ -2,6 +2,7 @@ from Ivy.version import __version__
 from Ivy.alignment.stream import RNASeqAlignmentStream, DNASeqAlignmentStream
 from Ivy.commandline.parse_ivy_opts import CommandLineParser
 from Ivy.annotation.writer import VCFWriteHeader
+from Ivy.seq import Fasta
 from pprint import pprint as p
 import logging
 
@@ -12,32 +13,29 @@ __status__ = 'development'
 __version__ = __version__
 
 def run():
-    logger = logging.getLogger(__name__)
-
+    logger = logging.getLogger(__name__)    
     parse = CommandLineParser()
     params = parse.ivy_parse_options()
     vcf = VCFWriteHeader(params)
-    vcf.make_vcf_header()
-    
+    #vcf.make_vcf_header()
+
+    logger.debug("Beginning Ivy run (v." + __version__ + ")" )
     if params.r_bams:
         logger.debug("Loading RNA-seq bam file '{0}'".format(params.r_bams))
         rna_pileup_alignment = RNASeqAlignmentStream(params)
         for rna in rna_pileup_alignment.filter_stream():
-            pprint(rna)
-            #print '{chrom}\t{pos:d}\t{ref:s}\t{alt:s}\tDP={coverage:d};DP4={dp4:s};MIS_RATIO={mismatch_ratio:0.4f}'.format(
-            #chrom=rna['chrom'],
-            #pos=rna['pos'],
-            #ref=rna['ref'],
-            #alt=rna['alt'],
-            #mismatch_ratio=rna['mismatch_ratio'],
-            #coverage=rna['coverage'],
-            #dp4=",".join([str(_) for _ in rna['dp4']]))
+            print to_tab(rna)
             
     if params.d_bams:
         logger.debug("Loading DNA-seq bam file '{0}'".format(params.d_bams))
         dna_pileup_alignment = DNASeqAlignmentStream(params)
         for dna in dna_pileup_alignment.filter_stream():
-            pprint(dna)
+            print '{chrom:}\t{pos:}\t{ref:}\t{alt:}'.format(
+                chrom=dna.get('chrom'),
+                pos=dna.get('pos'),
+                ref=dna.get('ref'),
+                alt=dna.get('alt'))
+            
 
     #with open(params.outname, 'w') as f:
     #f.write()
@@ -53,3 +51,25 @@ def pprint(data, *args, **kwargs):
         print '  {key}({types}): {val}'.format(
             key=key, val=data[key], types=type(data[key]).__name__)
     print '}'
+
+def to_tsv(data, *args, **kwargs):
+    entory = ''
+    for key in data:
+        if isinstance(data[key], str):
+            entory += data[key]+"\t"
+        elif isinstance(data[key], int) or isinstance(data[key], float):
+            entory += str(data[key])+"\t"
+        elif isinstance(data[key], tuple):
+            entory += ','.join([str(_) for _ in data[key]]) + "\t"
+    return entory
+    
+            
+def to_tab(data, *args, **kwargs):
+    return '{chrom:}\t{pos:}\t{ref:}\t{alt:}\t{dp4:}'.format(
+        chrom=data.get('chrom'),
+        pos=data.get('pos'),
+        ref=data.get('ref'),
+        alt=data.get('alt'),
+        dp4=",".join([str(_) for _ in data.get('dp4')]))
+        
+    

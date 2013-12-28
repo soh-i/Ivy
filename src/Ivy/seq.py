@@ -26,7 +26,7 @@ class Fasta(object):
                     header.append(head)
             return header
 
-    def split_by_blocks(self, n=0):
+    def split_by_blocks(self, n=1):
         '''
         Args:
          lists(list): block of splited chromosome
