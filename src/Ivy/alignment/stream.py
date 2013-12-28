@@ -444,8 +444,8 @@ class RNASeqAlignmentStream(AlignmentStream):
     def filter_stream(self):
         for data in self.pileup_stream():
             #debug
-            if self.pos == 543062:
-                break
+            #if self.pos == 543062:
+            #break
             
             passed_mismatches = data[2]
             if passed_mismatches < 1:
