@@ -183,7 +183,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         
         self.fafile = pysam.Fastafile(self.params.fasta)
         self.one_based = self.params.one_based
-
+        
         ### Resolve to explore specific region or not
         # Flag == 1: explore all region
         if self.params.region.all_flag == 1:
@@ -207,11 +207,14 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             else:
                 # explore all region if self.params.region.* is None
                 pass
-        if  _is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
+
+        if _is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
             pass
         else:
-            raise ValueError("Invalid chromosome name")
-
+            # raise if multi threading is ON
+            raise ValueError("Invalid chromosome name in {fa}, {reg}".format(fa=self.params.fasta, reg=self.params.region))
+            #pass
+            
         if self.params.verbose:
             self.logger.debug(AttrDict.show(self.params))
             
@@ -273,7 +276,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                         chrom=self.chrom, start=self.start, end=self.end))
             elif self.ref_base == 'N' or self.ref_base == 'n':
                 continue
-            
+             
             # filter reads with all params
             if (self.params.basic_filter.rm_duplicated
                 and self.params.basic_filter.rm_deletion
@@ -405,6 +408,17 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
 
 
 def _parse_faidx(filename):
+    '''
+    Return:
+     chromosomes(list) in given fai file
+    
+    Example:
+     $ cat genome.fa.fai
+     chr18 78077248 7 50 51
+     chr19 59128983 79638807 50 51
+     chr20 63025520 139950377 50 51
+    '''
+    
     fasta_chrom_name = []
     with open(filename, 'r') as fh:
         for row in fh:
@@ -424,7 +438,8 @@ def _is_same_chromosome_name(bam=None, fa=None):
             if any([fai_chr == bam_chr for fai_chr in _parse_faidx(fa_dx_filename)]):
                 return True
             else:
-                return False
+                #return False
+                print tuple([_parse_faidx(fa_dx_filename), bam_references])
         else:
             raise RuntimeError('{filename:s} of faidx file is not found'.
                                format(filename=fa_dx_filename))
