@@ -34,13 +34,17 @@ def single_run():
     vcf = VCFWriteHeader(params)
     #vcf.make_vcf_header()
     logger.debug("Beginning Ivy run (v." + __version__ + ")" )
+    
+    # RNA-seq data
     if params.r_bams:
         logger.debug("Loading RNA-seq bam file '{0}'".format(params.r_bams))
         rna_pileup_alignment = RNASeqAlignmentStream(params)
         #print dir(rna_pileup_alignment)
         for rna in rna_pileup_alignment.filter_stream():
-            print Printer.to_tab(rna)
+            #print Printer.to_tab(rna)
+            print rna
             
+    # DNA-Seq data
     if params.d_bams:
         logger.debug("Loading DNA-seq bam file '{0}'".format(params.d_bams))
         dna_pileup_alignment = DNASeqAlignmentStream(params)
@@ -79,11 +83,12 @@ def __thread_ivy(seqs):
             if params.r_bams:
                 print "Pileup {0} by {1}".format(params.r_bams, params.fasta)
                 pileup_iter = RNASeqAlignmentStream(params)
-                print dir(pileup_iter)
+                #print dir(pileup_iter)
                 for pileup in pileup_iter.filter_stream():
                     pass
                     
 def __worker(cpus=1, seqs=None):
+    print seqs
     if cpus < 1 and len(seqs) < 1:
         raise RuntimeError()
     p = Pool(processes=cpus)

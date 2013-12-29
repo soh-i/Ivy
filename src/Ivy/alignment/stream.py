@@ -270,9 +270,10 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             if not self.ref_base:
                 # Skip if chrom in bam is not in reference genome
                 continue
-                raise ValueError(
-                    'No sequence content within chroms: {chrom:s}, start: {start:s}, end: {end:s}'.format(
-                        chrom=self.params.region.chrom, start=self.params.region.start, end=self.params.region.end))
+                
+                #raise ValueError(
+                #   'No sequence content within chroms: {chrom:s}, start: {start:s}, end: {end:s}'.format(
+                #       chrom=self.params.region.chrom, start=self.params.region.start, end=self.params.region.end))
             elif self.ref_base == 'N' or self.ref_base == 'n':
                 continue
              
@@ -437,7 +438,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                 if any([fai_chr == bam_chr for fai_chr in self._parse_faidx(fa_dx_filename)]):
                     return True
                 else:
-                    print tuple([self._parse_faidx(fa_dx_filename), bam_references])
+                    #print tuple([self._parse_faidx(fa_dx_filename), bam_references])
                     return False
             else:
                 raise RuntimeError('{filename:s} of faidx file is not found'.
