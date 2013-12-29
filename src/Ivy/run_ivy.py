@@ -41,8 +41,7 @@ def single_run():
         rna_pileup_alignment = RNASeqAlignmentStream(params)
         #print dir(rna_pileup_alignment)
         for rna in rna_pileup_alignment.filter_stream():
-            #print Printer.to_tab(rna)
-            print rna
+            print Printer.to_tab(rna)
             
     # DNA-Seq data
     if params.d_bams:
@@ -78,14 +77,11 @@ def __thread_ivy(seqs):
     vcf = VCFWriteHeader(params)
     if params.r_bams: 
         for seq in seqs:
-            params.fasta = os.path.join('block_fasta', seq)
             # Update reference genome to splited fasta
-            if params.r_bams:
-                print "Pileup {0} by {1}".format(params.r_bams, params.fasta)
-                pileup_iter = RNASeqAlignmentStream(params)
-                #print dir(pileup_iter)
-                for pileup in pileup_iter.filter_stream():
-                    pass
+            params.fasta = os.path.join('block_fasta', seq)
+            pileup_iter = RNASeqAlignmentStream(params)
+            return [pileup for pileup in pileup_iter.filter_stream()]
+                
                     
 def __worker(cpus=1, seqs=None):
     print seqs
