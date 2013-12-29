@@ -210,9 +210,8 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         if self._is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
             pass
         else:
-            # raise if multi threading is ON
-            raise RuntimeError("Invalid chromosome name in {fa}, {reg}".format(fa=self.params.fasta, reg=self.params.region))
-            #pass
+            #raise RuntimeError("Invalid chromosome name in {fa}, {reg}".format(fa=self.params.fasta, reg=self.params.region))
+            return None
             
         if self.params.verbose:
             self.logger.debug(AttrDict.show(self.params))
@@ -269,7 +268,8 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                                         start=col.pos,
                                         end=col.pos+1).upper()
             if not self.ref_base:
-                # TODO: resolve difference name in fasta and bam
+                # Skip if chrom in bam is not in reference genome
+                continue
                 raise ValueError(
                     'No sequence content within chroms: {chrom:s}, start: {start:s}, end: {end:s}'.format(
                         chrom=self.params.region.chrom, start=self.params.region.start, end=self.params.region.end))
