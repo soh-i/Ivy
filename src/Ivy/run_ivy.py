@@ -7,6 +7,7 @@ from pprint import pprint as p
 from multiprocessing import Pool
 import logging
 import string
+import shutil
 import os, os.path
 
 __program__ = 'run_ivy'
@@ -14,6 +15,14 @@ __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
 __version__ = __version__
+
+def run():
+    parse = CommandLineParser()
+    params = parse.ivy_parse_options()
+    if params.n_threads == 1:
+        single_run()
+    elif params.n_threads > 2:
+        thread_run()
 
 def single_run():
     logger = logging.getLogger(__name__)    
@@ -66,15 +75,14 @@ def __thread_ivy(seqs):
             params.fasta = os.path.join('block_fasta', seq)
             # Update reference genome to splited fasta
             if params.r_bams:
-                print params
+                print "Pileup {0} by {1}".format(params.r_bams, params.fasta)
                 pileup_iter = RNASeqAlignmentStream(params)
+                print dir(pileup_iter)
                 for pileup in pileup_iter.filter_stream():
-                    print params.fasta
-                    #print 'Fasta: {fa:}'.format(fa=params.fasta)
-                    #print Printer.to_tab(pileup)
-
+                    pass
+                    
 def __worker(cpus=1, seqs=None):
-    if cpus <= 1 and len(seqs) <= 1:
+    if cpus < 1 and len(seqs) < 1:
         raise RuntimeError()
     p = Pool(processes=cpus)
     seq = p.map(__thread_ivy, [seqs])
@@ -87,7 +95,7 @@ def thread_run():
     
     # create tmp directory
     if not os.path.isdir(save_path):
-        os.mkdir(path)
+        os.mkdir(save_path)
     fasta_files = [_ for _ in os.listdir(save_path) if _.endswith('.fa')]
     
     # generate worker
