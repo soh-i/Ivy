@@ -52,10 +52,10 @@ def list_fasta_files(path, suffix):
     '''
     if suffix:
         # uses custamized suffix of fasta
-        return  [_ for _ in os.listdir(path) if _.endswith(ext)]
+        return [_ for _ in os.listdir(path) if _.endswith(ext)]
     else:
         # default
-        return  [_ for _ in os.listdir(path) if _.endswith('.fa')]
+        return [_ for _ in os.listdir(path) if _.endswith('.fa')]
 
 def __thread_ivy(seqs):
     parse = CommandLineParser()
@@ -63,12 +63,16 @@ def __thread_ivy(seqs):
     vcf = VCFWriteHeader(params)
     if params.r_bams: 
         for seq in seqs:
-            print seq
+            params.fasta = os.path.join('block_fasta', seq)
             # Update reference genome to splited fasta
-            #  pileup_iter = RNASeqAlignmentStream(params)
-            #  or pileup in pileup_iter.filter_stream():
-            #     print to_tab(pileup)
-                
+            if params.r_bams:
+                print params
+                pileup_iter = RNASeqAlignmentStream(params)
+                for pileup in pileup_iter.filter_stream():
+                    print params.fasta
+                    #print 'Fasta: {fa:}'.format(fa=params.fasta)
+                    #print Printer.to_tab(pileup)
+
 def __worker(cpus=1, seqs=None):
     if cpus <= 1 and len(seqs) <= 1:
         raise RuntimeError()
@@ -79,17 +83,17 @@ def __worker(cpus=1, seqs=None):
 def thread_run():
     parse = CommandLineParser()
     params = parse.ivy_parse_options()
-    path = './block_fasta'
+    save_path = './block_fasta'
     
     # create tmp directory
-    if not os.path.isdir(path):
+    if not os.path.isdir(save_path):
         os.mkdir(path)
-    fasta_files = [_ for _ in os.listdir(path) if _.endswith('.fa')]
+    fasta_files = [_ for _ in os.listdir(save_path) if _.endswith('.fa')]
     
     # generate worker
     if len(fasta_files) != params.n_threads:
         print "Remove old splited fasta, and generate new..."
-        shutil.rmtree(path)
+        shutil.rmtree(save_path)
         
         # split fasta by number of threads
         fa = Fasta(fa=params.fasta)
@@ -101,37 +105,38 @@ def thread_run():
         print "Used existing splited fasta..."
         __worker(cpus=params.n_threads, seqs=fasta_files)
 
-class Printer(object):
-    @staticmethod
-    def pprint(data, *args, **kwargs):
-        '''
-        Simple pretty print yielded pileuped data
-        '''
-        print '{'
-        for key in data:
-            print '  {key}({types}): {val}'.format(
-                key=key, val=data[key], types=type(data[key]).__name__)
-        print '}'
-
-    @staticmethod
-    def to_tsv(data, *args, **kwargs):
-        entory = ''
-        for key in data:
-            if isinstance(data[key], str):
-                entory += data[key]+"\t"
-            elif isinstance(data[key], int) or isinstance(data[key], float):
-                entory += str(data[key])+"\t"
-            elif isinstance(data[key], tuple):
-                entory += ','.join([str(_) for _ in data[key]]) + "\t"
-        return entory
-         
-    @staticmethod
-    def to_tab(data, *args, **kwargs):
-        return '{chrom:}\t{pos:}\t{ref:}\t{alt:}\t{dp4:}'.format(
-            chrom=data.get('chrom'),
-            pos=data.get('pos'),
-            ref=data.get('ref'),
-            alt=data.get('alt'),
-            dp4=",".join([str(_) for _ in data.get('dp4')]))
-            
-         
+        
+#class Printer(object):
+#    @staticmethod
+#    def pprint(data, *args, **kwargs):
+#        '''
+#        Simple pretty print yielded pileuped data
+#        '''
+#        print '{'
+#        for key in data:
+#            print '  {key}({types}): {val}'.format(
+#                key=key, val=data[key], types=type(data[key]).__name__)
+#        print '}'
+# 
+#    @staticmethod
+#    def to_tsv(data, *args, **kwargs):
+#        entory = ''
+#        for key in data:
+#            if isinstance(data[key], str):
+#                entory += data[key]+"\t"
+#            elif isinstance(data[key], int) or isinstance(data[key], float):
+#                entory += str(data[key])+"\t"
+#            elif isinstance(data[key], tuple):
+#                entory += ','.join([str(_) for _ in data[key]]) + "\t"
+#        return entory
+#         
+#    @staticmethod
+#    def to_tab(data, *args, **kwargs):
+#        return '{chrom:}\t{pos:}\t{ref:}\t{alt:}\t{dp4:}'.format(
+#            chrom=data.get('chrom'),
+#            pos=data.get('pos'),
+#            ref=data.get('ref'),
+#            alt=data.get('alt'),
+#            dp4=",".join([str(_) for _ in data.get('dp4')]))
+#            
+#         
