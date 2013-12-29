@@ -8,7 +8,6 @@ import pprint
 import logging
 import warnings
 import pysam
-
 from Ivy.utils import die, AttrDict, IvyLogger
 from Ivy.alignment.filters import strand_bias_filter, positional_bias_filter
 from Ivy.alignment.stats import AlignmentReadsStats
@@ -208,11 +207,11 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                 # explore all region if self.params.region.* is None
                 pass
 
-        if _is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
+        if self._is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
             pass
         else:
             # raise if multi threading is ON
-            raise ValueError("Invalid chromosome name in {fa}, {reg}".format(fa=self.params.fasta, reg=self.params.region))
+            raise RuntimeError("Invalid chromosome name in {fa}, {reg}".format(fa=self.params.fasta, reg=self.params.region))
             #pass
             
         if self.params.verbose:
@@ -272,8 +271,8 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             if not self.ref_base:
                 # TODO: resolve difference name in fasta and bam
                 raise ValueError(
-                    'No sequence content within {chrom:s}, {start:s}, {end:s}'.format(
-                        chrom=self.chrom, start=self.start, end=self.end))
+                    'No sequence content within chroms: {chrom:s}, start: {start:s}, end: {end:s}'.format(
+                        chrom=self.params.region.chrom, start=self.params.region.start, end=self.params.region.end))
             elif self.ref_base == 'N' or self.ref_base == 'n':
                 continue
              
@@ -407,50 +406,49 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         print "unmapped: %s" % self.samfile.unmapped
 
 
-def _parse_faidx(filename):
-    '''
-    Return:
-     chromosomes(list) in given fai file
-    
-    Example:
-     $ cat genome.fa.fai
-     chr18 78077248 7 50 51
-     chr19 59128983 79638807 50 51
-     chr20 63025520 139950377 50 51
-    '''
-    
-    fasta_chrom_name = []
-    with open(filename, 'r') as fh:
-        for row in fh:
-            data = row.split('\t')
-            fasta_chrom_name.append(data[0])
-    return fasta_chrom_name
-            
-def _is_same_chromosome_name(bam=None, fa=None):
-    __bam = pysam.Samfile(os.path.abspath(bam), 'rb')
-    __fa = pysam.Fastafile(os.path.abspath(fa))
-    bam_references = __bam.references
-    fa_filename = __fa.filename
-    fa_dx_filename = fa_filename + '.fai'
-    
-    if os.path.isfile(fa_dx_filename):
-        for bam_chr in bam_references:
-            if any([fai_chr == bam_chr for fai_chr in _parse_faidx(fa_dx_filename)]):
-                return True
+    def _parse_faidx(self, filename):
+        '''
+        Return:
+         chromosomes(list) in given fai file
+        
+        Example:
+         $ cat genome.fa.fai
+         chr18 78077248 7 50 51
+         chr19 59128983 79638807 50 51
+         chr20 63025520 139950377 50 51
+        '''
+        
+        fasta_chrom_name = []
+        with open(filename, 'r') as fh:
+            for row in fh:
+                data = row.split('\t')
+                fasta_chrom_name.append(data[0])
+        return fasta_chrom_name
+                
+    def _is_same_chromosome_name(self, bam=None, fa=None):
+        __bam = pysam.Samfile(os.path.abspath(bam), 'rb')
+        __fa = pysam.Fastafile(os.path.abspath(fa))
+        bam_references = __bam.references
+        fa_filename = __fa.filename
+        fa_dx_filename = fa_filename + '.fai'
+        
+        if os.path.isfile(fa_dx_filename):
+            for bam_chr in bam_references:
+                if any([fai_chr == bam_chr for fai_chr in self._parse_faidx(fa_dx_filename)]):
+                    return True
+                else:
+                    print tuple([self._parse_faidx(fa_dx_filename), bam_references])
+                    return False
             else:
-                #return False
-                print tuple([_parse_faidx(fa_dx_filename), bam_references])
-        else:
-            raise RuntimeError('{filename:s} of faidx file is not found'.
-                               format(filename=fa_dx_filename))
-            
-    def _resolve_chrom_name(self, bam_chr=None, fa_chr=None):
-        raise NotImplementedError()
-        if not fa_chr.startswith('chr'):
-            return 'chr' + fa_chr
-        else:
-            return fa_chr
-
+                raise RuntimeError('{filename:s} of faidx file is not found'.
+                                   format(filename=fa_dx_filename))
+                
+def _resolve_chrom_name(self, bam_chr=None, fa_chr=None):
+    raise NotImplementedError()
+    if not fa_chr.startswith('chr'):
+        return 'chr' + fa_chr
+    else:
+        return fa_chr
             
 class RNASeqAlignmentStream(AlignmentStream):
     def __init__(self, rna_params):
