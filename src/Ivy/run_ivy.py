@@ -25,19 +25,21 @@ def run():
         thread_run()
 
 def single_run():
+    '''
+    Ivy runs as single thread
+    '''
     logger = logging.getLogger(__name__)    
     parse = CommandLineParser()
     params = parse.ivy_parse_options()
-    print params
     vcf = VCFWriteHeader(params)
     #vcf.make_vcf_header()
     logger.debug("Beginning Ivy run (v." + __version__ + ")" )
-    
     if params.r_bams:
         logger.debug("Loading RNA-seq bam file '{0}'".format(params.r_bams))
         rna_pileup_alignment = RNASeqAlignmentStream(params)
+        #print dir(rna_pileup_alignment)
         for rna in rna_pileup_alignment.filter_stream():
-            print to_tab(rna)
+            print Printer.to_tab(rna)
             
     if params.d_bams:
         logger.debug("Loading DNA-seq bam file '{0}'".format(params.d_bams))
@@ -114,37 +116,37 @@ def thread_run():
         __worker(cpus=params.n_threads, seqs=fasta_files)
 
         
-#class Printer(object):
-#    @staticmethod
-#    def pprint(data, *args, **kwargs):
-#        '''
-#        Simple pretty print yielded pileuped data
-#        '''
-#        print '{'
-#        for key in data:
-#            print '  {key}({types}): {val}'.format(
-#                key=key, val=data[key], types=type(data[key]).__name__)
-#        print '}'
-# 
-#    @staticmethod
-#    def to_tsv(data, *args, **kwargs):
-#        entory = ''
-#        for key in data:
-#            if isinstance(data[key], str):
-#                entory += data[key]+"\t"
-#            elif isinstance(data[key], int) or isinstance(data[key], float):
-#                entory += str(data[key])+"\t"
-#            elif isinstance(data[key], tuple):
-#                entory += ','.join([str(_) for _ in data[key]]) + "\t"
-#        return entory
-#         
-#    @staticmethod
-#    def to_tab(data, *args, **kwargs):
-#        return '{chrom:}\t{pos:}\t{ref:}\t{alt:}\t{dp4:}'.format(
-#            chrom=data.get('chrom'),
-#            pos=data.get('pos'),
-#            ref=data.get('ref'),
-#            alt=data.get('alt'),
-#            dp4=",".join([str(_) for _ in data.get('dp4')]))
-#            
-#         
+class Printer(object):
+    @staticmethod
+    def pprint(data, *args, **kwargs):
+        '''
+        Simple pretty print yielded pileuped data
+        '''
+        print '{'
+        for key in data:
+            print '  {key}({types}): {val}'.format(
+                key=key, val=data[key], types=type(data[key]).__name__)
+        print '}'
+ 
+    @staticmethod
+    def to_tsv(data, *args, **kwargs):
+        entory = ''
+        for key in data:
+            if isinstance(data[key], str):
+                entory += data[key]+"\t"
+            elif isinstance(data[key], int) or isinstance(data[key], float):
+                entory += str(data[key])+"\t"
+            elif isinstance(data[key], tuple):
+                entory += ','.join([str(_) for _ in data[key]]) + "\t"
+        return entory
+         
+    @staticmethod
+    def to_tab(data, *args, **kwargs):
+        return '{chrom:}\t{pos:}\t{ref:}\t{alt:}\t{dp4:}'.format(
+            chrom=data.get('chrom'),
+            pos=data.get('pos'),
+            ref=data.get('ref'),
+            alt=data.get('alt'),
+            dp4=",".join([str(_) for _ in data.get('dp4')]))
+            
+         
