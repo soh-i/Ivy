@@ -4,11 +4,12 @@ from Ivy.annotation.writer import VCFWriteHeader
 from Ivy.seq import Fasta, Timer, decode_chr_name_from_file
 from Ivy.version import __version__
 from pprint import pprint as p
+import subprocess
 import multiprocessing
 import logging
 import string
 import shutil
-import os, os.path, sys
+import os, os.path, sys, re
 import time
 
 __program__ = 'run_ivy'
@@ -90,6 +91,10 @@ def thread_run():
         logger.debug("Used existing splited reference genome")
         with Timer() as t:
             __start_worker(params.n_threads, _get_fa_list(save_path))
+            
+    logger.debug("Start to merge files")
+    merge_tmp_files('tmp')
+
         
 def __multi_pileup(seq_files):
     current = multiprocessing.current_process()
@@ -100,7 +105,7 @@ def __multi_pileup(seq_files):
     #logger.debug("Class: {0}".format(current.start.im_func.func_name))
     
     chromosome_list = decode_chr_name_from_file([seq_files])
-    
+    path_to_tmp = 'tmp'
     for seq_files in chromosome_list:
         reverted = seq_files[0] + "_" + "-".join(seq_files[1:]) + ".fa"
         params.fasta = os.path.join('block_fasta', reverted)
@@ -109,19 +114,52 @@ def __multi_pileup(seq_files):
         for chrom in seq_files[1:]: # Skip serial number in the 1st element
             params.region.chrom = chrom
             pileup_iter = RNASeqAlignmentStream(params)
-            out = open('tmp_' + chrom + '.log', mode='w', buffering=False)
+            if not os.path.isdir("tmp"):
+                os.mkdir("tmp")
+
+            out = open('tmp/tmp_' + chrom + '.log', mode='w', buffering=False)
             try:
                 for p in pileup_iter.filter_stream():
                     out.write(Printer.to_tab(p)+'\n')
+                    
             except KeyboardInterrupt:
                 logger.debug("Interrupted Ivy run, PID: {0}".format(current.pid))
                 multiprocessing.terminate()
+                
             finally:
                 out.close()
-                
-        logger.debug("Finished to pileup in '{0}'".format(chrom))
 
+    logger.debug("Finished to pileup in '{0}'".format(chrom))
+
+def merge_tmp_files(path):
+    if not os.path.isdir(path):
+        return False
+    
+    file_list = []
+
+    for f in os.listdir(path):
+        p = re.compile(r'^tmp_{1}(.+).{1}log$')
+        ma = p.match(f)
+        f_name =  ma.group(1)
+        if f_name.startswith('chr'):
+            f_name = f_name.replace('chr', '', 1)
+            if f_name.isdigit():
+                file_list.append(int(f_name))
+            else:
+                file_list.append(str(f_name))
+
+    revert_files = [path + '/tmp_chr' + str(_) + '.log' for _ in sorted(file_list)]
+    tmp_size = len(revert_files)
+    if not os.access('/bin/cat', os.X_OK):
+        print "Not found executalble 'cat' command on this machine"
         
+    command = "/bin/cat "
+    command += " ".join(revert_files)
+    name = "ivy_merged_result.log"
+    f = open(name, mode='w', buffering=False)
+    subprocess.call([command], stdout=f, shell=True)
+    logger.debug("Finished to {0} merge tmp files to {1}".format(tmp_size, name))
+
 def __start_worker(cpus, fas):
     if cpus < 1 and len(fas) < 1:
         raise RuntimeError("Number of cpus or seq. len. is too small")
@@ -195,5 +233,6 @@ class Printer(object):
             dp4=",".join([str(_) for _ in data.get('dp4')]),
             alf=data.get('allele_freq'))
         
-            
          
+if __name__ == '__main__':
+    print "Please execute from APP_ROOT/bin/ivy"
