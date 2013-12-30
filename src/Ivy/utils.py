@@ -9,7 +9,7 @@ def die(msg=''):
 
 class IvyLogger(object):
     def __init__(self):
-        self.log_fmt = '%(asctime)s|%(name)s|%(levelname)s|%(message)s'
+        self.log_fmt = '[%(asctime)s] [%(levelname)s] [%(message)s]'
         logging.basicConfig(level=logging.DEBUG, format=self.log_fmt)
         self.logger = None
 

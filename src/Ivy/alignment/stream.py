@@ -8,7 +8,6 @@ import pprint
 import logging
 import warnings
 import pysam
-
 from Ivy.utils import die, AttrDict, IvyLogger
 from Ivy.alignment.filters import strand_bias_filter, positional_bias_filter
 from Ivy.alignment.stats import AlignmentReadsStats
@@ -183,35 +182,44 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         
         self.fafile = pysam.Fastafile(self.params.fasta)
         self.one_based = self.params.one_based
-
+        
         ### Resolve to explore specific region or not
+        # explore specific chrom each thred if multi threading
+        if self.params.n_threads:
+            self.params.region.all_flag = 0
+            self.params.region.start = None
+            self.params.region.end = None
+            
         # Flag == 1: explore all region
         if self.params.region.all_flag == 1:
             self.params.region.start = None
             self.params.region.end = None
             self.params.region.chrom = None
-
+            
         # Flag == 0: explore specific region
         elif self.params.region.all_flag == 0:
             if (self.params.region.chrom
                 and self.params.region.start and self.params.region.end):
-                (self.params.region.start, self.params.region.end) = \
-                self.__resolve_coords(
-                    self.params.region.start,
-                    self.params.region.end,
-                    self.params.one_based)
+                self.params.region.start, self.params.region.end = \
+                                                                   self.__resolve_coords(
+                                                                       self.params.region.start,
+                                                                       self.params.region.end,
+                                                                       self.params.one_based)
+        else:
+            # explore all region if self.params.region.* is None
+            pass
                 
-                if not self.params.region.chrom.startswith('chr'):
-                    self.params.region.chrom = 'chr' + self.params.region.chrom
-                else: self.params.region.chrom = self.params.region.chrom
-            else:
-                # explore all region if self.params.region.* is None
-                pass
-        if  _is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
+        #if self.params.region.chrom.startswith('chr'):
+        #    self.params.region.chrom = self.params.region.chrom.replace('chr', '', 1)
+        #else:
+        #    self.params.region.chrom = self.params.region.chrom
+
+        if self._is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
             pass
         else:
-            raise ValueError("Invalid chromosome name")
-
+            #raise RuntimeError("Invalid chromosome name in {fa}, {reg}".format(fa=self.params.fasta, reg=self.params.region))
+            return None
+            
         if self.params.verbose:
             self.logger.debug(AttrDict.show(self.params))
             
@@ -251,86 +259,95 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
           passed_mismatches[2]
 
         '''
+        
+        self.logger.debug("Target chromosome: {0}".format(self.params.region.chrom))
         if self.params.verbose:
             self.logger.debug("Start pileup bam'{0}' file...".format(self.__class__.__name__))
-        
-        for col in self.samfile.pileup(reference=self.params.region.chrom,
-                                       start=self.params.region.start,
-                                       end=self.params.region.end
-                                       ):
-            self.bam_chrom = self.samfile.getrname(col.tid)
-            if self.params.one_based:
-                self.pos = col.pos + 1
-            else:
-                self.pos = col.pos
-            self.ref_base= self.fafile.fetch(reference=self.bam_chrom,
-                                        start=col.pos,
-                                        end=col.pos+1).upper()
-            if not self.ref_base:
-                # TODO: resolve difference name in fasta and bam
-                raise ValueError(
-                    'No sequence content within {chrom:s}, {start:s}, {end:s}'.format(
-                        chrom=self.chrom, start=self.start, end=self.end))
-            elif self.ref_base == 'N' or self.ref_base == 'n':
-                continue
-            
-            # filter reads with all params
-            if (self.params.basic_filter.rm_duplicated
-                and self.params.basic_filter.rm_deletion
-                and self.params.basic_filter.rm_insertion):
-                if reads_filter_params_debug:
-                    self.params.show(self.params.basic_filter)
-                    raise SystemExit("Method: {0:s}".format(
-                        self.reads_filter_by_all_params.__name__))
-                    
-                passed_reads, passed_matches, passed_mismatches = (
-                    self.reads_filter_by_all_params(col.pileup, self.ref_base))
-                
-            # allow duplicated containing reads
-            elif (not self.params.basic_filter.rm_duplicated
-                  and self.params.basic_filter.rm_deletion
-                  and self.params.basic_filter.rm_insertion):
-                if reads_filter_params_debug:
-                    self.params.show(self.params.basic_filter)
-                    raise SystemExit("Method: '{0:s}'".format(
-                        self.reads_allow_duplication.__name__))
-                    
-                passed_reads, passed_matches, passed_mismatches = (
-                    self.reads_allow_duplication(col.pileup, self.ref_base))
-                
-            # allow deletions containing reads
-            elif (not self.params.basic_filter.rm_deletion
-                  and self.params.basic_filter.rm_insertion
-                  and self.params.basic_filter.rm_duplicated):
-                if reads_filter_params_debug:
-                    self.params.show(self.params.basic_filter)
-                    raise SystemExit("Method: {0:s}".format(self.reads_allow_deletion.__name__))
-                    
-                passed_reads, passed_matches, passed_mismatches = (
-                    self.reads_allow_deletion(col.pileup, self.ref_base))
-                
-            # allow insertion containing reads
-            elif (not self.params.basic_filter.rm_insertion
-                  and self.params.basic_filter.rm_deletion
-                  and self.params.basic_filterf.rm_duplicated):
-                if reads_filter_params_debug:
-                    self.params.show(self.params.basic_filter)
-                    raise SystemExit("Method: {0:s}".format(
-                        self.params.basic_filter, self.reads_allow_insertion.__name__))
-                    
-                passed_reads, passed_mathces, passed_mismatches = (
-                    self.reads_allow_insertion(col.pileup, self.ref_base))
 
-            # no filter
-            else:
-                if reads_filter_params_debug:
-                    self.params.show(self.params.basic_filter)
-                    raise SystemExit("Method: '{0:s}'".format(self.reads_without_filter.__name__))
+        try:
+            for col in self.samfile.pileup(reference=self.params.region.chrom,
+                                           start=self.params.region.start,
+                                           end=self.params.region.end):
+                self.bam_chrom = self.samfile.getrname(col.tid)
+                if self.params.one_based:
+                    self.pos = col.pos + 1
+                else:
+                    self.pos = col.pos
+                self.ref_base= self.fafile.fetch(reference=self.bam_chrom,
+                                            start=col.pos,
+                                            end=col.pos+1).upper()
+                if not self.ref_base:
+                    # Skip if chrom in bam is not in reference genome
+                    continue
                     
-                passed_reads, passed_matches, passed_mismatches = (
-                    self.reads_without_filter(col.pileups, self.ref_base))
-
-            yield tuple([passed_reads, passed_matches, passed_mismatches])
+                    #raise ValueError(
+                    #   'No sequence content within chroms: {chrom:s}, start: {start:s}, end: {end:s}'.format(
+                    #       chrom=self.params.region.chrom, start=self.params.region.start, end=self.params.region.end))
+                elif self.ref_base == 'N' or self.ref_base == 'n':
+                    continue
+                 
+                # filter reads with all params
+                if (self.params.basic_filter.rm_duplicated
+                    and self.params.basic_filter.rm_deletion
+                    and self.params.basic_filter.rm_insertion):
+                    if reads_filter_params_debug:
+                        self.params.show(self.params.basic_filter)
+                        raise SystemExit("Method: {0:s}".format(
+                            self.reads_filter_by_all_params.__name__))
+                        
+                    passed_reads, passed_matches, passed_mismatches = (
+                        self.reads_filter_by_all_params(col.pileup, self.ref_base))
+                    
+                # allow duplicated containing reads
+                elif (not self.params.basic_filter.rm_duplicated
+                      and self.params.basic_filter.rm_deletion
+                      and self.params.basic_filter.rm_insertion):
+                    if reads_filter_params_debug:
+                        self.params.show(self.params.basic_filter)
+                        raise SystemExit("Method: '{0:s}'".format(
+                            self.reads_allow_duplication.__name__))
+                        
+                    passed_reads, passed_matches, passed_mismatches = (
+                        self.reads_allow_duplication(col.pileup, self.ref_base))
+                    
+                # allow deletions containing reads
+                elif (not self.params.basic_filter.rm_deletion
+                      and self.params.basic_filter.rm_insertion
+                      and self.params.basic_filter.rm_duplicated):
+                    if reads_filter_params_debug:
+                        self.params.show(self.params.basic_filter)
+                        raise SystemExit("Method: {0:s}".format(self.reads_allow_deletion.__name__))
+                        
+                    passed_reads, passed_matches, passed_mismatches = (
+                        self.reads_allow_deletion(col.pileup, self.ref_base))
+                    
+                # allow insertion containing reads
+                elif (not self.params.basic_filter.rm_insertion
+                      and self.params.basic_filter.rm_deletion
+                      and self.params.basic_filter.rm_duplicated):
+                    if reads_filter_params_debug:
+                        self.params.show(self.params.basic_filter)
+                        raise SystemExit("Method: {0:s}".format(
+                            self.params.basic_filter, self.reads_allow_insertion.__name__))
+                        
+                    passed_reads, passed_mathces, passed_mismatches = (
+                        self.reads_allow_insertion(col.pileup, self.ref_base))
+     
+                # no filter
+                else:
+                    if reads_filter_params_debug:
+                        self.params.show(self.params.basic_filter)
+                        raise SystemExit("Method: '{0:s}'".format(self.reads_without_filter.__name__))
+                        
+                    passed_reads, passed_matches, passed_mismatches = (
+                        self.reads_without_filter(col.pileups, self.ref_base))
+     
+                yield tuple([passed_reads, passed_matches, passed_mismatches])
+                
+        except ValueError:
+            # e.g. ValueError: invalid reference `chr18` in pysam error
+            # return tuple in None
+            yield tuple([None, None, None])
             
     def mutation_types(self, A, T, G, C, ref=None):
         '''
@@ -404,38 +421,49 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         print "unmapped: %s" % self.samfile.unmapped
 
 
-def _parse_faidx(filename):
-    fasta_chrom_name = []
-    with open(filename, 'r') as fh:
-        for row in fh:
-            data = row.split('\t')
-            fasta_chrom_name.append(data[0])
-    return fasta_chrom_name
-            
-def _is_same_chromosome_name(bam=None, fa=None):
-    __bam = pysam.Samfile(os.path.abspath(bam), 'rb')
-    __fa = pysam.Fastafile(os.path.abspath(fa))
-    bam_references = __bam.references
-    fa_filename = __fa.filename
-    fa_dx_filename = fa_filename + '.fai'
-    
-    if os.path.isfile(fa_dx_filename):
-        for bam_chr in bam_references:
-            if any([fai_chr == bam_chr for fai_chr in _parse_faidx(fa_dx_filename)]):
-                return True
+    def _parse_faidx(self, filename):
+        '''
+        Return:
+         chromosomes(list) in given fai file
+        
+        Example:
+         $ cat genome.fa.fai
+         chr18 78077248 7 50 51
+         chr19 59128983 79638807 50 51
+         chr20 63025520 139950377 50 51
+        '''
+        
+        fasta_chrom_name = []
+        with open(filename, 'r') as fh:
+            for row in fh:
+                data = row.split('\t')
+                fasta_chrom_name.append(data[0])
+        return fasta_chrom_name
+                
+    def _is_same_chromosome_name(self, bam=None, fa=None):
+        __bam = pysam.Samfile(os.path.abspath(bam), 'rb')
+        __fa = pysam.Fastafile(os.path.abspath(fa))
+        bam_references = __bam.references
+        fa_filename = __fa.filename
+        fa_dx_filename = fa_filename + '.fai'
+        
+        if os.path.isfile(fa_dx_filename):
+            for bam_chr in bam_references:
+                if any([fai_chr == bam_chr for fai_chr in self._parse_faidx(fa_dx_filename)]):
+                    return True
+                else:
+                    #print tuple([self._parse_faidx(fa_dx_filename), bam_references])
+                    return False
             else:
-                return False
-        else:
-            raise RuntimeError('{filename:s} of faidx file is not found'.
-                               format(filename=fa_dx_filename))
-            
-    def _resolve_chrom_name(self, bam_chr=None, fa_chr=None):
-        raise NotImplementedError()
-        if not fa_chr.startswith('chr'):
-            return 'chr' + fa_chr
-        else:
-            return fa_chr
-
+                raise RuntimeError('{filename:s} of faidx file is not found'.
+                                   format(filename=fa_dx_filename))
+                
+def _resolve_chrom_name(self, bam_chr=None, fa_chr=None):
+    raise NotImplementedError()
+    if not fa_chr.startswith('chr'):
+        return 'chr' + fa_chr
+    else:
+        return fa_chr
             
 class RNASeqAlignmentStream(AlignmentStream):
     def __init__(self, rna_params):

@@ -1,4 +1,3 @@
-import string
 import re
 import string
 import os.path
@@ -9,6 +8,20 @@ import pysam
 import pprint
 import time
 
+class Timer(object):
+    def __init__(self, verbose=True):
+        self.verbose = verbose
+        
+    def __enter__(self):
+        self.start = time.time()
+
+    def __exit__(self, *args):
+        self.end = time.time()
+        self.secs = self.end - self.start
+        if self.verbose:
+            print '=> Elapsed time: {:f} (sec)'.format(self.secs)
+
+            
 class Fasta(object):
     def __init__(self, fa=''):
         if os.path.isfile(fa):
@@ -19,7 +32,6 @@ class Fasta(object):
     def fasta_header(self):
         header = []
         with open(self.filename, 'r') as f:
-            #head = [line.replace('>', '', 1).rstrip() for line in f if line.startswith('>')]
             for line in f:
                 if line.startswith('>'):
                     head = line.replace('>', '', 1).rstrip()
@@ -73,8 +85,8 @@ class Fasta(object):
          chrom(list): splited chromsome by cpus
         '''
         
-        #MAX_CPUs = multiprocessing.cpu_count()
-        MAX_CPUs = 24
+        MAX_CPUs = multiprocessing.cpu_count()
+        #MAX_CPUs = 24
         if cpus > MAX_CPUs:
             raise RuntimeError("Over the number of cpus are given")
         
@@ -130,46 +142,72 @@ def decode_chr_name_from_file(chroms):
     Args:
      blocked fasta file, 1_chr18-chr19-chr20.fa
     Returns:
-     chromosome name(list): [chr18, chr19, chr20]
+     chromosome name(list): [1, chr18, chr19, chr20],
+     *** Note that the 1st element is serial number in blocked fasta file name ***
     '''
+    
+    tmp = []
     decode = []
     files = [f.split("-") for f in chroms]
-    for i in files:
-        for chrm in i:
-            # remove prefix
+    for fh in files:
+        for chrm in fh:
             p = re.compile(r'(^\d+_)(.+)')
-            match = p.match(chrm)
-            if match:
-                decode.append(match.group(0).replace(match.group(1), '', 1))
+            m = p.match(chrm)
+            if m:
+                # add serial numer
+                pp = re.compile(r'(^\d+)_')
+                index = pp.match(m.group(0)).group(1)
+                tmp.append(index)
+                # add others
+                remove_chr = m.group(1)
+                tmp.append(m.group(0).replace(remove_chr, '', 1))
             else:
                 # remove suffix
                 p = re.compile(r'(.+)\.{1}fa$')
-                match = p.match(chrm)
-                if match:
-                    decode.append(match.group(1))
+                m = p.match(chrm)
+                if m:
+                    tmp.append(m.group(1))
                 else:
                     # normal
-                    decode.append(chrm)
+                    tmp.append(chrm)
+        decode.append(tmp)
+        # clear previous elements
+        tmp = []
     return decode
-                
+    
+def as_single(genome):
+    human_chr = ['chrM', 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6',
+                 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
+                 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20',
+                 'chr21', 'chr22', 'chrX', 'chrY']
+    fafile = pysam.Fastafile(genome)
+    for c in human_chr:
+        l = len(fafile.fetch(reference=c, start=1, end=1000000000))
+        print "Chr: %s, Length: %d" % (c, l)
+
+### Fetching fasta file by multiprocessing ###
 def fetch_seq(fa):
     '''
+    Fetch fasta file
+    
     Args:
      fasta(list): Path to fasta file
     '''
     
     print multiprocessing.current_process()
-    
     path = './block_fasta/'
-    fafile = pysam.Fastafile(path+fa)
+    fafile = pysam.Fastafile(os.path.join(path, fa))
     chroms = decode_chr_name_from_file([fa])
+    bam_file = '../../../data/sample_0.005.bam'
+    bam = pysam.Samfile(bam_file, 'rb')
     seq = []
-    for c in chroms:
-        #print "fetching {0}...".format(c)
-        l = len(fafile.fetch(reference=c, start=1, end=1000000000))
-        print "Chr: %s, Length: %d" % (c, l)
-        
-    return seq
+    align_len = 0
+    for out in chroms:
+        for inn in out[1:]:
+            for col in bam.pileup(reference=inn):
+                ref = fafile.fetch(reference=inn, start=col.pos, end=col.pos+1)
+                align_len += len([_ for _ in col.pileups])
+            print "Result: Total mapped reads [%d] in [%s]" % (align_len, inn)
 
 def run(cpus, fas):
     '''
@@ -181,16 +219,6 @@ def run(cpus, fas):
     p = multiprocessing.Pool(cpus)
     seq = p.map(fetch_seq, fas)
     return seq
-
-def as_single(genome):
-    human_chr = ['chrM', 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6',
-                 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
-                 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20',
-                 'chr21', 'chr22', 'chrX', 'chrY']
-    fafile = pysam.Fastafile(genome)
-    for c in human_chr:
-        l = len(fafile.fetch(reference=c, start=1, end=1000000000))
-        print "Chr: %s, Length: %d" % (c, l)
 
 def get_fa_list(path):
     '''
@@ -207,22 +235,10 @@ def get_fa_list(path):
             fa.append(_)
     return fa
 
-class Timer(object):
-    def __init__(self, verbose=True):
-        self.verbose = verbose
-        
-    def __enter__(self):
-        self.start = time.time()
-
-    def __exit__(self, *args):
-        self.end = time.time()
-        self.secs = self.end - self.start
-        if self.verbose:
-            print '=> Elapsed time: {:f} (sec)'.format(self.secs)
     
 if __name__ == '__main__':
     path = './block_fasta/'
-    fasta_file = "../../../data/genome.fa"
+    fasta_file = "../../../data/hg19.fa"
     cpus = 4
     
     # create directory
@@ -230,22 +246,28 @@ if __name__ == '__main__':
         os.mkdir(path)
     fas = get_fa_list(path)
 
-    fa = Fasta(fa=fasta_file)
-    with Timer() as t:
-        as_single(fasta_file)
-    
+    # Run as single thread
+    #fa = Fasta(fa=fasta_file)
+    #with Timer() as t:
+    #    as_single(fasta_file)
+    #
+
+    # Parallel
     if len(fas) != cpus:
         print "Remove old blocks and generates new blocks"
         shutil.rmtree(path)
         fa = Fasta(fa=fasta_file)
         fa.split_by_blocks(n=cpus)
         
+        
         with Timer() as t:
             run(cpus, get_fa_list(path))
         
     elif len(get_fa_list(path)) == cpus:
         print "Used existing block"
+        print get_fa_list(path)
+        
         with Timer() as t:
             run(cpus, get_fa_list(path))
 
-    
+            
