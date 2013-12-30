@@ -85,7 +85,7 @@ def get_fa_list(path):
             fa.append(_)
     return fa
         
-def __thread_ivy(seqs):
+def __multi_pileup(seqs):
     parse = CommandLineParser()
     params = parse.ivy_parse_options()
     vcf = VCFWriteHeader(params)
@@ -104,12 +104,12 @@ def __thread_ivy(seqs):
         print '#length: {0}'.format(l)
 
         
-def __worker(cpus=1, seqs=None):
+def __start_worker(cpus=1, seqs=None):
     if cpus < 1 and len(seqs) < 1:
         raise RuntimeError("Number of cpus or seq. len. is too small")
     print "Number of CPUs: {:d}".format(cpus)
     p = mp.Pool(cpus)
-    seq = p.map(__thread_ivy, [seqs])
+    seq = p.map(__multi_pileup, [seqs])
 
 if __name__ == '__main__':
     parse = CommandLineParser()
@@ -132,12 +132,12 @@ if __name__ == '__main__':
         
         # call workers
         with Timer() as t:
-            __worker(cpus=params.n_threads, seqs=fasta_files)
+            __start_worker(cpus=params.n_threads, seqs=fasta_files)
             
     elif len(fasta_files):
         print "Used existing splited fasta..."
         with Timer() as t:
-            __worker(cpus=params.n_threads, seqs=fasta_files)
+            __start_worker(cpus=params.n_threads, seqs=fasta_files)
 
             
 class Printer(object):
