@@ -8,7 +8,7 @@ import multiprocessing
 import logging
 import string
 import shutil
-import os, os.path
+import os, os.path, sys
 import time
 
 __program__ = 'run_ivy'
@@ -109,12 +109,15 @@ def __multi_pileup(seq_files):
         for chrom in seq_files[1:]: # Skip serial number in the 1st element
             params.region.chrom = chrom
             pileup_iter = RNASeqAlignmentStream(params)
+            out = open('tmp_' + chrom + '.log', mode='w', buffering=False)
             try:
                 for p in pileup_iter.filter_stream():
-                    pass
+                    out.write(Printer.to_tab(p)+'\n')
             except KeyboardInterrupt:
                 logger.debug("Interrupted Ivy run, PID: {0}".format(current.pid))
                 multiprocessing.terminate()
+            finally:
+                out.close()
                 
         logger.debug("Finished to pileup in '{0}'".format(chrom))
 
@@ -184,11 +187,13 @@ class Printer(object):
          
     @staticmethod
     def to_tab(data, *args, **kwargs):
-        return '{chrom:}\t{pos:}\t{ref:}\t{alt:}\t{dp4:}'.format(
+        return '{chrom:}\t{pos:}\t{ref:}\t{alt:}\t{dp4:}\t{alf:}'.format(
             chrom=data.get('chrom'),
             pos=data.get('pos'),
             ref=data.get('ref'),
             alt=data.get('alt'),
-            dp4=",".join([str(_) for _ in data.get('dp4')]))
+            dp4=",".join([str(_) for _ in data.get('dp4')]),
+            alf=data.get('allele_freq'))
+        
             
          
