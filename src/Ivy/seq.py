@@ -190,6 +190,7 @@ def fetch_seq(fa):
     fafile = pysam.Fastafile(os.path.join(path, fa))
     chroms = decode_chr_name_from_file([fa])
     bam_file = '../../../data/sample_0.005.bam'
+    #bam_file = '../../../data/testREDItools/rna.bam'
     bam = pysam.Samfile(bam_file, 'rb')
     seq = []
     align_len = 0
@@ -197,7 +198,7 @@ def fetch_seq(fa):
         for col in bam.pileup(reference=c):
             ref = fafile.fetch(reference=c, start=col.pos, end=col.pos+1)
             align_len += len([_ for _ in col.pileups])
-        print "Result: Mapped reads [%d] in [%s]" % (align_len, c)
+        print "Result: Total mapped reads [%d] in [%s]" % (align_len, c)
 
 def run(cpus, fas):
     '''
@@ -228,7 +229,7 @@ def get_fa_list(path):
     
 if __name__ == '__main__':
     path = './block_fasta/'
-    fasta_file = "../../../data/genome.fa"
+    fasta_file = "../../../data/hg19.fa"
     cpus = 4
     
     # create directory
