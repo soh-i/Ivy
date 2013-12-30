@@ -189,11 +189,15 @@ def fetch_seq(fa):
     path = './block_fasta/'
     fafile = pysam.Fastafile(os.path.join(path, fa))
     chroms = decode_chr_name_from_file([fa])
+    bam_file = '../../../data/sample_0.005.bam'
+    bam = pysam.Samfile(bam_file, 'rb')
     seq = []
+    align_len = 0
     for c in chroms:
-        l = len(fafile.fetch(reference=c, start=1, end=1000000000))
-        print "Chr: %s, Length: %d" % (c, l)
-    return seq
+        for col in bam.pileup(reference=c):
+            ref = fafile.fetch(reference=c, start=col.pos, end=col.pos+1)
+            align_len += len([_ for _ in col.pileups])
+        print "Result: Mapped reads [%d] in [%s]" % (align_len, c)
 
 def run(cpus, fas):
     '''
@@ -232,10 +236,13 @@ if __name__ == '__main__':
         os.mkdir(path)
     fas = get_fa_list(path)
 
-    fa = Fasta(fa=fasta_file)
-    with Timer() as t:
-        as_single(fasta_file)
-    
+    # Run as single thread
+    #fa = Fasta(fa=fasta_file)
+    #with Timer() as t:
+    #    as_single(fasta_file)
+    #
+
+    # Parallel
     if len(fas) != cpus:
         print "Remove old blocks and generates new blocks"
         shutil.rmtree(path)
@@ -249,3 +256,5 @@ if __name__ == '__main__':
         print "Used existing block"
         with Timer() as t:
             run(cpus, get_fa_list(path))
+
+            
