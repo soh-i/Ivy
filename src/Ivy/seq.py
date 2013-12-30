@@ -154,9 +154,11 @@ def decode_chr_name_from_file(chroms):
             p = re.compile(r'(^\d+_)(.+)')
             m = p.match(chrm)
             if m:
+                # add serial numer
                 pp = re.compile(r'(^\d+)_')
                 index = pp.match(m.group(0)).group(1)
                 tmp.append(index)
+                # add others
                 remove_chr = m.group(1)
                 tmp.append(m.group(0).replace(remove_chr, '', 1))
             else:
@@ -170,8 +172,7 @@ def decode_chr_name_from_file(chroms):
                     tmp.append(chrm)
         decode.append(tmp)
         # clear previous elements
-        tmp = [] 
-    print decode
+        tmp = []
     return decode
     
 def as_single(genome):
