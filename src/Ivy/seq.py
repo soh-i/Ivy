@@ -142,29 +142,36 @@ def decode_chr_name_from_file(chroms):
     Args:
      blocked fasta file, 1_chr18-chr19-chr20.fa
     Returns:
-     chromosome name(list): [chr18, chr19, chr20]
+     chromosome name(list): [1, chr18, chr19, chr20],
+     *** Note that the 1st element is serial number in blocked fasta file name ***
     '''
+    
     tmp = []
     decode = []
     files = [f.split("-") for f in chroms]
-    for index, fh in enumerate(files):
+    for fh in files:
         for chrm in fh:
-            # remove prefix
             p = re.compile(r'(^\d+_)(.+)')
-            match = p.match(chrm)
-            if match:
-                tmp.append(match.group(0).replace(match.group(1), '', 1))
+            m = p.match(chrm)
+            if m:
+                pp = re.compile(r'(^\d+)_')
+                index = pp.match(m.group(0)).group(1)
+                tmp.append(index)
+                remove_chr = m.group(1)
+                tmp.append(m.group(0).replace(remove_chr, '', 1))
             else:
                 # remove suffix
                 p = re.compile(r'(.+)\.{1}fa$')
-                match = p.match(chrm)
-                if match:
-                    tmp.append(match.group(1))
+                m = p.match(chrm)
+                if m:
+                    tmp.append(m.group(1))
                 else:
                     # normal
                     tmp.append(chrm)
         decode.append(tmp)
-        tmp = []
+        # clear previous elements
+        tmp = [] 
+    print decode
     return decode
     
 def as_single(genome):
