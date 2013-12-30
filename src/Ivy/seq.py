@@ -163,9 +163,23 @@ def decode_chr_name_from_file(chroms):
                     # normal
                     decode.append(chrm)
     return decode
-                
+
+    
+def as_single(genome):
+    human_chr = ['chrM', 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6',
+                 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
+                 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20',
+                 'chr21', 'chr22', 'chrX', 'chrY']
+    fafile = pysam.Fastafile(genome)
+    for c in human_chr:
+        l = len(fafile.fetch(reference=c, start=1, end=1000000000))
+        print "Chr: %s, Length: %d" % (c, l)
+
+### Fetching fasta file by multiprocessing ###
 def fetch_seq(fa):
     '''
+    Fetch fasta file
+    
     Args:
      fasta(list): Path to fasta file
     '''
@@ -191,16 +205,6 @@ def run(cpus, fas):
     p = multiprocessing.Pool(cpus)
     seq = p.map(fetch_seq, fas)
     return seq
-
-def as_single(genome):
-    human_chr = ['chrM', 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6',
-                 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
-                 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20',
-                 'chr21', 'chr22', 'chrX', 'chrY']
-    fafile = pysam.Fastafile(genome)
-    for c in human_chr:
-        l = len(fafile.fetch(reference=c, start=1, end=1000000000))
-        print "Chr: %s, Length: %d" % (c, l)
 
 def get_fa_list(path):
     '''
