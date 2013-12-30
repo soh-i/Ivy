@@ -195,7 +195,6 @@ def fetch_seq(fa):
     '''
     
     print multiprocessing.current_process()
-    
     path = './block_fasta/'
     fafile = pysam.Fastafile(os.path.join(path, fa))
     chroms = decode_chr_name_from_file([fa])
@@ -204,11 +203,12 @@ def fetch_seq(fa):
     bam = pysam.Samfile(bam_file, 'rb')
     seq = []
     align_len = 0
-    for c in chroms:
-        for col in bam.pileup(reference=c):
-            ref = fafile.fetch(reference=c, start=col.pos, end=col.pos+1)
-            align_len += len([_ for _ in col.pileups])
-        print "Result: Total mapped reads [%d] in [%s]" % (align_len, c)
+    for out in chroms:
+        for inn in out[1:]:
+            for col in bam.pileup(reference=inn):
+                ref = fafile.fetch(reference=inn, start=col.pos, end=col.pos+1)
+                align_len += len([_ for _ in col.pileups])
+            print "Result: Total mapped reads [%d] in [%s]" % (align_len, inn)
 
 def run(cpus, fas):
     '''
