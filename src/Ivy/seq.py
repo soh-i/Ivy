@@ -199,7 +199,6 @@ def fetch_seq(fa):
     fafile = pysam.Fastafile(os.path.join(path, fa))
     chroms = decode_chr_name_from_file([fa])
     bam_file = '../../../data/sample_0.005.bam'
-    #bam_file = '../../../data/testREDItools/rna.bam'
     bam = pysam.Samfile(bam_file, 'rb')
     seq = []
     align_len = 0
@@ -260,11 +259,14 @@ if __name__ == '__main__':
         fa = Fasta(fa=fasta_file)
         fa.split_by_blocks(n=cpus)
         
+        
         with Timer() as t:
             run(cpus, get_fa_list(path))
         
     elif len(get_fa_list(path)) == cpus:
         print "Used existing block"
+        print get_fa_list(path)
+        
         with Timer() as t:
             run(cpus, get_fa_list(path))
 
