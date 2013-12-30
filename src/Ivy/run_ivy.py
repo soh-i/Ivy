@@ -20,7 +20,7 @@ __version__ = __version__
 def run():
     parse = CommandLineParser()
     params = parse.ivy_parse_options()
-    if params.n_threads == 1:
+    if params.n_threads == 1 or not params.n_threads:
         single_run()
     elif params.n_threads > 2:
         thread_run()
@@ -29,6 +29,7 @@ def single_run():
     '''
     Ivy runs as single thread
     '''
+    
     logger = logging.getLogger(__name__)    
     parse = CommandLineParser()
     params = parse.ivy_parse_options()
@@ -115,7 +116,8 @@ def __start_worker(cpus, fas):
     seq = p.map(__multi_pileup, fas)
     return seq
     
-if __name__ == '__main__':
+#if __name__ == '__main__':
+def thread_run():
     parse = CommandLineParser()
     params = parse.ivy_parse_options()
     save_path = './block_fasta'
