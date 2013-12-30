@@ -144,26 +144,28 @@ def decode_chr_name_from_file(chroms):
     Returns:
      chromosome name(list): [chr18, chr19, chr20]
     '''
+    tmp = []
     decode = []
     files = [f.split("-") for f in chroms]
-    for i in files:
-        for chrm in i:
+    for index, fh in enumerate(files):
+        for chrm in fh:
             # remove prefix
             p = re.compile(r'(^\d+_)(.+)')
             match = p.match(chrm)
             if match:
-                decode.append(match.group(0).replace(match.group(1), '', 1))
+                tmp.append(match.group(0).replace(match.group(1), '', 1))
             else:
                 # remove suffix
                 p = re.compile(r'(.+)\.{1}fa$')
                 match = p.match(chrm)
                 if match:
-                    decode.append(match.group(1))
+                    tmp.append(match.group(1))
                 else:
                     # normal
-                    decode.append(chrm)
+                    tmp.append(chrm)
+        decode.append(tmp)
+        tmp = []
     return decode
-
     
 def as_single(genome):
     human_chr = ['chrM', 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6',
