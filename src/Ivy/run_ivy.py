@@ -1,10 +1,10 @@
 from Ivy.alignment.stream import RNASeqAlignmentStream, DNASeqAlignmentStream
 from Ivy.commandline.parse_ivy_opts import CommandLineParser
 from Ivy.annotation.writer import VCFWriteHeader
-from Ivy.seq import Fasta
+from Ivy.seq import Fasta, Timer
 from Ivy.version import __version__
 from pprint import pprint as p
-from multiprocessing import Pool
+import multiprocessing as mp
 import logging
 import string
 import shutil
@@ -71,27 +71,47 @@ def list_fasta_files(path, suffix):
         # default
         return [_ for _ in os.listdir(path) if _.endswith('.fa')]
 
+def get_fa_list(path):
+    '''
+    Args:
+     path(str): blocked fasta contained directory
+
+    Returns:
+     files(list): only .fa file which located in given path
+    '''
+    fa = []
+    for _ in os.listdir(path):
+        if _.endswith(".fa"):
+            fa.append(_)
+    return fa
+        
 def __thread_ivy(seqs):
     parse = CommandLineParser()
     params = parse.ivy_parse_options()
     vcf = VCFWriteHeader(params)
-    if params.r_bams: 
-        for seq in seqs:
-            # Update reference genome to splited fasta
-            params.fasta = os.path.join('block_fasta', seq)
-            pileup_iter = RNASeqAlignmentStream(params)
-            return [pileup for pileup in pileup_iter.filter_stream()]
-                
-                    
-def __worker(cpus=1, seqs=None):
-    print seqs
-    if cpus < 1 and len(seqs) < 1:
-        raise RuntimeError()
-    p = Pool(processes=cpus)
-    seq = p.map(__thread_ivy, [seqs])
-    return seq
+    print mp.current_process()
+    
+    for seq in seqs:
+        # Update reference genome to splited fasta
+        params.fasta = os.path.join('block_fasta', seq)
+        pileup_iter = RNASeqAlignmentStream(params)
+        
+        print "Now pileuping in {0}...".format(seq)
+        l = 0
+        for pileup in pileup_iter.filter_stream():
+            l += len(pileup)
+        #print "Finished worker in seq. {0}...".format(seq)
+        print '#length: {0}'.format(l)
 
-def thread_run():
+        
+def __worker(cpus=1, seqs=None):
+    if cpus < 1 and len(seqs) < 1:
+        raise RuntimeError("Number of cpus or seq. len. is too small")
+    print "Number of CPUs: {:d}".format(cpus)
+    p = mp.Pool(cpus)
+    seq = p.map(__thread_ivy, [seqs])
+
+if __name__ == '__main__':
     parse = CommandLineParser()
     params = parse.ivy_parse_options()
     save_path = './block_fasta'
@@ -109,14 +129,17 @@ def thread_run():
         # split fasta by number of threads
         fa = Fasta(fa=params.fasta)
         fa.split_by_blocks(n=params.n_threads)
-        # call threads
-        __worker(cpus=params.n_threads, seqs=fasta_files)
         
+        # call workers
+        with Timer() as t:
+            __worker(cpus=params.n_threads, seqs=fasta_files)
+            
     elif len(fasta_files):
         print "Used existing splited fasta..."
-        __worker(cpus=params.n_threads, seqs=fasta_files)
+        with Timer() as t:
+            __worker(cpus=params.n_threads, seqs=fasta_files)
 
-        
+            
 class Printer(object):
     @staticmethod
     def pprint(data, *args, **kwargs):
