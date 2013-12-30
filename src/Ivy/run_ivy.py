@@ -85,6 +85,7 @@ def thread_run():
         # call workers
         with Timer() as t:
             __start_worker(params.n_threads, _get_fa_list(path))
+                
     elif len(fasta_files):
         logger.debug("Used existing splited reference genome")
         with Timer() as t:
@@ -92,6 +93,7 @@ def thread_run():
         
 def __multi_pileup(seq_files):
     current = multiprocessing.current_process()
+    logger.debug("Process: {0}".format(current))
     logger.debug("PID: {0}".format(current.pid))
     logger.debug("RUN: {0}".format(current.run))
     logger.debug("Identity: {0}".format(current._identity))
@@ -107,20 +109,22 @@ def __multi_pileup(seq_files):
         for chrom in seq_files[1:]: # Skip serial number in the 1st element
             params.region.chrom = chrom
             pileup_iter = RNASeqAlignmentStream(params)
-            for p in pileup_iter.filter_stream():
-                #print p
-                pass
-            logger.debug("Finished to pileup in '{0}'".format(chrom))
+            try:
+                for p in pileup_iter.filter_stream():
+                    pass
+            except KeyboardInterrupt:
+                logger.debug("Interrupted Ivy run, PID: {0}".format(current.pid))
+                multiprocessing.terminate()
+                
+        logger.debug("Finished to pileup in '{0}'".format(chrom))
 
         
 def __start_worker(cpus, fas):
     if cpus < 1 and len(fas) < 1:
         raise RuntimeError("Number of cpus or seq. len. is too small")
     logger.debug("Number of CPUs: {:d}".format(cpus))
-    
     p = multiprocessing.Pool(cpus)
     seq = p.map(__multi_pileup, fas)
-    return seq
     
 def list_fasta_files(path, suffix):
     '''
