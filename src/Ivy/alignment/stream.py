@@ -263,86 +263,91 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         self.logger.debug("Target chromosome: {0}".format(self.params.region.chrom))
         if self.params.verbose:
             self.logger.debug("Start pileup bam'{0}' file...".format(self.__class__.__name__))
-            
-        for col in self.samfile.pileup(reference=self.params.region.chrom,
-                                       start=self.params.region.start,
-                                       end=self.params.region.end
-                                       ):
-            self.bam_chrom = self.samfile.getrname(col.tid)
-            if self.params.one_based:
-                self.pos = col.pos + 1
-            else:
-                self.pos = col.pos
-            self.ref_base= self.fafile.fetch(reference=self.bam_chrom,
-                                        start=col.pos,
-                                        end=col.pos+1).upper()
-            if not self.ref_base:
-                # Skip if chrom in bam is not in reference genome
-                continue
-                
-                #raise ValueError(
-                #   'No sequence content within chroms: {chrom:s}, start: {start:s}, end: {end:s}'.format(
-                #       chrom=self.params.region.chrom, start=self.params.region.start, end=self.params.region.end))
-            elif self.ref_base == 'N' or self.ref_base == 'n':
-                continue
-             
-            # filter reads with all params
-            if (self.params.basic_filter.rm_duplicated
-                and self.params.basic_filter.rm_deletion
-                and self.params.basic_filter.rm_insertion):
-                if reads_filter_params_debug:
-                    self.params.show(self.params.basic_filter)
-                    raise SystemExit("Method: {0:s}".format(
-                        self.reads_filter_by_all_params.__name__))
-                    
-                passed_reads, passed_matches, passed_mismatches = (
-                    self.reads_filter_by_all_params(col.pileup, self.ref_base))
-                
-            # allow duplicated containing reads
-            elif (not self.params.basic_filter.rm_duplicated
-                  and self.params.basic_filter.rm_deletion
-                  and self.params.basic_filter.rm_insertion):
-                if reads_filter_params_debug:
-                    self.params.show(self.params.basic_filter)
-                    raise SystemExit("Method: '{0:s}'".format(
-                        self.reads_allow_duplication.__name__))
-                    
-                passed_reads, passed_matches, passed_mismatches = (
-                    self.reads_allow_duplication(col.pileup, self.ref_base))
-                
-            # allow deletions containing reads
-            elif (not self.params.basic_filter.rm_deletion
-                  and self.params.basic_filter.rm_insertion
-                  and self.params.basic_filter.rm_duplicated):
-                if reads_filter_params_debug:
-                    self.params.show(self.params.basic_filter)
-                    raise SystemExit("Method: {0:s}".format(self.reads_allow_deletion.__name__))
-                    
-                passed_reads, passed_matches, passed_mismatches = (
-                    self.reads_allow_deletion(col.pileup, self.ref_base))
-                
-            # allow insertion containing reads
-            elif (not self.params.basic_filter.rm_insertion
-                  and self.params.basic_filter.rm_deletion
-                  and self.params.basic_filterf.rm_duplicated):
-                if reads_filter_params_debug:
-                    self.params.show(self.params.basic_filter)
-                    raise SystemExit("Method: {0:s}".format(
-                        self.params.basic_filter, self.reads_allow_insertion.__name__))
-                    
-                passed_reads, passed_mathces, passed_mismatches = (
-                    self.reads_allow_insertion(col.pileup, self.ref_base))
 
-            # no filter
-            else:
-                if reads_filter_params_debug:
-                    self.params.show(self.params.basic_filter)
-                    raise SystemExit("Method: '{0:s}'".format(self.reads_without_filter.__name__))
+        try:
+            for col in self.samfile.pileup(reference=self.params.region.chrom,
+                                           start=self.params.region.start,
+                                           end=self.params.region.end):
+                self.bam_chrom = self.samfile.getrname(col.tid)
+                if self.params.one_based:
+                    self.pos = col.pos + 1
+                else:
+                    self.pos = col.pos
+                self.ref_base= self.fafile.fetch(reference=self.bam_chrom,
+                                            start=col.pos,
+                                            end=col.pos+1).upper()
+                if not self.ref_base:
+                    # Skip if chrom in bam is not in reference genome
+                    continue
                     
-                passed_reads, passed_matches, passed_mismatches = (
-                    self.reads_without_filter(col.pileups, self.ref_base))
-
-            yield tuple([passed_reads, passed_matches, passed_mismatches])
+                    #raise ValueError(
+                    #   'No sequence content within chroms: {chrom:s}, start: {start:s}, end: {end:s}'.format(
+                    #       chrom=self.params.region.chrom, start=self.params.region.start, end=self.params.region.end))
+                elif self.ref_base == 'N' or self.ref_base == 'n':
+                    continue
+                 
+                # filter reads with all params
+                if (self.params.basic_filter.rm_duplicated
+                    and self.params.basic_filter.rm_deletion
+                    and self.params.basic_filter.rm_insertion):
+                    if reads_filter_params_debug:
+                        self.params.show(self.params.basic_filter)
+                        raise SystemExit("Method: {0:s}".format(
+                            self.reads_filter_by_all_params.__name__))
+                        
+                    passed_reads, passed_matches, passed_mismatches = (
+                        self.reads_filter_by_all_params(col.pileup, self.ref_base))
+                    
+                # allow duplicated containing reads
+                elif (not self.params.basic_filter.rm_duplicated
+                      and self.params.basic_filter.rm_deletion
+                      and self.params.basic_filter.rm_insertion):
+                    if reads_filter_params_debug:
+                        self.params.show(self.params.basic_filter)
+                        raise SystemExit("Method: '{0:s}'".format(
+                            self.reads_allow_duplication.__name__))
+                        
+                    passed_reads, passed_matches, passed_mismatches = (
+                        self.reads_allow_duplication(col.pileup, self.ref_base))
+                    
+                # allow deletions containing reads
+                elif (not self.params.basic_filter.rm_deletion
+                      and self.params.basic_filter.rm_insertion
+                      and self.params.basic_filter.rm_duplicated):
+                    if reads_filter_params_debug:
+                        self.params.show(self.params.basic_filter)
+                        raise SystemExit("Method: {0:s}".format(self.reads_allow_deletion.__name__))
+                        
+                    passed_reads, passed_matches, passed_mismatches = (
+                        self.reads_allow_deletion(col.pileup, self.ref_base))
+                    
+                # allow insertion containing reads
+                elif (not self.params.basic_filter.rm_insertion
+                      and self.params.basic_filter.rm_deletion
+                      and self.params.basic_filterf.rm_duplicated):
+                    if reads_filter_params_debug:
+                        self.params.show(self.params.basic_filter)
+                        raise SystemExit("Method: {0:s}".format(
+                            self.params.basic_filter, self.reads_allow_insertion.__name__))
+                        
+                    passed_reads, passed_mathces, passed_mismatches = (
+                        self.reads_allow_insertion(col.pileup, self.ref_base))
+     
+                # no filter
+                else:
+                    if reads_filter_params_debug:
+                        self.params.show(self.params.basic_filter)
+                        raise SystemExit("Method: '{0:s}'".format(self.reads_without_filter.__name__))
+                        
+                    passed_reads, passed_matches, passed_mismatches = (
+                        self.reads_without_filter(col.pileups, self.ref_base))
+     
+                yield tuple([passed_reads, passed_matches, passed_mismatches])
+                
+        except ValueError:
+            # e.g. ValueError: invalid reference `chr18` in pysam error
+            # return tuple in None
+            yield tuple([None, None, None])
             
     def mutation_types(self, A, T, G, C, ref=None):
         '''
