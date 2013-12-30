@@ -1,14 +1,15 @@
 from Ivy.alignment.stream import RNASeqAlignmentStream, DNASeqAlignmentStream
 from Ivy.commandline.parse_ivy_opts import CommandLineParser
 from Ivy.annotation.writer import VCFWriteHeader
-from Ivy.seq import Fasta, Timer
+from Ivy.seq import Fasta, Timer, decode_chr_name_from_file
 from Ivy.version import __version__
 from pprint import pprint as p
-import multiprocessing as mp
+import multiprocessing
 import logging
 import string
 import shutil
 import os, os.path
+import time
 
 __program__ = 'run_ivy'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -71,7 +72,7 @@ def list_fasta_files(path, suffix):
         # default
         return [_ for _ in os.listdir(path) if _.endswith('.fa')]
 
-def get_fa_list(path):
+def _get_fa_list(path):
     '''
     Args:
      path(str): blocked fasta contained directory
@@ -85,32 +86,35 @@ def get_fa_list(path):
             fa.append(_)
     return fa
         
-def __multi_pileup(seqs):
+def __multi_pileup(seq_files):
     parse = CommandLineParser()
     params = parse.ivy_parse_options()
     vcf = VCFWriteHeader(params)
-    print mp.current_process()
-    
-    for seq in seqs:
-        # Update reference genome to splited fasta
-        params.fasta = os.path.join('block_fasta', seq)
-        pileup_iter = RNASeqAlignmentStream(params)
-        
-        print "Now pileuping in {0}...".format(seq)
-        l = 0
-        for pileup in pileup_iter.filter_stream():
-            l += len(pileup)
-        #print "Finished worker in seq. {0}...".format(seq)
-        print '#length: {0}'.format(l)
+    print multiprocessing.current_process()
 
+    chromosome_list = decode_chr_name_from_file([seq_files])
+    for seq_files in chromosome_list:
+        reverted = seq_files[0] + "_" + "-".join(seq_files[1:]) + ".fa"
+        params.fasta = os.path.join('block_fasta', reverted)
+        print "Subjected fasta: '{0}'".format(params.fasta)
         
-def __start_worker(cpus=1, seqs=None):
-    if cpus < 1 and len(seqs) < 1:
+        for chrom in seq_files[1:]: # Skip serial number in the 1st element
+            params.region.chrom = chrom
+            pileup_iter = RNASeqAlignmentStream(params)
+            print "Now pileuping in {0}...".format(params.fasta)
+            for p in pileup_iter.filter_stream():
+                #print p
+                pass
+        
+def __start_worker(cpus, fas):
+    if cpus < 1 and len(fas) < 1:
         raise RuntimeError("Number of cpus or seq. len. is too small")
+        
     print "Number of CPUs: {:d}".format(cpus)
-    p = mp.Pool(cpus)
-    seq = p.map(__multi_pileup, [seqs])
-
+    p = multiprocessing.Pool(cpus)
+    seq = p.map(__multi_pileup, fas)
+    return seq
+    
 if __name__ == '__main__':
     parse = CommandLineParser()
     params = parse.ivy_parse_options()
@@ -119,7 +123,7 @@ if __name__ == '__main__':
     # create tmp directory
     if not os.path.isdir(save_path):
         os.mkdir(save_path)
-    fasta_files = [_ for _ in os.listdir(save_path) if _.endswith('.fa')]
+    fasta_files = _get_fa_list(save_path)
     
     # generate worker
     if len(fasta_files) != params.n_threads:
@@ -128,16 +132,15 @@ if __name__ == '__main__':
         
         # split fasta by number of threads
         fa = Fasta(fa=params.fasta)
-        fa.split_by_blocks(n=params.n_threads)
+        fa.split_by_blocks(params.n_threads, _get_fa_list(path))
         
         # call workers
         with Timer() as t:
-            __start_worker(cpus=params.n_threads, seqs=fasta_files)
-            
+            __start_worker(params.n_threads, _get_fa_list(path))
     elif len(fasta_files):
         print "Used existing splited fasta..."
         with Timer() as t:
-            __start_worker(cpus=params.n_threads, seqs=fasta_files)
+            __start_worker(params.n_threads, _get_fa_list(save_path))
 
             
 class Printer(object):

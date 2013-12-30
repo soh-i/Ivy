@@ -184,28 +184,37 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         self.one_based = self.params.one_based
         
         ### Resolve to explore specific region or not
+        # explore specific chrom each thred if multi threading
+        if self.params.n_threads:
+            self.params.region.all_flag = 0
+            self.params.region.start = None
+            self.params.region.end = None
+            
+            print "Target: ", self.params.region.chrom
+            
         # Flag == 1: explore all region
         if self.params.region.all_flag == 1:
             self.params.region.start = None
             self.params.region.end = None
             self.params.region.chrom = None
-
+            
         # Flag == 0: explore specific region
         elif self.params.region.all_flag == 0:
             if (self.params.region.chrom
                 and self.params.region.start and self.params.region.end):
-                (self.params.region.start, self.params.region.end) = \
-                self.__resolve_coords(
-                    self.params.region.start,
-                    self.params.region.end,
-                    self.params.one_based)
+                self.params.region.start, self.params.region.end = \
+                                                                   self.__resolve_coords(
+                                                                       self.params.region.start,
+                                                                       self.params.region.end,
+                                                                       self.params.one_based)
+        else:
+            # explore all region if self.params.region.* is None
+            pass
                 
-                if not self.params.region.chrom.startswith('chr'):
-                    self.params.region.chrom = 'chr' + self.params.region.chrom
-                else: self.params.region.chrom = self.params.region.chrom
-            else:
-                # explore all region if self.params.region.* is None
-                pass
+        #if self.params.region.chrom.startswith('chr'):
+        #    self.params.region.chrom = self.params.region.chrom.replace('chr', '', 1)
+        #else:
+        #    self.params.region.chrom = self.params.region.chrom
 
         if self._is_same_chromosome_name(bam=self.params.r_bams, fa=self.params.fasta):
             pass
@@ -252,9 +261,10 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
           passed_mismatches[2]
 
         '''
+        print "From {0}, target is {1}".format(__name__, self.params.region.chrom)
         if self.params.verbose:
             self.logger.debug("Start pileup bam'{0}' file...".format(self.__class__.__name__))
-        
+            
         for col in self.samfile.pileup(reference=self.params.region.chrom,
                                        start=self.params.region.start,
                                        end=self.params.region.end
