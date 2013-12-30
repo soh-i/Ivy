@@ -190,8 +190,6 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             self.params.region.start = None
             self.params.region.end = None
             
-            print "Target: ", self.params.region.chrom
-            
         # Flag == 1: explore all region
         if self.params.region.all_flag == 1:
             self.params.region.start = None
@@ -261,7 +259,8 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
           passed_mismatches[2]
 
         '''
-        print "From {0}, target is {1}".format(__name__, self.params.region.chrom)
+        
+        self.logger.debug("Target chromosome: {0}".format(self.params.region.chrom))
         if self.params.verbose:
             self.logger.debug("Start pileup bam'{0}' file...".format(self.__class__.__name__))
             
