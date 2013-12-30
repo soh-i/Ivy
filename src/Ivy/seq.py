@@ -1,4 +1,3 @@
-import string
 import re
 import string
 import os.path
@@ -9,6 +8,20 @@ import pysam
 import pprint
 import time
 
+class Timer(object):
+    def __init__(self, verbose=True):
+        self.verbose = verbose
+        
+    def __enter__(self):
+        self.start = time.time()
+
+    def __exit__(self, *args):
+        self.end = time.time()
+        self.secs = self.end - self.start
+        if self.verbose:
+            print '=> Elapsed time: {:f} (sec)'.format(self.secs)
+
+            
 class Fasta(object):
     def __init__(self, fa=''):
         if os.path.isfile(fa):
@@ -19,7 +32,6 @@ class Fasta(object):
     def fasta_header(self):
         header = []
         with open(self.filename, 'r') as f:
-            #head = [line.replace('>', '', 1).rstrip() for line in f if line.startswith('>')]
             for line in f:
                 if line.startswith('>'):
                     head = line.replace('>', '', 1).rstrip()
@@ -73,8 +85,8 @@ class Fasta(object):
          chrom(list): splited chromsome by cpus
         '''
         
-        #MAX_CPUs = multiprocessing.cpu_count()
-        MAX_CPUs = 24
+        MAX_CPUs = multiprocessing.cpu_count()
+        #MAX_CPUs = 24
         if cpus > MAX_CPUs:
             raise RuntimeError("Over the number of cpus are given")
         
@@ -161,14 +173,12 @@ def fetch_seq(fa):
     print multiprocessing.current_process()
     
     path = './block_fasta/'
-    fafile = pysam.Fastafile(path+fa)
+    fafile = pysam.Fastafile(os.path.join(path, fa))
     chroms = decode_chr_name_from_file([fa])
     seq = []
     for c in chroms:
-        #print "fetching {0}...".format(c)
         l = len(fafile.fetch(reference=c, start=1, end=1000000000))
         print "Chr: %s, Length: %d" % (c, l)
-        
     return seq
 
 def run(cpus, fas):
@@ -207,18 +217,6 @@ def get_fa_list(path):
             fa.append(_)
     return fa
 
-class Timer(object):
-    def __init__(self, verbose=True):
-        self.verbose = verbose
-        
-    def __enter__(self):
-        self.start = time.time()
-
-    def __exit__(self, *args):
-        self.end = time.time()
-        self.secs = self.end - self.start
-        if self.verbose:
-            print '=> Elapsed time: {:f} (sec)'.format(self.secs)
     
 if __name__ == '__main__':
     path = './block_fasta/'
