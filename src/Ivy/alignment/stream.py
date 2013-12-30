@@ -324,7 +324,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                 # allow insertion containing reads
                 elif (not self.params.basic_filter.rm_insertion
                       and self.params.basic_filter.rm_deletion
-                      and self.params.basic_filterf.rm_duplicated):
+                      and self.params.basic_filter.rm_duplicated):
                     if reads_filter_params_debug:
                         self.params.show(self.params.basic_filter)
                         raise SystemExit("Method: {0:s}".format(
