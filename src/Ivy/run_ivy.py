@@ -28,7 +28,8 @@ def run():
         single_run()
     elif params.n_threads > 2:
         thread_run()
-
+    logger.debug("Finished Ivy run!")
+    
 def single_run():
     '''
     Working on single thread
@@ -57,12 +58,13 @@ def single_run():
                 alt=dna.get('alt'))
     #with open(params.outname, 'w') as f:
     #f.write()
+    logger.debug("Finished Ivy run!")
 
 def thread_run():
     '''
     Working on multi threading
     '''
-    
+    logger.debug("Beginning Ivy run v." + __version__)
     save_path = './block_fasta'
     
     # create tmp directory
@@ -72,10 +74,11 @@ def thread_run():
     
     # generate worker
     if len(fasta_files) != params.n_threads:
-        logger.debug("Remove old splited fasta, and generate new")
+        logger.debug("Remove old splited fasta")
         shutil.rmtree(save_path)
         
         # split fasta by number of threads
+        logger.debug("Split reference genome by number of threads")
         fa = Fasta(fa=params.fasta)
         fa.split_by_blocks(params.n_threads, _get_fa_list(path))
         
@@ -83,17 +86,16 @@ def thread_run():
         with Timer() as t:
             __start_worker(params.n_threads, _get_fa_list(path))
     elif len(fasta_files):
-        logger.debug("Used existing splited fasta")
+        logger.debug("Used existing splited reference genome")
         with Timer() as t:
             __start_worker(params.n_threads, _get_fa_list(save_path))
         
 def __multi_pileup(seq_files):
-    import os
     current = multiprocessing.current_process()
     logger.debug("PID: {0}".format(current.pid))
     logger.debug("RUN: {0}".format(current.run))
     logger.debug("Identity: {0}".format(current._identity))
-    logger.debug("Class: {0}".format(current.start.im_func.func_name))
+    #logger.debug("Class: {0}".format(current.start.im_func.func_name))
     
     chromosome_list = decode_chr_name_from_file([seq_files])
     
@@ -109,6 +111,7 @@ def __multi_pileup(seq_files):
                 #print p
                 pass
             logger.debug("Finished to pileup in '{0}'".format(chrom))
+
         
 def __start_worker(cpus, fas):
     if cpus < 1 and len(fas) < 1:
