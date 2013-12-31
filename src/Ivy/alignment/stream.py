@@ -491,17 +491,17 @@ class RNASeqAlignmentStream(AlignmentStream):
             passed_matches = data['ma']
 
             # debug
-            if len(passed_mismatches) > 10:
-                print passed_reads[0].is_del
-                #print dir(passed_reads[0])
-                
-                print self.params.region.chrom,
-                print self.pos,
-                print self.ref_base,
-                print "Total reads: {0}".format(len(passed_reads)),
-                print "Matches: {0}".format(len(passed_matches)), 
-                print "Mismatches: {0}".format(len(passed_mismatches))
-            
+            #if len(passed_mismatches) > 10:
+            #    print passed_reads[0].is_del
+            #    #print dir(passed_reads[0])
+            #    
+            #    print self.params.region.chrom,
+            #    print self.pos,
+            #    print self.ref_base,
+            #    print "Total reads: {0}".format(len(passed_reads)),
+            #    print "Matches: {0}".format(len(passed_matches)), 
+            #    print "Mismatches: {0}".format(len(passed_mismatches))
+
             ##############################
             ### Basic filters in reads ###
             ##############################
