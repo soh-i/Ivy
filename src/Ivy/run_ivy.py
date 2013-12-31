@@ -96,7 +96,7 @@ def _thread_run():
             __start_worker(params.n_threads, _get_fa_list(save_path))
             
     logger.debug("Start to merge files")
-    __merge_tmp_files(tmp_path='tmp')
+    __merge_tmp_files(tmp_path='ivy_tmp')
         
 def __multi_pileup(seq_files):
     '''
@@ -111,7 +111,7 @@ def __multi_pileup(seq_files):
     #logger.debug("Class: {0}".format(current.start.im_func.func_name))
     
     chromosome_list = decode_chr_name_from_file([seq_files])
-    path_to_tmp = 'tmp'
+    path_to_tmp = 'ivy_tmp'
     for seq_files in chromosome_list:
         reverted = seq_files[0] + "_" + "-".join(seq_files[1:]) + ".fa"
         params.fasta = os.path.join('block_fasta', reverted)
@@ -120,10 +120,10 @@ def __multi_pileup(seq_files):
         for chrom in seq_files[1:]: # Skip serial number in the 1st element
             params.region.chrom = chrom
             pileup_iter = RNASeqAlignmentStream(params)
-            if not os.path.isdir("tmp"):
-                os.mkdir("tmp")
+            if not os.path.isdir(path_to_tmp):
+                os.mkdir(path_to_tmp)
                 
-            out = open('tmp/tmp_' + chrom + '.log', mode='w', buffering=False)
+            out = open(path_to_tmp+'/tmp_'+chrom+'.log', mode='w', buffering=False)
             try:
                 for p in pileup_iter.filter_stream():
                     out.write(Printer.to_tab(p)+'\n')
