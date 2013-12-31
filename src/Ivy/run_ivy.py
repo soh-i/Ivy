@@ -84,11 +84,11 @@ def _thread_run():
         # split fasta by number of threads
         logger.debug("Split reference genome by number of threads")
         fa = Fasta(fa=params.fasta)
-        fa.split_by_blocks(params.n_threads, _get_fa_list(path))
+        fa.split_by_blocks(params.n_threads)
         
         # call workers
         with Timer() as t:
-            __start_worker(params.n_threads, _get_fa_list(path))
+            __start_worker(params.n_threads, _get_fa_list(save_path))
         
     elif len(fasta_files):
         logger.debug("Used existing splited reference genome")
