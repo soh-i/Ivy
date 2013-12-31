@@ -93,8 +93,7 @@ def thread_run():
             __start_worker(params.n_threads, _get_fa_list(save_path))
             
     logger.debug("Start to merge files")
-    merge_tmp_files('tmp')
-
+    __merge_tmp_files(tmp_path='tmp')
         
 def __multi_pileup(seq_files):
     current = multiprocessing.current_process()
@@ -116,7 +115,7 @@ def __multi_pileup(seq_files):
             pileup_iter = RNASeqAlignmentStream(params)
             if not os.path.isdir("tmp"):
                 os.mkdir("tmp")
-
+                
             out = open('tmp/tmp_' + chrom + '.log', mode='w', buffering=False)
             try:
                 for p in pileup_iter.filter_stream():
@@ -128,16 +127,16 @@ def __multi_pileup(seq_files):
                 
             finally:
                 out.close()
-
+                
     logger.debug("Finished to pileup in '{0}'".format(chrom))
 
-def merge_tmp_files(path):
-    if not os.path.isdir(path):
+def __merge_tmp_files(tmp_path=None):
+    if not os.path.isdir(tmp_path):
+        print "Path: {0} is not found".format(tmp_path)
         return False
     
     file_list = []
-
-    for f in os.listdir(path):
+    for f in os.listdir(tmp_path):
         p = re.compile(r'^tmp_{1}(.+).{1}log$')
         ma = p.match(f)
         f_name =  ma.group(1)
@@ -147,22 +146,30 @@ def merge_tmp_files(path):
                 file_list.append(int(f_name))
             else:
                 file_list.append(str(f_name))
-
-    revert_files = [path + '/tmp_chr' + str(_) + '.log' for _ in sorted(file_list)]
+        else:
+            if f_name.isdigit():
+                file_list.append(int(f_name))
+            else:
+                file_list.append(str(f_name))
+                
+    revert_files = [tmp_path + '/tmp_chr' + str(_) + '.log' for _ in sorted(file_list)]
     tmp_size = len(revert_files)
+    
     if not os.access('/bin/cat', os.X_OK):
-        print "Not found executalble 'cat' command on this machine"
-        
+        print "Could not merge analysis files (Not found executalble 'cat' command)"
+        return False
     command = "/bin/cat "
     command += " ".join(revert_files)
     name = "ivy_merged_result.log"
-    f = open(name, mode='w', buffering=False)
-    subprocess.call([command], stdout=f, shell=True)
+    fout = open(name, mode='w', buffering=False)
+    subprocess.call([command], stdout=fout, shell=True)
     logger.debug("Finished to {0} merge tmp files to {1}".format(tmp_size, name))
 
 def __start_worker(cpus, fas):
     if cpus < 1 and len(fas) < 1:
-        raise RuntimeError("Number of cpus or seq. len. is too small")
+        print "Number of cpus or seq. len. is too small"
+        return False
+        
     logger.debug("Number of CPUs: {:d}".format(cpus))
     p = multiprocessing.Pool(cpus)
     seq = p.map(__multi_pileup, fas)
@@ -235,4 +242,4 @@ class Printer(object):
         
          
 if __name__ == '__main__':
-    print "Please execute from APP_ROOT/bin/ivy"
+    print "Please execute bin at APP_ROOT/bin/ivy"
