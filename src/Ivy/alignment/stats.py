@@ -116,28 +116,64 @@ class AlignmentReadsStats(object):
             ref_f = 0
             alt_r = 0
             alt_f = 0
+            dp4 = 0
             if ref == 'A':
-                ref_r = (ar)
+                # REF: A
+                # ALT: T, G, C
                 ref_f = (af)
+                ref_r = (ar)
                 alt_f = (gf + tf + cf)
                 alt_r = (gr + tr + cr)
+                dp4 = tuple([ref_f, ref_r, alt_f, alt_r])
+                
             elif ref == 'T':
-                ref_r = (tr)
+                # REF: T
+                # ALT: A, G, C
                 ref_f = (tf)
-                alt_r = (gr + cr + ar)
+                ref_r = (tr)
                 alt_f = (gf + cf + af)
+                alt_r = (gr + cr + ar)
+                dp4 = tuple([ref_f, ref_r, alt_f, alt_r])
+                
             elif ref == 'G':
-                ref_r = (gr)
+                # REF: G
+                # ALT: A, T, C
                 ref_f = (gf)
+                ref_r = (gr)
+                alt_f = (cf + tf + af)
                 alt_r = (cr + tr + ar)
-                alt_f = (cf + cf + af)
+                dp4 = tuple([ref_f, ref_r, alt_f, alt_r])
+                
             elif ref == 'C':
-                ref_r = (cr)
+                # REF: C
+                # ALT: A, T, G
                 ref_f = (cf)
-                alt_r = (ar + tr + gr)
+                ref_r = (cr)
                 alt_f = (af + tf + gf)
-            return tuple([ref_f, ref_r, alt_f, alt_r])
+                alt_r = (ar + tr + gr)
+                dp4 = tuple([ref_f, ref_r, alt_f, alt_r])
+            return dp4
+            
         else:
             raise ValueError(
                 'Could not define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
                 .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
+
+if __name__ == '__main__':
+    dp4 = AlignmentReadsStats.compute_dp4(ref="A",
+                                          af=11, ar=1,
+                                          tf=1, tr=0,
+                                          gf=2, gr=9,
+                                          cf=9, cr=1)
+    ma = [_ for _ in range(1, 598)]
+    mis = [_ for _ in range(1,31)]
+    freq = AlignmentReadsStats.mismatch_frequency(mis=mis, m=ma)
+    print dp4
+    print freq
+    
+    base = ['A', 'T', 'T', 'T', 'T', 'G', 'G', 'G', 'G']
+    allele = AlignmentReadsStats.define_allele(base, ref='T')
+    print allele
+    
+    
+    
