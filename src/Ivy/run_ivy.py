@@ -18,7 +18,7 @@ __license__ = ''
 __status__ = 'development'
 __version__ = __version__
 
-
+# Global configuration
 logger = logging.getLogger(__name__)
 parse = CommandLineParser()
 params = parse.ivy_parse_options()
@@ -26,12 +26,14 @@ vcf = VCFWriteHeader(params)
 
 def run():
     if params.n_threads == 1 or not params.n_threads:
-        single_run()
+        vcf.make_vcf_header()
+        _single_run()
     elif params.n_threads > 2:
-        thread_run()
+        vcf.make_vcf_header()
+        _thread_run()
     logger.debug("Finished Ivy run!")
     
-def single_run():
+def _single_run():
     '''
     Working on single thread
     '''
@@ -61,10 +63,11 @@ def single_run():
     #f.write()
     logger.debug("Finished Ivy run!")
 
-def thread_run():
+def _thread_run():
     '''
-    Working on multi threading
+    Wrapper of working on multiprocessing
     '''
+    
     logger.debug("Beginning Ivy run v." + __version__)
     save_path = './block_fasta'
     
@@ -96,6 +99,10 @@ def thread_run():
     __merge_tmp_files(tmp_path='tmp')
         
 def __multi_pileup(seq_files):
+    '''
+    Call pileup methods to run as multiprocessing
+    '''
+    
     current = multiprocessing.current_process()
     logger.debug("Process: {0}".format(current))
     logger.debug("PID: {0}".format(current.pid))
@@ -131,6 +138,13 @@ def __multi_pileup(seq_files):
     logger.debug("Finished to pileup in '{0}'".format(chrom))
 
 def __merge_tmp_files(tmp_path=None):
+    '''
+    Merge temporary files into a VCF as final result
+    
+    Args:
+     tmp_path(str): path to Ivy tmp directory
+    '''
+    
     if not os.path.isdir(tmp_path):
         print "Path: {0} is not found".format(tmp_path)
         return False
@@ -166,6 +180,13 @@ def __merge_tmp_files(tmp_path=None):
     logger.debug("Finished to {0} merge tmp files to {1}".format(tmp_size, name))
 
 def __start_worker(cpus, fas):
+    '''
+    Start Ivy child processes for multiprocessing run
+    
+    Args:
+     cpus(int): Number of used cpus for run
+     fas(list): Fasta files get by _get_fa_list(path)
+    '''
     if cpus < 1 and len(fas) < 1:
         print "Number of cpus or seq. len. is too small"
         return False
@@ -194,7 +215,6 @@ def _get_fa_list(path):
     '''
     Args:
      path(str): blocked fasta contained directory
-
     Returns:
      files(list): only .fa file which located in given path
     '''
