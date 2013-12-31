@@ -47,9 +47,11 @@ class BaseStringGenerator(object):
         '''
         
         if strand == 1:
+            # reverse
             return [_.alignment.seq[_.qpos] for _ in base
                     if _.alignment.is_reverse]
         elif strand == 0:
+            # forward
             return [_.alignment.seq[_.qpos] for _ in base
                     if not _.alignment.is_reverse]
         else:
@@ -103,8 +105,8 @@ class FilteredAlignmentReadsGenerator(object):
                       and not _.alignment.is_duplicate
                       and not _.alignment.is_unmapped
                       and not _.is_del)]
-        _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
         _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
+        _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
         
     def reads_allow_duplication(self, pileup_obj, ref_base):
@@ -127,10 +129,15 @@ class FilteredAlignmentReadsGenerator(object):
             
     def reads_without_filter(self, pileup_obj, ref_base):
         '''All reads are passed through under this filter'''
+        # is_del 1 if the base on the padded read is a deletion
+        # indel == 0 means no indel
+        #
         
-        _reads = [_ for _ in pileup_obj if (not _.alignment.is_unmapped)]
-        _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
+        _reads = [_ for _ in pileup_obj
+                  if (not _.alignment.is_unmapped
+                      and _.indel == 0 and _.is_del == 0)]
         _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
+        _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
         
     def reads_allow_insertion(self):
@@ -295,7 +302,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                         raise SystemExit("Method: {0:s}".format(
                             self.reads_filter_by_all_params.__name__))
                         
-                    passed_reads, passed_matches, passed_mismatches = (
+                    passed_reads, passed_ma, passed_mis = (
                         self.reads_filter_by_all_params(col.pileup, self.ref_base))
                     
                 # allow duplicated containing reads
@@ -307,7 +314,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                         raise SystemExit("Method: '{0:s}'".format(
                             self.reads_allow_duplication.__name__))
                         
-                    passed_reads, passed_matches, passed_mismatches = (
+                    passed_reads, passed_ma, passed_mis = (
                         self.reads_allow_duplication(col.pileup, self.ref_base))
                     
                 # allow deletions containing reads
@@ -318,7 +325,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                         self.params.show(self.params.basic_filter)
                         raise SystemExit("Method: {0:s}".format(self.reads_allow_deletion.__name__))
                         
-                    passed_reads, passed_matches, passed_mismatches = (
+                    passed_reads, passed_ma, passed_mis = (
                         self.reads_allow_deletion(col.pileup, self.ref_base))
                     
                 # allow insertion containing reads
@@ -330,26 +337,28 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                         raise SystemExit("Method: {0:s}".format(
                             self.params.basic_filter, self.reads_allow_insertion.__name__))
                         
-                    passed_reads, passed_mathces, passed_mismatches = (
+                    passed_reads, passed_ma, passed_mis = (
                         self.reads_allow_insertion(col.pileup, self.ref_base))
      
                 # no filter
                 else:
+                    #print "NO FILTER"
                     if reads_filter_params_debug:
                         self.params.show(self.params.basic_filter)
                         raise SystemExit("Method: '{0:s}'".format(self.reads_without_filter.__name__))
                         
-                    passed_reads, passed_matches, passed_mismatches = (
+                    passed_reads, passed_ma, passed_mis = (
                         self.reads_without_filter(col.pileups, self.ref_base))
-     
-                yield tuple([passed_reads, passed_matches, passed_mismatches])
+                    #yield tuple([passed_reads, passed_ma, passed_mis])
+                    yield {'reads': passed_reads, 'ma': passed_ma, 'mis': passed_mis}
                 
         except ValueError:
             # e.g. ValueError: invalid reference `chr18` in pysam error
             # return tuple in None
-            yield tuple([None, None, None])
+            #yield tuple([None, None, None])
+            yield {'reads': None, 'ma': None, 'mis': None}
             
-    def mutation_types(self, A, T, G, C, ref=None):
+    def mutation_types(self, A=None, T=None, G=None, C=None, ref=None):
         '''
         Define possible mutation types in given list in each base type
         '''
@@ -475,12 +484,23 @@ class RNASeqAlignmentStream(AlignmentStream):
             #debug
             #if self.pos == 543062:
             #break
-            
-            passed_mismatches = data[2]
+            passed_mismatches = data['mis']
             if passed_mismatches < 1:
                 continue
-            passed_reads = data[0]
-            passed_matches = data[1]
+            passed_reads = data['reads']
+            passed_matches = data['ma']
+
+            # debug
+            if len(passed_mismatches) > 10:
+                print passed_reads[0].is_del
+                #print dir(passed_reads[0])
+                
+                print self.params.region.chrom,
+                print self.pos,
+                print self.ref_base,
+                print "Total reads: {0}".format(len(passed_reads)),
+                print "Matches: {0}".format(len(passed_matches)), 
+                print "Mismatches: {0}".format(len(passed_mismatches))
             
             ##############################
             ### Basic filters in reads ###
@@ -510,7 +530,7 @@ class RNASeqAlignmentStream(AlignmentStream):
             T_reads = specific_reads.get('T')
             G_reads = specific_reads.get('G')
             C_reads = specific_reads.get('C')
-            mutation_type = self.mutation_types(A_reads, T_reads, G_reads, C_reads, ref=self.ref_base)
+            mutation_type = self.mutation_types(A=A_reads, T=T_reads, G=G_reads, C=C_reads, ref=self.ref_base)
             if len(mutation_type) == 0:
                 continue
 
@@ -665,7 +685,7 @@ class DNASeqAlignmentStream(AlignmentStream):
             T_reads = specific_reads.get('T')
             G_reads = specific_reads.get('G')
             C_reads = specific_reads.get('C')
-            mutation_type = self.mutation_types(A_reads, T_reads, G_reads, C_reads, ref=self.ref_base)
+            mutation_type = self.mutation_types(A=A_reads, T=T_reads, G=G_reads, C=C_reads, ref=self.ref_base)
             if len(mutation_type) == 0:
                 continue
 
