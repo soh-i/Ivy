@@ -565,7 +565,8 @@ class RNASeqAlignmentStream(AlignmentStream):
             Cbase = base.get('C')
                     
             _all_base = Abase + Gbase + Cbase + Tbase
-            alt = alignstat.define_allele(_all_base, ref=self.ref_base)
+            _alt = alignstat.define_allele(_all_base, ref=self.ref_base)
+            alt_base = ",".join([",".join(_[0]) for _ in _alt])
                     
             # Specific base string by read strand(forward/reverse)
             G_base_r = basegen.retrieve_base_string_with_strand(G_reads, strand=0)
@@ -626,11 +627,14 @@ class RNASeqAlignmentStream(AlignmentStream):
                                          tr=len(T_base_r), tf=len(T_base_f),
                                          gr=len(G_base_r), gf=len(G_base_f),
                                          cr=len(C_base_r), cf=len(C_base_f)))
+            
+
+            
             d = {
                 'chrom': self.bam_chrom,
                 'pos': self.pos,
                 'ref': self.ref_base,
-                'alt': alt[0][0],
+                'alt': alt_base,
                 'coverage': len(passed_reads),
                 'mismatches': len(passed_mismatches),
                 'matches': len(passed_matches),
@@ -718,7 +722,8 @@ class DNASeqAlignmentStream(AlignmentStream):
             Gbase = base.get('G')
             Cbase = base.get('C')
             _all_base = Abase + Gbase + Cbase + Tbase
-            alt = alignstat.define_allele(_all_base, ref=self.ref_base)
+            _alt = alignstat.define_allele(_all_base, ref=self.ref_base)
+            alt_base = ",".join([",".join(_[0]) for _ in _alt])
                 
             #ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
             #try:
@@ -731,7 +736,7 @@ class DNASeqAlignmentStream(AlignmentStream):
                 'chrom': self.bam_chrom,
                 'pos': self.pos,
                 'ref': self.ref_base,
-                'alt': alt[0],
+                'alt': alt_base,
                 #'coverage': len(passed_reads),
                 #'mismatches': len(passed_mismatches),
                 #'matches': len(passed_matches),
