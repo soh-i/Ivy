@@ -195,11 +195,14 @@ if __name__ == '__main__':
     print dp4
     print freq
     
-    base = ['A', 'T', 'T', 'T', 'T', 'G', 'G', 'G', 'A', 'A']
+    base = ['A', 'T', 'T', 'T', 'T', 'G', 'G',  'A', 'A']
     allele = AlignmentReadsStats.define_allele(base, ref='T')
     print base
     print "REF: T"
-    print allele
+    print allele[0]
+    print ",".join([",".join(_[0]) for _ in allele])
+
+    
     
     
     
