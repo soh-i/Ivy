@@ -382,11 +382,11 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
         mutation_types = {}
         if len(A) > 0 and ref != 'A':
             mutation_types.update({'A': len(A)})
-        elif len(T) > 0 and ref != 'T':
+        if len(T) > 0 and ref != 'T':
             mutation_types.update({'T': len(T)})
-        elif len(G) > 0 and ref != 'G':
+        if len(G) > 0 and ref != 'G':
             mutation_types.update({'G': len(G)})
-        elif len(C) > 0 and ref != 'C':
+        if len(C) > 0 and ref != 'C':
             mutation_types.update({'C': len(C)})
         return mutation_types
         
@@ -551,7 +551,9 @@ class RNASeqAlignmentStream(AlignmentStream):
             mutation_type = self.mutation_types(A=A_reads, T=T_reads, G=G_reads, C=C_reads, ref=self.ref_base)
             if len(mutation_type) == 0:
                 continue
-
+            print mutation_type
+            if self.params.basic_filter.num_allow_type < len(mutation_type):
+                pass
             #ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
                 
             basegen = BaseStringGenerator()
@@ -711,7 +713,7 @@ class DNASeqAlignmentStream(AlignmentStream):
             mutation_type = self.mutation_types(A=A_reads, T=T_reads, G=G_reads, C=C_reads, ref=self.ref_base)
             if len(mutation_type) == 0:
                 continue
-
+            
             basegen = BaseStringGenerator()
             base = basegen.retrieve_base_string_each_base_type(a=A_reads,
                                                                t=T_reads,
