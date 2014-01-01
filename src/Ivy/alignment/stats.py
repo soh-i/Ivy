@@ -65,40 +65,64 @@ class AlignmentReadsStats(object):
                 return .0
                
     @staticmethod
+    #def define_allele(base, ref=None):
+    #    if base and ref:
+    #        [_.upper() for _ in base]
+    #        ref.upper()
+    #    
+    #    c = Counter(base)
+    #    comm = c.most_common()
+    # 
+    #    __allele = {}
+    #    for base in comm:
+    #        if base[0] != ref:
+    #            __allele.update({base[0]:base[1]})
+    # 
+    #    for j in __allele:
+    #        for k in __allele:
+    #            # single alllele is found
+    #            if j == k:
+    #                return tuple([j, __allele[j]])
+    #                
+    #            # most common varinat with a allele type alone
+    #            elif __allele[k] == __allele[j] and k != j:
+    #                return tuple(__allele.items())
+    #                
+    #            # most common variant if has many allele
+    #            elif __allele[k] != __allele[j] and k != j:
+    #                m = max(__allele[k], __allele[j])
+    #                if m == __allele[k]:
+    #                    return tuple([k, __allele[k]])
+    #                elif m == __allele[j]:
+    #                    return tuple([j, __allele[j]])
+    #    else:
+    #        # allele is not found
+    #        return '.'
+    
     def define_allele(base, ref=None):
-        if base and ref:
-            [_.upper() for _ in base]
-            ref.upper()
-        
-        c = Counter(base)
-        comm = c.most_common()
-
-        __allele = {}
-        for base in comm:
-            if base[0] != ref:
-                __allele.update({base[0]:base[1]})
-
-        for j in __allele:
-            for k in __allele:
-                # single alllele is found
-                if j == k:
-                    return tuple([j, __allele[j]])
-                    
-                # most common varinat with a allele type alone
-                elif __allele[k] == __allele[j] and k != j:
-                    return tuple(__allele.items())
-                    
-                # most common variant if has many allele
-                elif __allele[k] != __allele[j] and k != j:
-                    m = max(__allele[k], __allele[j])
-                    if m == __allele[k]:
-                        return tuple([k, __allele[k]])
-                    elif m == __allele[j]:
-                        return tuple([j, __allele[j]])
+        found_allele = {}
+        data = Counter(base)
+        for i in data.most_common():
+            b_type = i[0]
+            count = i[1]
+            if b_type != ref:
+                found_allele.update({b_type: count})
+        if len(found_allele):
+            # Mismatch is found
+            max_val= max(found_allele.values())
         else:
-            # allele is not found
+            # Mismatch base is not found
             return '.'
-
+            
+        result = []
+        for value in found_allele.values():
+            if value == max_val:
+                for itm in found_allele.items():
+                    if itm[1] == value:
+                        result.append(itm)
+                break
+        return result
+        
     @staticmethod
     def compute_dp4(ref=None, af=None, ar=None, tf=None, tr=None, gf=None, gr=None, cf=None, cr=None):
         '''
@@ -171,8 +195,10 @@ if __name__ == '__main__':
     print dp4
     print freq
     
-    base = ['A', 'T', 'T', 'T', 'T', 'G', 'G', 'G', 'G']
+    base = ['A', 'T', 'T', 'T', 'T', 'G', 'G', 'G', 'A', 'A']
     allele = AlignmentReadsStats.define_allele(base, ref='T')
+    print base
+    print "REF: T"
     print allele
     
     
