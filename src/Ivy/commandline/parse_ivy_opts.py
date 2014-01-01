@@ -179,7 +179,7 @@ class CommandLineParser(object):
                                       metavar='',
                                       dest='rm_deletion',
                                       action='store_true',
-                                      default=False,
+                                      default=True,
                                       help='Remove deletion reads [default: %default]'
                                       )
         basic_filter_group.add_option('--rm-insertion-read',
