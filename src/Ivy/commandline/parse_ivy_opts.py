@@ -71,7 +71,7 @@ class CommandLineParser(object):
                                nargs=1,
                                type='string',
                                default='All',
-                               help='Explore specify region [chr:start-end]',
+                               help='Explore specific region [chr:start-end]',
                                )
         self.parser.add_option('-G',
                                metavar='',
@@ -80,14 +80,14 @@ class CommandLineParser(object):
                                nargs=1,
                                type='string',
                                default=None,
-                               help='GTF file',
+                               help='GTF file to annotate the candidate sites',
                                )
         self.parser.add_option('--one-based',
                                metavar='',
                                dest='one_based',
                                action='store_true',
                                default=False,
-                               help='Genomic coordinate'
+                               help='True if genomic coordinate is 1-origin'
                                )
         self.parser.add_option('--num-threads',
                                metavar='',
@@ -127,14 +127,14 @@ class CommandLineParser(object):
                                 dest='ko_strain',
                                 action='store_true',
                                 default=False,
-                                help='Adar null strain is used. [default: %default]'
+                                help='Filter by Adar null strain RNA-seq data [default: %default]'
                                 )
         sample_group.add_option('--replicate',
                                 metavar='',
                                 dest='replicate',
                                 action='store_true',
                                 default=False,
-                                help='Biological replicate is used [default: %default]'
+                                help='Considering biological replicate [default: %default]'
                                 )
         self.parser.add_option_group(sample_group)
         
@@ -148,7 +148,7 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=0.1,
                                       type='float',
-                                      help='Min mutation frequency [default: %default]'
+                                      help='Minimum allele frequency [default: %default]'
                                       )
         basic_filter_group.add_option('--min-rna-coverage',
                                       metavar='',
@@ -157,7 +157,7 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=10,
                                       type='int',
-                                      help='Min RNA read coverage [default: %default]'
+                                      help='Minimum RNA-seq read coverage [default: %default]'
                                       )
         basic_filter_group.add_option('--min-dna-coverage',
                                       metavar='',
@@ -166,7 +166,7 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=20,
                                       type='int',
-                                      help='Min DNA read coverage [default: %default]'
+                                      help='Minimum DNA-seq read coverage [default: %default]'
                                       )
         basic_filter_group.add_option('--rm-duplicated-read',
                                       metavar='',
