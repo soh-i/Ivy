@@ -172,8 +172,8 @@ class CommandLineParser(object):
                                       metavar='',
                                       dest='rm_duplicated',
                                       action='store_true',
-                                      default=False,
-                                      help='Remove duplicated reads [default: %default]'
+                                      default=True,
+                                      help='Remove duplicated mapped reads [default: %default]'
                                       )
         basic_filter_group.add_option('--rm-deletion-read',
                                       metavar='',
