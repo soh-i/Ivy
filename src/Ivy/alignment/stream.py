@@ -70,12 +70,14 @@ class FilteredAlignmentReadsGenerator(object):
 
     def reads_filter_by_all_params(self, pileup_obj, ref_base):
         '''
-        Required attributes:
-         proper pair reads
+        List of read filters:
+         Proper pair reads
          NOT duplicated reads
          NOT unmapped reads
-         NOT deletion reads
+         NOT deletion reads, note that is_del is quite effective for reducing reads
          NOT fail to quality check reads
+         NOT paased spliced reads (RNA-seq data)
+         NOT passed primary alignmnet reads
         '''
                 
         _reads = [_ for _ in pileup_obj
@@ -84,15 +86,16 @@ class FilteredAlignmentReadsGenerator(object):
                       and not _.alignment.is_duplicate
                       and not _.alignment.is_unmapped
                       and not _.alignment.is_secondary
-                      and _.indel == 0 and _.is_del == 0)]
+                      and _.indel == 0
+                      and _.is_del == 0)] 
+
         _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
         _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
             
     def reads_filter_without_pp(self, pileup_obj, ref_base):
         '''
-        Required attributes:
-         proper pair reads
+        List of read filters:
          NOT fail to quality check reads
          NOT duplicated reads
          NOT unmapped reads
@@ -100,42 +103,43 @@ class FilteredAlignmentReadsGenerator(object):
         '''
         
         _reads = [_ for _ in pileup_obj
-                  if (_.alignment.is_proper_pair
-                      and not _.alignment.is_qcfail
+                  if (_.alignment.is_qcfail
                       and not _.alignment.is_duplicate
                       and not _.alignment.is_unmapped
-                      and not _.is_del)]
+                      and _.is_del == 0
+                      and _.indel == 0)]
+        
         _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
         _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
         
     def reads_allow_duplication(self, pileup_obj, ref_base):
         '''
-        Required attributes:
+        List of read filters:
          proper pair reads
          NOT failt to quality check reads
          NOT unmapped reads
          NOT deletion reads
         '''
         
-        _reads = [_ for _ in col.pileups
+        _reads = [_ for _ in col.pileup_obj
                   if (_.alignment.is_proper_pair
                       and not _.alignment.is_qcfail
                       and not _.alignment.is_unmapped
-                      and not _.is_del)]
+                      and not _.is_del
+                      and not _.indel == 0)]
+        
         _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
         _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
             
     def reads_without_filter(self, pileup_obj, ref_base):
         '''All reads are passed through under this filter'''
-        # is_del 1 if the base on the padded read is a deletion
-        # indel == 0 means no indel
-        #
         
         _reads = [_ for _ in pileup_obj
-                  if (not _.alignment.is_unmapped
-                      and _.indel == 0 and _.is_del == 0)]
+                  if (_.indel == 0
+                      and _.is_del == 0)]
+        
         _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
         _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
@@ -143,7 +147,7 @@ class FilteredAlignmentReadsGenerator(object):
     def reads_allow_insertion(self):
         print "Use --rm-insertion-reads is recommended"
         return None
-            
+        
     def reads_allow_deletion(self, pileup_obj, ref_base):
         print "Use --rm-deletion-reads is recommended"
         return None
@@ -276,6 +280,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                                            start=self.params.region.start,
                                            end=self.params.region.end):
                 self.bam_chrom = self.samfile.getrname(col.tid)
+                
                 if self.params.one_based:
                     self.pos = col.pos + 1
                 else:
@@ -301,9 +306,9 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                         self.params.show(self.params.basic_filter)
                         raise SystemExit("Method: {0:s}".format(
                             self.reads_filter_by_all_params.__name__))
-                        
                     passed_reads, passed_ma, passed_mis = (
-                        self.reads_filter_by_all_params(col.pileup, self.ref_base))
+                        self.reads_filter_by_all_params(col.pileups, self.ref_base))
+                    print  {'reads': passed_reads, 'ma': passed_ma, 'mis': passed_mis}
                     
                 # allow duplicated containing reads
                 elif (not self.params.basic_filter.rm_duplicated
@@ -315,7 +320,8 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                             self.reads_allow_duplication.__name__))
                         
                     passed_reads, passed_ma, passed_mis = (
-                        self.reads_allow_duplication(col.pileup, self.ref_base))
+                        self.reads_allow_duplication(col.pileups, self.ref_base))
+                    yield {'reads': passed_reads, 'ma': passed_ma, 'mis': passed_mis}
                     
                 # allow deletions containing reads
                 elif (not self.params.basic_filter.rm_deletion
@@ -326,7 +332,8 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                         raise SystemExit("Method: {0:s}".format(self.reads_allow_deletion.__name__))
                         
                     passed_reads, passed_ma, passed_mis = (
-                        self.reads_allow_deletion(col.pileup, self.ref_base))
+                        self.reads_allow_deletion(col.pileups, self.ref_base))
+                    yield {'reads': passed_reads, 'ma': passed_ma, 'mis': passed_mis}
                     
                 # allow insertion containing reads
                 elif (not self.params.basic_filter.rm_insertion
@@ -338,7 +345,8 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                             self.params.basic_filter, self.reads_allow_insertion.__name__))
                         
                     passed_reads, passed_ma, passed_mis = (
-                        self.reads_allow_insertion(col.pileup, self.ref_base))
+                        self.reads_allow_insertion(col.pileups, self.ref_base))
+                    yield {'reads': passed_reads, 'ma': passed_ma, 'mis': passed_mis}
      
                 # no filter
                 else:
@@ -506,6 +514,7 @@ class RNASeqAlignmentStream(AlignmentStream):
             ### Basic filters in reads ###
             ##############################
             alignstat = AlignmentReadsStats()
+            
             # --min-rna-cov
             coverage = alignstat.reads_coverage(passed_reads)
             if coverage <= self.params.basic_filter.min_rna_cov:
