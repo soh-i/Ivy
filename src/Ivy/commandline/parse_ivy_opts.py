@@ -186,7 +186,7 @@ class CommandLineParser(object):
                                       metavar='',
                                       dest='rm_insertion',
                                       action='store_true',
-                                      default=False,
+                                      default=True,
                                       help='Remove insertion reads [default: %default]'
                                       )
         basic_filter_group.add_option('--min-rna-mapq',
