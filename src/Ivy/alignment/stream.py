@@ -665,7 +665,6 @@ class RNASeqAlignmentStream(AlignmentStream):
                 #'C_f': C_base_f,
                 #'C_r': C_base_r,
             }
-            print d
             yield d
             
                         
