@@ -98,8 +98,8 @@ def _thread_run():
     logger.debug("Start to merge files")
     __merge_tmp_files(tmp_path='ivy_tmp')
     
-    logger.debug("Elapsed time: {0}h {1}min {2}sec".format(
-        int(t.interval*1/360), int(t.interval*1/60), int(t.interval)))
+    logger.debug("Elapsed time: {0}d {0}h {1}min {2}sec".format(
+        int(t.interval*1/24*1/3600), int(t.interval*1/3600), int(t.interval*1/60), int(t.interval)))
         
 def __multi_pileup(seq_files):
     '''
