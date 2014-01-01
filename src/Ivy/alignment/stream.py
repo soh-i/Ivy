@@ -551,9 +551,9 @@ class RNASeqAlignmentStream(AlignmentStream):
             mutation_type = self.mutation_types(A=A_reads, T=T_reads, G=G_reads, C=C_reads, ref=self.ref_base)
             if len(mutation_type) == 0:
                 continue
-            print mutation_type
-            if self.params.basic_filter.num_allow_type < len(mutation_type):
-                pass
+            if len(mutation_type) > self.params.basic_filter.num_type:
+                continue
+                
             #ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
                 
             basegen = BaseStringGenerator()
