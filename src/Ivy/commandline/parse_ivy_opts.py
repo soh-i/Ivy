@@ -328,7 +328,7 @@ class CommandLineParser(object):
             print "### All options with values ###"
             for k, v in self.parser.values.__dict__.iteritems():
                 print '[' + k + ':', v, ']'
-        die()
+            die()
         
         #############################
         ### Check required params ###
