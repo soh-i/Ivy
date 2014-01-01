@@ -327,9 +327,9 @@ class CommandLineParser(object):
         if opt.dry_run:
             print "### All options with values ###"
             for k, v in self.parser.values.__dict__.iteritems():
-                print '[' + k + ']:', v
-            die()
-
+                print '[' + k + ':', v, ']'
+        die()
+        
         #############################
         ### Check required params ###
         #############################
@@ -338,7 +338,7 @@ class CommandLineParser(object):
         
         # fasta file, -f
         if not opt.fasta:
-            self.parser.error('[-f] Reference fasta file is a required argument')
+            self.parser.error('[-f] Reference fasta file is required')
         elif self._ok_file(opt.fasta):
             passed_params.fasta = opt.fasta
         elif not self._ok_file(opt.fasta):
@@ -346,11 +346,12 @@ class CommandLineParser(object):
             
         # RNA-seq bam file, r_bams
         if not opt.r_bams:
-            self.parser.error('[-r] RNA-seq bam file is a required argument')
+            self.parser.error('[-r] RNA-seq bam file is required')
         elif self._ok_file(opt.r_bams):
             passed_params.r_bams = opt.r_bams
         elif not self._ok_file(opt.r_bams):
             self.parser.error(opt.r_bams + " is not found or writable file!")
+
             
         # output filename, -o
         if opt.outname:
@@ -421,7 +422,7 @@ class CommandLineParser(object):
         if opt.replicate is True:
             passed_params.sample_filter.replicate = opt.replicate
         elif opt.replicate is False:
-            passed_params.sample_filter.replicate = opt.replicate
+            passed_params.sample_filter.replicate = False
 
         ############################
         ### Basic filter options ###
