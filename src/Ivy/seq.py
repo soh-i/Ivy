@@ -155,9 +155,18 @@ def decode_chr_name_from_file(chroms):
                 pp = re.compile(r'(^\d+)_')
                 index = pp.match(m.group(0)).group(1)
                 tmp.append(index)
+                
                 # add others
                 remove_chr = m.group(1)
-                tmp.append(m.group(0).replace(remove_chr, '', 1))
+                chrom = m.group(0).replace(remove_chr, '', 1)
+
+                # remove suffix
+                ppp = re.compile(r'(.+)\.{1}fa$')
+                mm = ppp.match(chrom)
+                if mm:
+                    tmp.append(mm.group(1))
+                else:
+                    tmp.append(chrom)
             else:
                 # remove suffix
                 p = re.compile(r'(.+)\.{1}fa$')
@@ -166,10 +175,12 @@ def decode_chr_name_from_file(chroms):
                     tmp.append(m.group(1))
                 else:
                     # normal
-                    tmp.append(chrm)
+                    tmp.append(chrom)
         decode.append(tmp)
         # clear previous elements
         tmp = []
+        
+    print decode
     return decode
     
 def as_single(genome):
