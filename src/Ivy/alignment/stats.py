@@ -30,7 +30,7 @@ class AlignmentReadsStats(object):
         
     @staticmethod
     def reads_coverage(reads):
-        return  len(reads)
+        return len(reads)
         
     @staticmethod
     def average_base_quality(reads):
