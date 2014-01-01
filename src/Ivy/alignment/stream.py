@@ -291,7 +291,6 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                 if not self.ref_base:
                     # Skip if chrom in bam is not in reference genome
                     continue
-                    
                     #raise ValueError(
                     #   'No sequence content within chroms: {chrom:s}, start: {start:s}, end: {end:s}'.format(
                     #       chrom=self.params.region.chrom, start=self.params.region.start, end=self.params.region.end))
@@ -302,13 +301,17 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                 if (self.params.basic_filter.rm_duplicated
                     and self.params.basic_filter.rm_deletion
                     and self.params.basic_filter.rm_insertion):
+                    
                     if reads_filter_params_debug:
                         self.params.show(self.params.basic_filter)
                         raise SystemExit("Method: {0:s}".format(
                             self.reads_filter_by_all_params.__name__))
+                        
                     passed_reads, passed_ma, passed_mis = (
                         self.reads_filter_by_all_params(col.pileups, self.ref_base))
-                    print  {'reads': passed_reads, 'ma': passed_ma, 'mis': passed_mis}
+                    yield {'reads': passed_reads,
+                           'ma': passed_ma,
+                           'mis': passed_mis}
                     
                 # allow duplicated containing reads
                 elif (not self.params.basic_filter.rm_duplicated
@@ -321,7 +324,9 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                         
                     passed_reads, passed_ma, passed_mis = (
                         self.reads_allow_duplication(col.pileups, self.ref_base))
-                    yield {'reads': passed_reads, 'ma': passed_ma, 'mis': passed_mis}
+                    yield {'reads': passed_reads,
+                           'ma': passed_ma,
+                           'mis': passed_mis}
                     
                 # allow deletions containing reads
                 elif (not self.params.basic_filter.rm_deletion
@@ -333,7 +338,9 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                         
                     passed_reads, passed_ma, passed_mis = (
                         self.reads_allow_deletion(col.pileups, self.ref_base))
-                    yield {'reads': passed_reads, 'ma': passed_ma, 'mis': passed_mis}
+                    yield {'reads': passed_reads,
+                           'ma': passed_ma,
+                           'mis': passed_mis}
                     
                 # allow insertion containing reads
                 elif (not self.params.basic_filter.rm_insertion
@@ -346,19 +353,21 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                         
                     passed_reads, passed_ma, passed_mis = (
                         self.reads_allow_insertion(col.pileups, self.ref_base))
-                    yield {'reads': passed_reads, 'ma': passed_ma, 'mis': passed_mis}
+                    yield {'reads': passed_reads,
+                           'ma': passed_ma,
+                           'mis': passed_mis}
      
                 # no filter
                 else:
-                    #print "NO FILTER"
                     if reads_filter_params_debug:
                         self.params.show(self.params.basic_filter)
                         raise SystemExit("Method: '{0:s}'".format(self.reads_without_filter.__name__))
                         
                     passed_reads, passed_ma, passed_mis = (
                         self.reads_without_filter(col.pileups, self.ref_base))
-                    #yield tuple([passed_reads, passed_ma, passed_mis])
-                    yield {'reads': passed_reads, 'ma': passed_ma, 'mis': passed_mis}
+                    yield {'reads': passed_reads,
+                           'ma': passed_ma,
+                           'mis': passed_mis}
                 
         except ValueError:
             # e.g. ValueError: invalid reference `chr18` in pysam error
@@ -621,7 +630,7 @@ class RNASeqAlignmentStream(AlignmentStream):
                 'chrom': self.bam_chrom,
                 'pos': self.pos,
                 'ref': self.ref_base,
-                'alt': alt[0],
+                'alt': alt[0][0],
                 'coverage': len(passed_reads),
                 'mismatches': len(passed_mismatches),
                 'matches': len(passed_matches),
@@ -650,6 +659,7 @@ class RNASeqAlignmentStream(AlignmentStream):
                 #'C_f': C_base_f,
                 #'C_r': C_base_r,
             }
+            print d
             yield d
             
                         
