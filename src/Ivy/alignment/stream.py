@@ -84,7 +84,7 @@ class FilteredAlignmentReadsGenerator(object):
                       and not _.alignment.is_duplicate
                       and not _.alignment.is_unmapped
                       and not _.alignment.is_secondary
-                      and not _.is_del)]
+                      and _.indel == 0 and _.is_del == 0)]
         _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
         _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
