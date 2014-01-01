@@ -196,7 +196,7 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=30,
                                       type='int',
-                                      help='Min mapping quality of RNA-seq data [default: %default]'
+                                      help='Minimum mapping quality of RNA-seq data [default: %default]'
                                       )
         basic_filter_group.add_option('--min-dna-mapq',
                                       metavar='',
@@ -205,7 +205,7 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=30,
                                       type='int',
-                                      help='Min mapping quality of DNA-seq data [default: %default]'
+                                      help='Minimum mapping quality of DNA-seq data [default: %default]'
                                       )
         basic_filter_group.add_option('--min-rna-baq',
                                       metavar='',
@@ -214,7 +214,7 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=28,
                                       type='int',
-                                      help='Min base call quality in RNA [default: %default]'
+                                      help='Minimum phread-scaled base call quality in RNA-seq reads [default: %default]'
                                       )
         basic_filter_group.add_option('--min-dna-baq',
                                       metavar='',
@@ -223,7 +223,7 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=28,
                                       type='int',
-                                      help='Min base call quality in DNA [default: %default]'
+                                      help='Minimum phread-scaled base call quality in DNA-seq reads [default: %default]'
                                       )
         basic_filter_group.add_option('--num-allow-type',
                                       metavar='',
@@ -232,7 +232,7 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=1,
                                       type='int',
-                                      help='Number of allowing base modification type [default: %default]'
+                                      help='Number of allowing base modification type(s) [default: %default]'
                                       )
         self.parser.add_option_group(basic_filter_group)
         
@@ -253,21 +253,21 @@ class CommandLineParser(object):
                                      dest='baq_bias',
                                      action='store_true',
                                      default=False,
-                                     help='Consider base call bias [default: %default]'
+                                     help='Considering base call bias [default: %default]'
                                      )
         stat_filter_group.add_option('--strand-bias',
                                      metavar='',
                                      dest='strand_bias',
                                      action='store_true',
                                      default=False,
-                                     help='Consider strand bias [default: %default]'
+                                     help='Considering strand bias [default: %default]'
                                      )
         stat_filter_group.add_option('--positional-bias',
                                      metavar='',
                                      dest='pos_bias',
                                      action='store_true',
                                      default=False,
-                                     help='Consider positional bias [default: %default]'
+                                     help='Considering positional bias [default: %default]'
                                      )
         self.parser.add_option_group(stat_filter_group)
         
