@@ -68,7 +68,7 @@ class FilteredAlignmentReadsGenerator(object):
      reads(list), matches(list), mismatches(list)
     '''
 
-    def reads_filter_by_all_params(self, pileup_obj, ref_base):
+    def reads_filter_by_all_params(self, pileup_obj, ref_base, is_single=False):
         '''
         List of read filters:
          Proper pair reads
@@ -79,16 +79,28 @@ class FilteredAlignmentReadsGenerator(object):
          NOT paased spliced reads (RNA-seq data)
          NOT passed primary alignmnet reads
         '''
-                
-        _reads = [_ for _ in pileup_obj
-                  if (_.alignment.is_proper_pair
-                      and not _.alignment.is_qcfail
-                      and not _.alignment.is_duplicate
-                      and not _.alignment.is_unmapped
-                      and not _.alignment.is_secondary
-                      and _.indel == 0
-                      and _.is_del == 0)] 
-
+        
+        _reads = []
+        # paired-end read (default)
+        if not is_single:
+            _reads = [_ for _ in pileup_obj
+                      if (_.alignment.is_proper_pair
+                          and not _.alignment.is_qcfail
+                          and not _.alignment.is_duplicate
+                          and not _.alignment.is_unmapped
+                          and not _.alignment.is_secondary
+                          and _.indel == 0
+                          and _.is_del == 0)]
+        # single-end
+        else:
+            _reads = [_ for _ in pileup_obj
+                      if (not _.alignment.is_qcfail
+                          and not _.alignment.is_duplicate
+                          and not _.alignment.is_unmapped
+                          and not _.alignment.is_secondary
+                          and _.indel == 0
+                          and _.is_del == 0)]
+            
         _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
         _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
@@ -308,7 +320,7 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                             self.reads_filter_by_all_params.__name__))
                         
                     passed_reads, passed_ma, passed_mis = (
-                        self.reads_filter_by_all_params(col.pileups, self.ref_base))
+                        self.reads_filter_by_all_params(col.pileups, self.ref_base, is_single=self.params.is_single))
                     yield {'reads': passed_reads,
                            'ma': passed_ma,
                            'mis': passed_mis}
