@@ -190,6 +190,7 @@ def __start_worker(cpus, fas):
      cpus(int): Number of used cpus for run
      fas(list): Fasta files get by _get_fa_list(path)
     '''
+    
     if cpus < 1 and len(fas) < 1:
         print "Number of cpus or seq. len. is too small"
         return False
@@ -235,6 +236,7 @@ class Printer(object):
         '''
         Simple pretty print yielded pileuped data
         '''
+        
         print '{'
         for key in data:
             print '  {key}({types}): {val}'.format(

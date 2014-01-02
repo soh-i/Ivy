@@ -597,21 +597,21 @@ class RNASeqAlignmentStream(AlignmentStream):
                     
             # Faital error if diff. in len(N) != (len(Nr)+len(Nf))
             # TODO: Wrapp *Error class in error.py
-            if len(Abase) != len(A_base_r + A_base_f):
-                raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
-                    all=len(Abase), f=len(A_base_f), r=len(A_base_r), pos=pos))
-                        
-            if len(Tbase) != len(T_base_r + T_base_f):
-                raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
-                    all=len(Tbase), f=len(T_base_f), r=len(T_base_r), pos=pos))
-                        
-            if len(Gbase) != len(G_base_r + G_base_f):
-                raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
-                    all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
-
-            if len(Cbase) != len(C_base_r + C_base_f):
-                raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
-                    all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
+            #if len(Abase) != len(A_base_r + A_base_f):
+            #    raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
+            #        all=len(Abase), f=len(A_base_f), r=len(A_base_r), pos=pos))
+            #            
+            #if len(Tbase) != len(T_base_r + T_base_f):
+            #    raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
+            #        all=len(Tbase), f=len(T_base_f), r=len(T_base_r), pos=pos))
+            #            
+            #if len(Gbase) != len(G_base_r + G_base_f):
+            #    raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
+            #        all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
+            # 
+            #if len(Cbase) != len(C_base_r + C_base_f):
+            #    raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
+            #        all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
 
             ###########################
             ### Statistical filsher ###
