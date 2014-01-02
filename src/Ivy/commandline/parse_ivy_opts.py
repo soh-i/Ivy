@@ -82,12 +82,19 @@ class CommandLineParser(object):
                                default=None,
                                help='GTF file to annotate the candidate sites',
                                )
+        self.parser.add_option('--single-end',
+                               metavar='',
+                               action='store',
+                               type='string',
+                               default=False,
+                               help='True if single-end RNA-seq experiments [default: %default]',
+                               )
         self.parser.add_option('--one-based',
                                metavar='',
                                dest='one_based',
                                action='store_true',
                                default=False,
-                               help='True if genomic coordinate is 1-origin'
+                               help='True if genomic coordinate is 1-origin [default: %default]'
                                )
         self.parser.add_option('--num-threads',
                                metavar='',
@@ -111,6 +118,7 @@ class CommandLineParser(object):
                                default=False,
                                help='Show verbosely logging messages'
                                )
+        
         
     def parse_sample_opt(self):
         # sample options
