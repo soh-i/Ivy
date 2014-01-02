@@ -510,27 +510,12 @@ class RNASeqAlignmentStream(AlignmentStream):
     
     def filter_stream(self):
         for data in self.pileup_stream():
-            #debug
-            #if self.pos == 543062:
-            #break
             passed_mismatches = data['mis']
             if passed_mismatches < 1:
                 continue
             passed_reads = data['reads']
             passed_matches = data['ma']
-
-            # debug
-            #if len(passed_mismatches) > 10:
-            #    print passed_reads[0].is_del
-            #    #print dir(passed_reads[0])
-            #    
-            #    print self.params.region.chrom,
-            #    print self.pos,
-            #    print self.ref_base,
-            #    print "Total reads: {0}".format(len(passed_reads)),
-            #    print "Matches: {0}".format(len(passed_matches)), 
-            #    print "Mismatches: {0}".format(len(passed_mismatches))
-
+            
             ##############################
             ### Basic filters in reads ###
             ##############################
@@ -547,8 +532,7 @@ class RNASeqAlignmentStream(AlignmentStream):
             average_mapq = alignstat.average_mapq(passed_reads)
             if average_mapq <= self.params.basic_filter.min_rna_mapq:
                 continue
-            #quals_in_pos = alignstat.quals_in_pos(passed_reads)
-            
+
             # --min-mis-frequency
             allele_freq = alignstat.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
             if allele_freq <= self.params.basic_filter.min_mut_freq:
@@ -565,8 +549,6 @@ class RNASeqAlignmentStream(AlignmentStream):
                 continue
             if len(mutation_type) > self.params.basic_filter.num_type:
                 continue
-                
-            #ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
                 
             basegen = BaseStringGenerator()
             base = basegen.retrieve_base_string_each_base_type(a=A_reads,
@@ -738,13 +720,6 @@ class DNASeqAlignmentStream(AlignmentStream):
             _alt = alignstat.define_allele(_all_base, ref=self.ref_base)
             alt_base = ",".join([",".join(_[0]) for _ in _alt])
                 
-            #ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
-            #try:
-            #    hoge = hoge
-            #except NameError as e:
-            #    print e.message
-            #    break
-            #    
             d = {
                 'chrom': self.bam_chrom,
                 'pos': self.pos,
