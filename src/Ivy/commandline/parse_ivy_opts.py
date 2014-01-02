@@ -84,8 +84,8 @@ class CommandLineParser(object):
                                )
         self.parser.add_option('--single-end',
                                metavar='',
-                               action='store',
-                               type='string',
+                               dest='is_single',
+                               action='store_true',
                                default=False,
                                help='True if single-end RNA-seq experiments [default: %default]',
                                )
@@ -96,7 +96,7 @@ class CommandLineParser(object):
                                default=False,
                                help='True if genomic coordinate is 1-origin [default: %default]'
                                )
-        self.parser.add_option('--num-threads',
+        self.parser.add_option('-p',
                                metavar='',
                                dest='n_threads',
                                action='store',
@@ -397,6 +397,12 @@ class CommandLineParser(object):
         else:
             passed_params.gtf = opt.gtf
 
+        # is_single --single
+        if opt.is_single:
+            passed_params.is_single = opt.is_single
+        else:
+            passed_params.is_single = opt.is_single
+            
         # --one_based
         if opt.one_based is True:
             passed_params.one_based = opt.one_based
