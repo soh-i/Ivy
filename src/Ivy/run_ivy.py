@@ -1,6 +1,7 @@
 from Ivy.alignment.stream import RNASeqAlignmentStream, DNASeqAlignmentStream
 from Ivy.commandline.parse_ivy_opts import CommandLineParser
 from Ivy.annotation.writer import VCFWriteHeader
+from Ivy.annotation.annotation import GTF
 from Ivy.seq import Fasta, Timer, decode_chr_name_from_file
 from Ivy.version import __version__
 from pprint import pprint as p
@@ -9,7 +10,10 @@ import multiprocessing
 import logging
 import string
 import shutil
-import os, os.path, sys, re
+import os
+import os.path
+import sys
+import re
 import time
 
 __program__ = 'run_ivy'
@@ -37,7 +41,7 @@ def _single_run():
     '''
     Working on single thread
     '''
-
+    
     #vcf.make_vcf_header()
     logger.debug("Beginning Ivy run (v." + __version__ + ")" )
     
