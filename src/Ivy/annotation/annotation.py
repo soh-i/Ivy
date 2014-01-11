@@ -62,10 +62,10 @@ class GTF(Annotation):
                                          parser=pysam.asGTF()):
                                          
             yield gtf
-            
+    
 if __name__ == '__main__':
     gtf_cls = GTF("/Users/yukke/Desktop/genes.gtf")
-    for g in gtf_cls.fetch_gtf("chr21"):
+    for g in gtf_cls.fetch_gtf("chr21", 1, 1000):
         print g
         
 
