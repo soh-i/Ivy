@@ -45,25 +45,27 @@ class AnnotateVCF(Annotation):
 
 
 class GTF(Annotation):
-    def __init__(self, ingtf, contig=None, start=None, end=None):
-        self.contig = contig
-        self.start = start
-        self.end = end
+    def __init__(self, ingtf):
+        self.ingtf = ingtf
         self._prepare()
         
     def _prepare(self):
-        if not os.path.isfile(ingtf + ".gz.tbi"):
+        if not os.path.isfile(self.ingtf + ".gz.tbi"):
             print "Indexing GTF file..."
-            compressed_gtf = pysam.tabix_index(ingtf, preset="gff")
+            compressed_gtf = pysam.tabix_index(self.ingtf, preset="gff")
         else:
-            compressed_gtf = ingtf + ".gz"
+            compressed_gtf = self.ingtf + ".gz"
         self.tabixfile = pysam.Tabixfile(compressed_gtf)
 
-    def fetch_gtf(self):
-        for gtf in pysam.Tabixfile.fetch(self.tabixfile,
-                                         parser=pysam.asGTF(),
-                                         start=self.start, end=self.end):
+    def fetch_gtf(self, contig=None, start=None, end=None):
+        for gtf in pysam.Tabixfile.fetch(self.tabixfile, contig, start, end,
+                                         parser=pysam.asGTF()):
+                                         
             yield gtf
             
 if __name__ == '__main__':
-    pass
+    gtf_cls = GTF("/Users/yukke/Desktop/genes.gtf")
+    for g in gtf_cls.fetch_gtf("chr21"):
+        print g
+        
+
