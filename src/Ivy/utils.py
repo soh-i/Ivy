@@ -7,6 +7,25 @@ import Ivy.version
 def die(msg=''):
     raise SystemExit(msg)
 
+def convert_base(base, strand=None):
+    if len(base) != 2:
+        return False
+        
+    dna = {'A': 'T',
+           'T': 'A',
+           'G': 'C',
+           'C': 'G',
+           }
+    if strand == '+':
+        return base
+    elif strand == '-':
+        r = []
+        r.append(dna.get(base[0]))
+        r.append(dna.get(base[1]))
+        return r
+                
+
+
 class IvyLogger(object):
     def __init__(self):
         self.log_fmt = '[%(asctime)s] [%(levelname)s] [%(message)s]'
@@ -107,6 +126,8 @@ if __name__ == '__main__':
     aa.region.start = 7423480
     aa.fasta = "hoge.fa"
     print aa
+
+    print  convert_base(['A', 'G'], strand='-')
 
     
 class ImutableDict(collections.Mapping):
