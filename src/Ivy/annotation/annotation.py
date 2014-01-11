@@ -1,11 +1,13 @@
 import pysam
+import os.path
 
 class Annotation(object):
-    def __init__(self):
-        self.gtf = gtf
-
     def to_array(self):
         pass
+
+    def to_file(self):
+        pass
+        
 
 class AnnotateVCF(Annotation):
     def __init__(self, vcf=None, gtf=None):
@@ -41,12 +43,27 @@ class AnnotateVCF(Annotation):
     def write_gtf(self):
         pass
 
+
+class GTF(Annotation):
+    def __init__(self, ingtf, contig=None, start=None, end=None):
+        self.contig = contig
+        self.start = start
+        self.end = end
+        self._prepare()
         
-def main():
-    a = AnnotateVCF(vcf="../../../data/test_data.vcf")
+    def _prepare(self):
+        if not os.path.isfile(ingtf + ".gz.tbi"):
+            print "Indexing GTF file..."
+            compressed_gtf = pysam.tabix_index(ingtf, preset="gff")
+        else:
+            compressed_gtf = ingtf + ".gz"
+        self.tabixfile = pysam.Tabixfile(compressed_gtf)
 
-    print a.vcf_to_array()[:10][:10]
-
+    def fetch_gtf(self):
+        for gtf in pysam.Tabixfile.fetch(self.tabixfile,
+                                         parser=pysam.asGTF(),
+                                         start=self.start, end=self.end):
+            yield gtf
+            
 if __name__ == '__main__':
-    main()
-
+    pass
