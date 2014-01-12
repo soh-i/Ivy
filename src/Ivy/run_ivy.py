@@ -27,7 +27,7 @@ parse = CommandLineParser()
 params = parse.ivy_parse_options()
 vcf = VCFWriteHeader(params)
 
-class MTime:
+class mtime(object):
     def __init__(self):
         self.start = time.time()
         
@@ -45,8 +45,7 @@ class MTime:
 
 def run():
     if params.n_threads == 1 or not params.n_threads:
-        t = Mtime()
-        vcf.make_vcf_header()
+        t = mtime()
         _single_run()
         t.end()
         logger.debug(t.tprint())
@@ -61,11 +60,14 @@ def _single_run():
     Working on single thread
     '''
     
-    #vcf.make_vcf_header()
+    vcf.make_vcf_header()
     logger.debug("Beginning Ivy run (v." + __version__ + ")" )
     # RNA-seq data
+    if params.gtf:
+        logger.debug("Loading GTF file: '{0}'".format(params.gtf))
+        
     if params.r_bams:
-        logger.debug("Loading RNA-seq bam file '{0}'".format(params.r_bams))
+        logger.debug("Loading RNA-seq bam file: '{0}'".format(params.r_bams))
         rna_pileup_alignment = RNASeqAlignmentStream(params)
         #print dir(rna_pileup_alignment)
         for rna in rna_pileup_alignment.filter_stream():
@@ -73,18 +75,16 @@ def _single_run():
                 
     # DNA-Seq data
     if params.d_bams:
-        logger.debug("Loading DNA-seq bam file '{0}'".format(params.d_bams))
+        logger.debug("Loading DNA-seq bam file: '{0}'".format(params.d_bams))
         dna_pileup_alignment = DNASeqAlignmentStream(params)
         for dna in dna_pileup_alignment.filter_stream():
-            print '{chrom:}\t{pos:}\t{ref:}\t{alt:}'.format(
-                chrom=dna.get('chrom'),
-                pos=dna.get('pos'),
-                ref=dna.get('ref'),
-                alt=dna.get('alt'),
-            )
-        #with open(params.outname, 'w') as f:
-        #f.write()
-
+            with open(params.outnamt, 'w') as f:
+                f.write('{chrom:}\t{pos:}\t{ref:}\t{alt:}'.format(
+                    chrom=dna.get('chrom'),
+                    pos=dna.get('pos'),
+                    ref=dna.get('ref'),
+                    alt=dna.get('alt'),))
+            
 def _thread_run():
     '''
     Wrapper of working on multiprocessing
