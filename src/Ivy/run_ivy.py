@@ -1,7 +1,6 @@
 from Ivy.alignment.stream import RNASeqAlignmentStream, DNASeqAlignmentStream
 from Ivy.commandline.parse_ivy_opts import CommandLineParser
 from Ivy.annotation.writer import VCFWriteHeader
-from Ivy.annotation.annotation import GTF
 from Ivy.seq import Fasta, Timer, decode_chr_name_from_file
 from Ivy.version import __version__
 from pprint import pprint as p
@@ -28,10 +27,30 @@ parse = CommandLineParser()
 params = parse.ivy_parse_options()
 vcf = VCFWriteHeader(params)
 
+class MTime:
+    def __init__(self):
+        self.start = time.time()
+        
+    def end(self):
+        self.end = time.time()
+        
+    def tprint(self):
+        self.process = self.end - self.start
+        self.h = int(self.process / 3600)
+        self.process -= self.h * 3600
+        self.m = int(self.process / 60)
+        self.process -= self.m * 60
+        self.s = self.process
+        return "Elapsed time: %dh %dm %fs" % (self.h, self.m, int(self.s))
+
 def run():
     if params.n_threads == 1 or not params.n_threads:
+        t = Mtime()
         vcf.make_vcf_header()
         _single_run()
+        t.end()
+        logger.debug(t.tprint())
+
     elif params.n_threads > 2:
         vcf.make_vcf_header()
         _thread_run()
@@ -44,7 +63,6 @@ def _single_run():
     
     #vcf.make_vcf_header()
     logger.debug("Beginning Ivy run (v." + __version__ + ")" )
-    
     # RNA-seq data
     if params.r_bams:
         logger.debug("Loading RNA-seq bam file '{0}'".format(params.r_bams))
@@ -52,7 +70,7 @@ def _single_run():
         #print dir(rna_pileup_alignment)
         for rna in rna_pileup_alignment.filter_stream():
             print Printer.to_tab(rna)
-            
+                
     # DNA-Seq data
     if params.d_bams:
         logger.debug("Loading DNA-seq bam file '{0}'".format(params.d_bams))
@@ -62,10 +80,10 @@ def _single_run():
                 chrom=dna.get('chrom'),
                 pos=dna.get('pos'),
                 ref=dna.get('ref'),
-                alt=dna.get('alt'))
-    #with open(params.outname, 'w') as f:
-    #f.write()
-    logger.debug("Finished Ivy run!")
+                alt=dna.get('alt'),
+            )
+        #with open(params.outname, 'w') as f:
+        #f.write()
 
 def _thread_run():
     '''
@@ -261,13 +279,15 @@ class Printer(object):
          
     @staticmethod
     def to_tab(data, *args, **kwargs):
-        return '{chrom:}\t{pos:}\t{ref:}\t{alt:}\t{dp4:}\t{alf:}'.format(
+        return '{chrom:}\t{pos:}\t{ref:}\t{alt:}\t{dp4:}\t{alf:}\t{t:}'.format(
             chrom=data.get('chrom'),
             pos=data.get('pos'),
             ref=data.get('ref'),
             alt=data.get('alt'),
             dp4=",".join([str(_) for _ in data.get('dp4')]),
-            alf=data.get('allele_freq'))
+            alf=data.get('allele_freq'),
+            t=data.get('type'),
+        )
         
          
 if __name__ == '__main__':
