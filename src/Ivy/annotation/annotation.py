@@ -64,12 +64,9 @@ class GTF(Annotation):
             yield gtf
 
     def strand_info(self, contig=None, start=None, end=None):
-        strand_in = []
-        prev_id = None
         for gtf in pysam.Tabixfile.fetch(self.tabixfile, contig, start, end,
                                          parser=pysam.asGTF()):
-            strand_in.append(gtf.strand)
-        return strand_in
+            return gtf.strand
 
 if __name__ == '__main__':
     gtf_cls = GTF("/Users/yukke/Desktop/genes.gtf")
