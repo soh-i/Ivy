@@ -1,4 +1,5 @@
 import os.path
+import os
 import pprint
 import collections
 import logging
@@ -7,7 +8,7 @@ import Ivy.version
 def die(msg=''):
     raise SystemExit(msg)
 
-def convert_base(base, strand=None):
+def convert_base(base=None, strand=None):
     if len(base) != 2:
         return False
         
@@ -23,14 +24,11 @@ def convert_base(base, strand=None):
         r.append(dna.get(base[0]))
         r.append(dna.get(base[1]))
         return r
-                
-
 
 class IvyLogger(object):
     def __init__(self):
         self.log_fmt = '[%(asctime)s] [%(levelname)s] [%(message)s]'
-        logging.basicConfig(level=logging.DEBUG, format=self.log_fmt)
-        self.logger = None
+        logging.basicConfig(level=logging.DEBUG, format=self.log_fmt) #, filename=str(os.getpid()) + "_ivy.log")
 
 class Utils(object):
     '''
@@ -118,17 +116,20 @@ class AttrDict(dict):
         else:
             return other
 
-            
+
 if __name__ == '__main__':
     #dic = {"fasta": "reference.fasta", "region": { "start": 993, "end": 9199} }
-    dic = {}
-    aa = AttrDict(dic)
-    aa.region.start = 7423480
-    aa.fasta = "hoge.fa"
-    print aa
+    #dic = {}
+    #aa = AttrDict(dic)
+    #aa.region.start = 7423480
+    #aa.fasta = "hoge.fa"
+    #print aa
 
-    print  convert_base(['A', 'G'], strand='-')
-
+    print  convert_base(base=['A', 'G'], strand='-')
+    print  convert_base(base=['A', 'G'], strand='+')
+    print  convert_base(base=['T', 'C'], strand='+')
+    print  convert_base(base=['T', 'C'], strand='-')
+    
     
 class ImutableDict(collections.Mapping):
     '''
