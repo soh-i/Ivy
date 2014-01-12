@@ -62,6 +62,7 @@ def _single_run():
     
     vcf.make_vcf_header()
     logger.debug("Beginning Ivy run (v." + __version__ + ")" )
+    
     # RNA-seq data
     if params.gtf:
         logger.debug("Loading GTF file: '{0}'".format(params.gtf))
@@ -69,7 +70,6 @@ def _single_run():
     if params.r_bams:
         logger.debug("Loading RNA-seq bam file: '{0}'".format(params.r_bams))
         rna_pileup_alignment = RNASeqAlignmentStream(params)
-        #print dir(rna_pileup_alignment)
         for rna in rna_pileup_alignment.filter_stream():
             print Printer.to_tab(rna)
                 
