@@ -8,9 +8,10 @@ import pprint
 import logging
 import warnings
 import pysam
-from Ivy.utils import die, AttrDict, IvyLogger
+from Ivy.utils import die, AttrDict, IvyLogger, convert_base
 from Ivy.alignment.filters import strand_bias_filter, positional_bias_filter
 from Ivy.alignment.stats import AlignmentReadsStats
+from Ivy.annotation.annotation import GTF
 
 __program__ = 'stream'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -250,6 +251,9 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             _fasta_info()
             _sam_info()
 
+        self.gtf_cls = GTF(self.params.gtf)
+        
+
     def __load_bam(self, rna=True):
         if rna:
             return pysam.Samfile(self.params.r_bams, 'rb', check_header=True, check_sq=True)
@@ -283,9 +287,8 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
 
         '''
         
-        self.logger.debug("Target chromosome: {0}".format(self.params.region.chrom))
         if self.params.verbose:
-            self.logger.debug("Start pileup bam'{0}' file...".format(self.__class__.__name__))
+            self.logger.debug("Start pileup bam '{0}' file...".format(self.__class__.__name__))
 
         try:
             for col in self.samfile.pileup(reference=self.params.region.chrom,
@@ -511,7 +514,7 @@ class RNASeqAlignmentStream(AlignmentStream):
     def filter_stream(self):
         for data in self.pileup_stream():
             passed_mismatches = data['mis']
-            if passed_mismatches < 1:
+            if passed_mismatches < 2:
                 continue
             passed_reads = data['reads']
             passed_matches = data['ma']
@@ -525,6 +528,7 @@ class RNASeqAlignmentStream(AlignmentStream):
             coverage = alignstat.reads_coverage(passed_reads)
             if coverage <= self.params.basic_filter.min_rna_cov:
                 continue
+                
             # --min-rna-baq
             average_baq = alignstat.average_base_quality(passed_reads)
             
@@ -623,8 +627,13 @@ class RNASeqAlignmentStream(AlignmentStream):
                                          tr=len(T_base_r), tf=len(T_base_f),
                                          gr=len(G_base_r), gf=len(G_base_f),
                                          cr=len(C_base_r), cf=len(C_base_f)))
-            
 
+            # Considering expressed strand in transcript
+            _strand = self.gtf_cls.strand_info(self.bam_chrom, self.pos, self.pos+1)
+            if _strand is not None:
+                _type = "-to-".join(convert_base([self.ref_base, alt_base], strand=_strand))
+            else:
+                _type = self.ref_base + "-to-" + alt_base
             
             d = {
                 'chrom': self.bam_chrom,
@@ -637,6 +646,7 @@ class RNASeqAlignmentStream(AlignmentStream):
                 'allele_freq': allele_freq,
                 'positional_bias': positional_bias_p,
                 'strand_bias': strand_bias_p,
+                'type': _type,
                 #'base_call_bias': base_call_bias_p,
                 #'ag_freq': ag_freq,
                 #'types': mutation_type,
