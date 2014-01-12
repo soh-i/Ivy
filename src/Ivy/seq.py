@@ -7,21 +7,18 @@ import multiprocessing
 import pysam
 import pprint
 import time
+from Ivy.utils import IvyLogger
 
 class Timer(object):
-    def __init__(self, verbose=True):
-        self.verbose = verbose
-        
     def __enter__(self):
         self.start = time.time()
-
+        return self
+        
     def __exit__(self, *args):
         self.end = time.time()
-        self.secs = self.end - self.start
-        if self.verbose:
-            print '=> Elapsed time: {:f} (sec)'.format(self.secs)
+        self.interval = self.end - self.start
 
-            
+        
 class Fasta(object):
     def __init__(self, fa=''):
         if os.path.isfile(fa):
@@ -149,31 +146,28 @@ def decode_chr_name_from_file(chroms):
     tmp = []
     decode = []
     files = [f.split("-") for f in chroms]
+    
     for fh in files:
         for chrm in fh:
-            p = re.compile(r'(^\d+_)(.+)')
-            m = p.match(chrm)
-            if m:
-                # add serial numer
-                pp = re.compile(r'(^\d+)_')
-                index = pp.match(m.group(0)).group(1)
+            # 1_chrN type
+            p = re.compile(r'^(\d)+_{1}(chr.+)')
+            ma = p.findall(chrm)
+            if ma:
+                index, name = ma[0]
                 tmp.append(index)
-                # add others
-                remove_chr = m.group(1)
-                tmp.append(m.group(0).replace(remove_chr, '', 1))
+                tmp.append(name)
             else:
-                # remove suffix
-                p = re.compile(r'(.+)\.{1}fa$')
-                m = p.match(chrm)
-                if m:
-                    tmp.append(m.group(1))
-                else:
-                    # normal
-                    tmp.append(chrm)
+                # chrN type or chrN.fa
+                p = re.compile(r'^(chr[A-Za-z0-9]+)(?!=\.fa)')
+                ma = p.search(chrm)
+                if ma:
+                    name = ma.group(0)
+                    tmp.append(name)
+                
         decode.append(tmp)
-        # clear previous elements
         tmp = []
     return decode
+
     
 def as_single(genome):
     human_chr = ['chrM', 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6',
@@ -238,36 +232,39 @@ def get_fa_list(path):
     
 if __name__ == '__main__':
     path = './block_fasta/'
-    fasta_file = "../../../data/hg19.fa"
-    cpus = 4
+    print get_fa_list(path)
+    print decode_chr_name_from_file(get_fa_list(path))
     
-    # create directory
-    if not os.path.isdir(path):
-        os.mkdir(path)
-    fas = get_fa_list(path)
-
-    # Run as single thread
-    #fa = Fasta(fa=fasta_file)
-    #with Timer() as t:
-    #    as_single(fasta_file)
-    #
-
-    # Parallel
-    if len(fas) != cpus:
-        print "Remove old blocks and generates new blocks"
-        shutil.rmtree(path)
-        fa = Fasta(fa=fasta_file)
-        fa.split_by_blocks(n=cpus)
-        
-        
-        with Timer() as t:
-            run(cpus, get_fa_list(path))
-        
-    elif len(get_fa_list(path)) == cpus:
-        print "Used existing block"
-        print get_fa_list(path)
-        
-        with Timer() as t:
-            run(cpus, get_fa_list(path))
-
-            
+    #fasta_file = "../../../data/hg19.fa"
+    #cpus = 4
+    # 
+    ## create directory
+    #if not os.path.isdir(path):
+    #    os.mkdir(path)
+    #fas = get_fa_list(path)
+    # 
+    ## Run as single thread
+    ##fa = Fasta(fa=fasta_file)
+    ##with Timer() as t:
+    ##    as_single(fasta_file)
+    ##
+    # 
+    ## Parallel
+    #if len(fas) != cpus:
+    #    print "Remove old blocks and generates new blocks"
+    #    shutil.rmtree(path)
+    #    fa = Fasta(fa=fasta_file)
+    #    fa.split_by_blocks(n=cpus)
+    #    
+    #    
+    #    with Timer() as t:
+    #        run(cpus, get_fa_list(path))
+    #    
+    #elif len(get_fa_list(path)) == cpus:
+    #    print "Used existing block"
+    #    print get_fa_list(path)
+    #    
+    #    with Timer() as t:
+    #        run(cpus, get_fa_list(path))
+    # 
+    #        

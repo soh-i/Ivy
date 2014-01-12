@@ -71,7 +71,7 @@ class CommandLineParser(object):
                                nargs=1,
                                type='string',
                                default='All',
-                               help='Explore specify region [chr:start-end]',
+                               help='Explore specific region [chr:start-end]',
                                )
         self.parser.add_option('-G',
                                metavar='',
@@ -80,16 +80,23 @@ class CommandLineParser(object):
                                nargs=1,
                                type='string',
                                default=None,
-                               help='GTF file',
+                               help='GTF file to annotate the candidate sites',
+                               )
+        self.parser.add_option('--single-end',
+                               metavar='',
+                               dest='is_single',
+                               action='store_true',
+                               default=False,
+                               help='True if single-end RNA-seq experiments [default: %default]',
                                )
         self.parser.add_option('--one-based',
                                metavar='',
                                dest='one_based',
                                action='store_true',
                                default=False,
-                               help='Genomic coordinate'
+                               help='True if genomic coordinate is 1-origin [default: %default]'
                                )
-        self.parser.add_option('--num-threads',
+        self.parser.add_option('-p',
                                metavar='',
                                dest='n_threads',
                                action='store',
@@ -112,6 +119,7 @@ class CommandLineParser(object):
                                help='Show verbosely logging messages'
                                )
         
+        
     def parse_sample_opt(self):
         # sample options
         sample_group = OptionGroup(self.parser, 'Sample options')
@@ -127,14 +135,14 @@ class CommandLineParser(object):
                                 dest='ko_strain',
                                 action='store_true',
                                 default=False,
-                                help='Adar null strain is used. [default: %default]'
+                                help='Filter by Adar null strain RNA-seq data [default: %default]'
                                 )
         sample_group.add_option('--replicate',
                                 metavar='',
                                 dest='replicate',
                                 action='store_true',
                                 default=False,
-                                help='Biological replicate is used [default: %default]'
+                                help='Considering biological replicate [default: %default]'
                                 )
         self.parser.add_option_group(sample_group)
         
@@ -148,7 +156,7 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=0.1,
                                       type='float',
-                                      help='Min mutation frequency [default: %default]'
+                                      help='Minimum allele frequency [default: %default]'
                                       )
         basic_filter_group.add_option('--min-rna-coverage',
                                       metavar='',
@@ -157,7 +165,7 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=10,
                                       type='int',
-                                      help='Min RNA read coverage [default: %default]'
+                                      help='Minimum RNA-seq read coverage [default: %default]'
                                       )
         basic_filter_group.add_option('--min-dna-coverage',
                                       metavar='',
@@ -166,27 +174,27 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=20,
                                       type='int',
-                                      help='Min DNA read coverage [default: %default]'
+                                      help='Minimum DNA-seq read coverage [default: %default]'
                                       )
         basic_filter_group.add_option('--rm-duplicated-read',
                                       metavar='',
                                       dest='rm_duplicated',
                                       action='store_true',
-                                      default=False,
-                                      help='Remove duplicated reads [default: %default]'
+                                      default=True,
+                                      help='Remove duplicated mapped reads [default: %default]'
                                       )
         basic_filter_group.add_option('--rm-deletion-read',
                                       metavar='',
                                       dest='rm_deletion',
                                       action='store_true',
-                                      default=False,
+                                      default=True,
                                       help='Remove deletion reads [default: %default]'
                                       )
         basic_filter_group.add_option('--rm-insertion-read',
                                       metavar='',
                                       dest='rm_insertion',
                                       action='store_true',
-                                      default=False,
+                                      default=True,
                                       help='Remove insertion reads [default: %default]'
                                       )
         basic_filter_group.add_option('--min-rna-mapq',
@@ -196,7 +204,7 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=30,
                                       type='int',
-                                      help='Min mapping quality of RNA-seq data [default: %default]'
+                                      help='Minimum mapping quality of RNA-seq data [default: %default]'
                                       )
         basic_filter_group.add_option('--min-dna-mapq',
                                       metavar='',
@@ -205,7 +213,7 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=30,
                                       type='int',
-                                      help='Min mapping quality of DNA-seq data [default: %default]'
+                                      help='Minimum mapping quality of DNA-seq data [default: %default]'
                                       )
         basic_filter_group.add_option('--min-rna-baq',
                                       metavar='',
@@ -214,7 +222,7 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=28,
                                       type='int',
-                                      help='Min base call quality in RNA [default: %default]'
+                                      help='Minimum phread-scaled base call quality in RNA-seq reads [default: %default]'
                                       )
         basic_filter_group.add_option('--min-dna-baq',
                                       metavar='',
@@ -223,7 +231,7 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=28,
                                       type='int',
-                                      help='Min base call quality in DNA [default: %default]'
+                                      help='Minimum phread-scaled base call quality in DNA-seq reads [default: %default]'
                                       )
         basic_filter_group.add_option('--num-allow-type',
                                       metavar='',
@@ -232,7 +240,7 @@ class CommandLineParser(object):
                                       nargs=1,
                                       default=1,
                                       type='int',
-                                      help='Number of allowing base modification type [default: %default]'
+                                      help='Number of allowing base modification type(s) [default: %default]'
                                       )
         self.parser.add_option_group(basic_filter_group)
         
@@ -253,21 +261,21 @@ class CommandLineParser(object):
                                      dest='baq_bias',
                                      action='store_true',
                                      default=False,
-                                     help='Consider base call bias [default: %default]'
+                                     help='Considering base call bias [default: %default]'
                                      )
         stat_filter_group.add_option('--strand-bias',
                                      metavar='',
                                      dest='strand_bias',
                                      action='store_true',
                                      default=False,
-                                     help='Consider strand bias [default: %default]'
+                                     help='Considering strand bias [default: %default]'
                                      )
         stat_filter_group.add_option('--positional-bias',
                                      metavar='',
                                      dest='pos_bias',
                                      action='store_true',
                                      default=False,
-                                     help='Consider positional bias [default: %default]'
+                                     help='Considering positional bias [default: %default]'
                                      )
         self.parser.add_option_group(stat_filter_group)
         
@@ -327,9 +335,9 @@ class CommandLineParser(object):
         if opt.dry_run:
             print "### All options with values ###"
             for k, v in self.parser.values.__dict__.iteritems():
-                print '[' + k + ']:', v
+                print '[' + k + ':', v, ']'
             die()
-
+        
         #############################
         ### Check required params ###
         #############################
@@ -338,7 +346,7 @@ class CommandLineParser(object):
         
         # fasta file, -f
         if not opt.fasta:
-            self.parser.error('[-f] Reference fasta file is a required argument')
+            self.parser.error('[-f] Reference fasta file is required')
         elif self._ok_file(opt.fasta):
             passed_params.fasta = opt.fasta
         elif not self._ok_file(opt.fasta):
@@ -346,11 +354,12 @@ class CommandLineParser(object):
             
         # RNA-seq bam file, r_bams
         if not opt.r_bams:
-            self.parser.error('[-r] RNA-seq bam file is a required argument')
+            self.parser.error('[-r] RNA-seq bam file is required')
         elif self._ok_file(opt.r_bams):
             passed_params.r_bams = opt.r_bams
         elif not self._ok_file(opt.r_bams):
             self.parser.error(opt.r_bams + " is not found or writable file!")
+
             
         # output filename, -o
         if opt.outname:
@@ -388,6 +397,12 @@ class CommandLineParser(object):
         else:
             passed_params.gtf = opt.gtf
 
+        # is_single --single
+        if opt.is_single:
+            passed_params.is_single = opt.is_single
+        else:
+            passed_params.is_single = opt.is_single
+            
         # --one_based
         if opt.one_based is True:
             passed_params.one_based = opt.one_based
@@ -421,7 +436,7 @@ class CommandLineParser(object):
         if opt.replicate is True:
             passed_params.sample_filter.replicate = opt.replicate
         elif opt.replicate is False:
-            passed_params.sample_filter.replicate = opt.replicate
+            passed_params.sample_filter.replicate = False
 
         ############################
         ### Basic filter options ###

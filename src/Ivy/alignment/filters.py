@@ -1,6 +1,4 @@
 import sys
-import fisher
-from scipy import stats, mean
 
 __program__ = 'filter'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -8,6 +6,8 @@ __license__ = ''
 __status__ = 'development'
 
 def strand_bias_filter(m=None, mis=None):
+    import fisher
+    
     mis_r = [_.alignment.seq[_.qpos] for _ in mis if _.alignment.is_reverse]
     mis_f = [_.alignment.seq[_.qpos] for _ in mis if not _.alignment.is_reverse]
     ma_r =  [_.alignment.seq[_.qpos] for _ in m if _.alignment.is_reverse]
@@ -16,6 +16,8 @@ def strand_bias_filter(m=None, mis=None):
     return p.left_tail
 
 def positional_bias_filter(m=None, mis=None):
+    from scipy import stats, mean
+    
     mismatch_pos = [_.alignment.qlen for _ in mis]
     match_pos = [_.alignment.qlen for _ in m]
     try:

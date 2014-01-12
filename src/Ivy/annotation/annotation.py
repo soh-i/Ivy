@@ -1,11 +1,13 @@
 import pysam
+import os.path
 
 class Annotation(object):
-    def __init__(self):
-        self.gtf = gtf
-
     def to_array(self):
         pass
+
+    def to_file(self):
+        pass
+        
 
 class AnnotateVCF(Annotation):
     def __init__(self, vcf=None, gtf=None):
@@ -41,12 +43,34 @@ class AnnotateVCF(Annotation):
     def write_gtf(self):
         pass
 
-        
-def main():
-    a = AnnotateVCF(vcf="../../../data/test_data.vcf")
 
-    print a.vcf_to_array()[:10][:10]
+class GTF(Annotation):
+    def __init__(self, ingtf):
+        self.ingtf = ingtf
+        self._prepare()
+        
+    def _prepare(self):
+        if not os.path.isfile(self.ingtf + ".gz.tbi"):
+            print "Indexing GTF file..."
+            compressed_gtf = pysam.tabix_index(self.ingtf, preset="gff")
+        else:
+            compressed_gtf = self.ingtf + ".gz"
+        self.tabixfile = pysam.Tabixfile(compressed_gtf)
+
+    def fetch_gtf(self, contig=None, start=None, end=None):
+        for gtf in pysam.Tabixfile.fetch(self.tabixfile, contig, start, end,
+                                         parser=pysam.asGTF()):
+                                         
+            yield gtf
+
+    def strand_info(self, contig=None, start=None, end=None):
+        for gtf in pysam.Tabixfile.fetch(self.tabixfile, contig, start, end,
+                                         parser=pysam.asGTF()):
+            return gtf.strand
 
 if __name__ == '__main__':
-    main()
+    gtf_cls = GTF("/Users/yukke/Desktop/genes.gtf")
+    print gtf_cls.strand_info("chr21", 48084236, 49094239)
+    
+        
 

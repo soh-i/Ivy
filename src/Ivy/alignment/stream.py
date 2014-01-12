@@ -8,9 +8,10 @@ import pprint
 import logging
 import warnings
 import pysam
-from Ivy.utils import die, AttrDict, IvyLogger
+from Ivy.utils import die, AttrDict, IvyLogger, convert_base
 from Ivy.alignment.filters import strand_bias_filter, positional_bias_filter
 from Ivy.alignment.stats import AlignmentReadsStats
+from Ivy.annotation.annotation import GTF
 
 __program__ = 'stream'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -47,9 +48,11 @@ class BaseStringGenerator(object):
         '''
         
         if strand == 1:
+            # reverse
             return [_.alignment.seq[_.qpos] for _ in base
                     if _.alignment.is_reverse]
         elif strand == 0:
+            # forward
             return [_.alignment.seq[_.qpos] for _ in base
                     if not _.alignment.is_reverse]
         else:
@@ -66,31 +69,46 @@ class FilteredAlignmentReadsGenerator(object):
      reads(list), matches(list), mismatches(list)
     '''
 
-    def reads_filter_by_all_params(self, pileup_obj, ref_base):
+    def reads_filter_by_all_params(self, pileup_obj, ref_base, is_single=False):
         '''
-        Required attributes:
-         proper pair reads
+        List of read filters:
+         Proper pair reads
          NOT duplicated reads
          NOT unmapped reads
-         NOT deletion reads
+         NOT deletion reads, note that is_del is quite effective for reducing reads
          NOT fail to quality check reads
+         NOT paased spliced reads (RNA-seq data)
+         NOT passed primary alignmnet reads
         '''
-                
-        _reads = [_ for _ in pileup_obj
-                  if (_.alignment.is_proper_pair
-                      and not _.alignment.is_qcfail
-                      and not _.alignment.is_duplicate
-                      and not _.alignment.is_unmapped
-                      and not _.alignment.is_secondary
-                      and not _.is_del)]
+        
+        _reads = []
+        # paired-end read (default)
+        if not is_single:
+            _reads = [_ for _ in pileup_obj
+                      if (_.alignment.is_proper_pair
+                          and not _.alignment.is_qcfail
+                          and not _.alignment.is_duplicate
+                          and not _.alignment.is_unmapped
+                          and not _.alignment.is_secondary
+                          and _.indel == 0
+                          and _.is_del == 0)]
+        # single-end
+        else:
+            _reads = [_ for _ in pileup_obj
+                      if (not _.alignment.is_qcfail
+                          and not _.alignment.is_duplicate
+                          and not _.alignment.is_unmapped
+                          and not _.alignment.is_secondary
+                          and _.indel == 0
+                          and _.is_del == 0)]
+            
         _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
         _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
             
     def reads_filter_without_pp(self, pileup_obj, ref_base):
         '''
-        Required attributes:
-         proper pair reads
+        List of read filters:
          NOT fail to quality check reads
          NOT duplicated reads
          NOT unmapped reads
@@ -98,29 +116,32 @@ class FilteredAlignmentReadsGenerator(object):
         '''
         
         _reads = [_ for _ in pileup_obj
-                  if (_.alignment.is_proper_pair
-                      and not _.alignment.is_qcfail
+                  if (_.alignment.is_qcfail
                       and not _.alignment.is_duplicate
                       and not _.alignment.is_unmapped
-                      and not _.is_del)]
-        _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
+                      and _.is_del == 0
+                      and _.indel == 0)]
+        
         _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
+        _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
         
     def reads_allow_duplication(self, pileup_obj, ref_base):
         '''
-        Required attributes:
+        List of read filters:
          proper pair reads
          NOT failt to quality check reads
          NOT unmapped reads
          NOT deletion reads
         '''
         
-        _reads = [_ for _ in col.pileups
+        _reads = [_ for _ in col.pileup_obj
                   if (_.alignment.is_proper_pair
                       and not _.alignment.is_qcfail
                       and not _.alignment.is_unmapped
-                      and not _.is_del)]
+                      and not _.is_del
+                      and not _.indel == 0)]
+        
         _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
         _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
@@ -128,15 +149,18 @@ class FilteredAlignmentReadsGenerator(object):
     def reads_without_filter(self, pileup_obj, ref_base):
         '''All reads are passed through under this filter'''
         
-        _reads = [_ for _ in pileup_obj if (not _.alignment.is_unmapped)]
-        _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
+        _reads = [_ for _ in pileup_obj
+                  if (_.indel == 0
+                      and _.is_del == 0)]
+        
         _matches = [_ for _ in _reads if _.alignment.seq[_.qpos] == ref_base]
+        _mismatches = [_ for _ in _reads if _.alignment.seq[_.qpos] != ref_base]
         return _reads, _matches, _mismatches
         
     def reads_allow_insertion(self):
         print "Use --rm-insertion-reads is recommended"
         return None
-            
+        
     def reads_allow_deletion(self, pileup_obj, ref_base):
         print "Use --rm-deletion-reads is recommended"
         return None
@@ -227,6 +251,9 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
             _fasta_info()
             _sam_info()
 
+        self.gtf_cls = GTF(self.params.gtf)
+        
+
     def __load_bam(self, rna=True):
         if rna:
             return pysam.Samfile(self.params.r_bams, 'rb', check_header=True, check_sq=True)
@@ -260,15 +287,15 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
 
         '''
         
-        self.logger.debug("Target chromosome: {0}".format(self.params.region.chrom))
         if self.params.verbose:
-            self.logger.debug("Start pileup bam'{0}' file...".format(self.__class__.__name__))
+            self.logger.debug("Start pileup bam '{0}' file...".format(self.__class__.__name__))
 
         try:
             for col in self.samfile.pileup(reference=self.params.region.chrom,
                                            start=self.params.region.start,
                                            end=self.params.region.end):
                 self.bam_chrom = self.samfile.getrname(col.tid)
+                
                 if self.params.one_based:
                     self.pos = col.pos + 1
                 else:
@@ -279,7 +306,6 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                 if not self.ref_base:
                     # Skip if chrom in bam is not in reference genome
                     continue
-                    
                     #raise ValueError(
                     #   'No sequence content within chroms: {chrom:s}, start: {start:s}, end: {end:s}'.format(
                     #       chrom=self.params.region.chrom, start=self.params.region.start, end=self.params.region.end))
@@ -290,13 +316,17 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                 if (self.params.basic_filter.rm_duplicated
                     and self.params.basic_filter.rm_deletion
                     and self.params.basic_filter.rm_insertion):
+                    
                     if reads_filter_params_debug:
                         self.params.show(self.params.basic_filter)
                         raise SystemExit("Method: {0:s}".format(
                             self.reads_filter_by_all_params.__name__))
                         
-                    passed_reads, passed_matches, passed_mismatches = (
-                        self.reads_filter_by_all_params(col.pileup, self.ref_base))
+                    passed_reads, passed_ma, passed_mis = (
+                        self.reads_filter_by_all_params(col.pileups, self.ref_base, is_single=self.params.is_single))
+                    yield {'reads': passed_reads,
+                           'ma': passed_ma,
+                           'mis': passed_mis}
                     
                 # allow duplicated containing reads
                 elif (not self.params.basic_filter.rm_duplicated
@@ -307,8 +337,11 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                         raise SystemExit("Method: '{0:s}'".format(
                             self.reads_allow_duplication.__name__))
                         
-                    passed_reads, passed_matches, passed_mismatches = (
-                        self.reads_allow_duplication(col.pileup, self.ref_base))
+                    passed_reads, passed_ma, passed_mis = (
+                        self.reads_allow_duplication(col.pileups, self.ref_base))
+                    yield {'reads': passed_reads,
+                           'ma': passed_ma,
+                           'mis': passed_mis}
                     
                 # allow deletions containing reads
                 elif (not self.params.basic_filter.rm_deletion
@@ -318,8 +351,11 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                         self.params.show(self.params.basic_filter)
                         raise SystemExit("Method: {0:s}".format(self.reads_allow_deletion.__name__))
                         
-                    passed_reads, passed_matches, passed_mismatches = (
-                        self.reads_allow_deletion(col.pileup, self.ref_base))
+                    passed_reads, passed_ma, passed_mis = (
+                        self.reads_allow_deletion(col.pileups, self.ref_base))
+                    yield {'reads': passed_reads,
+                           'ma': passed_ma,
+                           'mis': passed_mis}
                     
                 # allow insertion containing reads
                 elif (not self.params.basic_filter.rm_insertion
@@ -330,8 +366,11 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                         raise SystemExit("Method: {0:s}".format(
                             self.params.basic_filter, self.reads_allow_insertion.__name__))
                         
-                    passed_reads, passed_mathces, passed_mismatches = (
-                        self.reads_allow_insertion(col.pileup, self.ref_base))
+                    passed_reads, passed_ma, passed_mis = (
+                        self.reads_allow_insertion(col.pileups, self.ref_base))
+                    yield {'reads': passed_reads,
+                           'ma': passed_ma,
+                           'mis': passed_mis}
      
                 # no filter
                 else:
@@ -339,28 +378,30 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                         self.params.show(self.params.basic_filter)
                         raise SystemExit("Method: '{0:s}'".format(self.reads_without_filter.__name__))
                         
-                    passed_reads, passed_matches, passed_mismatches = (
+                    passed_reads, passed_ma, passed_mis = (
                         self.reads_without_filter(col.pileups, self.ref_base))
-     
-                yield tuple([passed_reads, passed_matches, passed_mismatches])
+                    yield {'reads': passed_reads,
+                           'ma': passed_ma,
+                           'mis': passed_mis}
                 
         except ValueError:
             # e.g. ValueError: invalid reference `chr18` in pysam error
             # return tuple in None
-            yield tuple([None, None, None])
+            #yield tuple([None, None, None])
+            yield {'reads': None, 'ma': None, 'mis': None}
             
-    def mutation_types(self, A, T, G, C, ref=None):
+    def mutation_types(self, A=None, T=None, G=None, C=None, ref=None):
         '''
         Define possible mutation types in given list in each base type
         '''
         mutation_types = {}
         if len(A) > 0 and ref != 'A':
             mutation_types.update({'A': len(A)})
-        elif len(T) > 0 and ref != 'T':
+        if len(T) > 0 and ref != 'T':
             mutation_types.update({'T': len(T)})
-        elif len(G) > 0 and ref != 'G':
+        if len(G) > 0 and ref != 'G':
             mutation_types.update({'G': len(G)})
-        elif len(C) > 0 and ref != 'C':
+        if len(C) > 0 and ref != 'C':
             mutation_types.update({'C': len(C)})
         return mutation_types
         
@@ -472,24 +513,22 @@ class RNASeqAlignmentStream(AlignmentStream):
     
     def filter_stream(self):
         for data in self.pileup_stream():
-            #debug
-            #if self.pos == 543062:
-            #break
-            
-            passed_mismatches = data[2]
-            if passed_mismatches < 1:
+            passed_mismatches = data['mis']
+            if passed_mismatches < 2:
                 continue
-            passed_reads = data[0]
-            passed_matches = data[1]
+            passed_reads = data['reads']
+            passed_matches = data['ma']
             
             ##############################
             ### Basic filters in reads ###
             ##############################
             alignstat = AlignmentReadsStats()
+            
             # --min-rna-cov
             coverage = alignstat.reads_coverage(passed_reads)
             if coverage <= self.params.basic_filter.min_rna_cov:
                 continue
+                
             # --min-rna-baq
             average_baq = alignstat.average_base_quality(passed_reads)
             
@@ -497,8 +536,7 @@ class RNASeqAlignmentStream(AlignmentStream):
             average_mapq = alignstat.average_mapq(passed_reads)
             if average_mapq <= self.params.basic_filter.min_rna_mapq:
                 continue
-            #quals_in_pos = alignstat.quals_in_pos(passed_reads)
-            
+
             # --min-mis-frequency
             allele_freq = alignstat.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
             if allele_freq <= self.params.basic_filter.min_mut_freq:
@@ -510,11 +548,11 @@ class RNASeqAlignmentStream(AlignmentStream):
             T_reads = specific_reads.get('T')
             G_reads = specific_reads.get('G')
             C_reads = specific_reads.get('C')
-            mutation_type = self.mutation_types(A_reads, T_reads, G_reads, C_reads, ref=self.ref_base)
+            mutation_type = self.mutation_types(A=A_reads, T=T_reads, G=G_reads, C=C_reads, ref=self.ref_base)
             if len(mutation_type) == 0:
                 continue
-
-            #ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
+            if len(mutation_type) > self.params.basic_filter.num_type:
+                continue
                 
             basegen = BaseStringGenerator()
             base = basegen.retrieve_base_string_each_base_type(a=A_reads,
@@ -527,7 +565,8 @@ class RNASeqAlignmentStream(AlignmentStream):
             Cbase = base.get('C')
                     
             _all_base = Abase + Gbase + Cbase + Tbase
-            alt = alignstat.define_allele(_all_base, ref=self.ref_base)
+            _alt = alignstat.define_allele(_all_base, ref=self.ref_base)
+            alt_base = ",".join([",".join(_[0]) for _ in _alt])
                     
             # Specific base string by read strand(forward/reverse)
             G_base_r = basegen.retrieve_base_string_with_strand(G_reads, strand=0)
@@ -544,21 +583,21 @@ class RNASeqAlignmentStream(AlignmentStream):
                     
             # Faital error if diff. in len(N) != (len(Nr)+len(Nf))
             # TODO: Wrapp *Error class in error.py
-            if len(Abase) != len(A_base_r + A_base_f):
-                raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
-                    all=len(Abase), f=len(A_base_f), r=len(A_base_r), pos=pos))
-                        
-            if len(Tbase) != len(T_base_r + T_base_f):
-                raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
-                    all=len(Tbase), f=len(T_base_f), r=len(T_base_r), pos=pos))
-                        
-            if len(Gbase) != len(G_base_r + G_base_f):
-                raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
-                    all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
-
-            if len(Cbase) != len(C_base_r + C_base_f):
-                raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
-                    all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
+            #if len(Abase) != len(A_base_r + A_base_f):
+            #    raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
+            #        all=len(Abase), f=len(A_base_f), r=len(A_base_r), pos=pos))
+            #            
+            #if len(Tbase) != len(T_base_r + T_base_f):
+            #    raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
+            #        all=len(Tbase), f=len(T_base_f), r=len(T_base_r), pos=pos))
+            #            
+            #if len(Gbase) != len(G_base_r + G_base_f):
+            #    raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
+            #        all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
+            # 
+            #if len(Cbase) != len(C_base_r + C_base_f):
+            #    raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
+            #        all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
 
             ###########################
             ### Statistical filsher ###
@@ -588,17 +627,26 @@ class RNASeqAlignmentStream(AlignmentStream):
                                          tr=len(T_base_r), tf=len(T_base_f),
                                          gr=len(G_base_r), gf=len(G_base_f),
                                          cr=len(C_base_r), cf=len(C_base_f)))
+
+            # Considering expressed strand in transcript
+            _strand = self.gtf_cls.strand_info(self.bam_chrom, self.pos, self.pos+1)
+            if _strand is not None:
+                _type = "-to-".join(convert_base([self.ref_base, alt_base], strand=_strand))
+            else:
+                _type = self.ref_base + "-to-" + alt_base
+            
             d = {
                 'chrom': self.bam_chrom,
                 'pos': self.pos,
                 'ref': self.ref_base,
-                'alt': alt[0],
+                'alt': alt_base,
                 'coverage': len(passed_reads),
                 'mismatches': len(passed_mismatches),
                 'matches': len(passed_matches),
                 'allele_freq': allele_freq,
                 'positional_bias': positional_bias_p,
                 'strand_bias': strand_bias_p,
+                'type': _type,
                 #'base_call_bias': base_call_bias_p,
                 #'ag_freq': ag_freq,
                 #'types': mutation_type,
@@ -665,10 +713,10 @@ class DNASeqAlignmentStream(AlignmentStream):
             T_reads = specific_reads.get('T')
             G_reads = specific_reads.get('G')
             C_reads = specific_reads.get('C')
-            mutation_type = self.mutation_types(A_reads, T_reads, G_reads, C_reads, ref=self.ref_base)
+            mutation_type = self.mutation_types(A=A_reads, T=T_reads, G=G_reads, C=C_reads, ref=self.ref_base)
             if len(mutation_type) == 0:
                 continue
-
+            
             basegen = BaseStringGenerator()
             base = basegen.retrieve_base_string_each_base_type(a=A_reads,
                                                                t=T_reads,
@@ -679,20 +727,14 @@ class DNASeqAlignmentStream(AlignmentStream):
             Gbase = base.get('G')
             Cbase = base.get('C')
             _all_base = Abase + Gbase + Cbase + Tbase
-            alt = alignstat.define_allele(_all_base, ref=self.ref_base)
+            _alt = alignstat.define_allele(_all_base, ref=self.ref_base)
+            alt_base = ",".join([",".join(_[0]) for _ in _alt])
                 
-            #ag_freq = alignstat.a_to_g_frequency(a=A_reads, g=G_reads)
-            #try:
-            #    hoge = hoge
-            #except NameError as e:
-            #    print e.message
-            #    break
-            #    
             d = {
                 'chrom': self.bam_chrom,
                 'pos': self.pos,
                 'ref': self.ref_base,
-                'alt': alt[0],
+                'alt': alt_base,
                 #'coverage': len(passed_reads),
                 #'mismatches': len(passed_mismatches),
                 #'matches': len(passed_matches),

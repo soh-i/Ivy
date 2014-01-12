@@ -30,7 +30,7 @@ class AlignmentReadsStats(object):
         
     @staticmethod
     def reads_coverage(reads):
-        return  len(reads)
+        return len(reads)
         
     @staticmethod
     def average_base_quality(reads):
@@ -65,40 +65,64 @@ class AlignmentReadsStats(object):
                 return .0
                
     @staticmethod
+    #def define_allele(base, ref=None):
+    #    if base and ref:
+    #        [_.upper() for _ in base]
+    #        ref.upper()
+    #    
+    #    c = Counter(base)
+    #    comm = c.most_common()
+    # 
+    #    __allele = {}
+    #    for base in comm:
+    #        if base[0] != ref:
+    #            __allele.update({base[0]:base[1]})
+    # 
+    #    for j in __allele:
+    #        for k in __allele:
+    #            # single alllele is found
+    #            if j == k:
+    #                return tuple([j, __allele[j]])
+    #                
+    #            # most common varinat with a allele type alone
+    #            elif __allele[k] == __allele[j] and k != j:
+    #                return tuple(__allele.items())
+    #                
+    #            # most common variant if has many allele
+    #            elif __allele[k] != __allele[j] and k != j:
+    #                m = max(__allele[k], __allele[j])
+    #                if m == __allele[k]:
+    #                    return tuple([k, __allele[k]])
+    #                elif m == __allele[j]:
+    #                    return tuple([j, __allele[j]])
+    #    else:
+    #        # allele is not found
+    #        return '.'
+    
     def define_allele(base, ref=None):
-        if base and ref:
-            [_.upper() for _ in base]
-            ref.upper()
-        
-        c = Counter(base)
-        comm = c.most_common()
-
-        __allele = {}
-        for base in comm:
-            if base[0] != ref:
-                __allele.update({base[0]:base[1]})
-
-        for j in __allele:
-            for k in __allele:
-                # single alllele is found
-                if j == k:
-                    return tuple([j, __allele[j]])
-                    
-                # most common varinat with a allele type alone
-                elif __allele[k] == __allele[j] and k != j:
-                    return tuple(__allele.items())
-                    
-                # most common variant if has many allele
-                elif __allele[k] != __allele[j] and k != j:
-                    m = max(__allele[k], __allele[j])
-                    if m == __allele[k]:
-                        return tuple([k, __allele[k]])
-                    elif m == __allele[j]:
-                        return tuple([j, __allele[j]])
+        found_allele = {}
+        data = Counter(base)
+        for i in data.most_common():
+            b_type = i[0]
+            count = i[1]
+            if b_type != ref:
+                found_allele.update({b_type: count})
+        if len(found_allele):
+            # Mismatch is found
+            max_val= max(found_allele.values())
         else:
-            # allele is not found
+            # Mismatch base is not found
             return '.'
-
+            
+        result = []
+        for value in found_allele.values():
+            if value == max_val:
+                for itm in found_allele.items():
+                    if itm[1] == value:
+                        result.append(itm)
+                break
+        return result
+        
     @staticmethod
     def compute_dp4(ref=None, af=None, ar=None, tf=None, tr=None, gf=None, gr=None, cf=None, cr=None):
         '''
@@ -116,28 +140,69 @@ class AlignmentReadsStats(object):
             ref_f = 0
             alt_r = 0
             alt_f = 0
+            dp4 = 0
             if ref == 'A':
-                ref_r = (ar)
+                # REF: A
+                # ALT: T, G, C
                 ref_f = (af)
+                ref_r = (ar)
                 alt_f = (gf + tf + cf)
                 alt_r = (gr + tr + cr)
+                dp4 = tuple([ref_f, ref_r, alt_f, alt_r])
+                
             elif ref == 'T':
-                ref_r = (tr)
+                # REF: T
+                # ALT: A, G, C
                 ref_f = (tf)
-                alt_r = (gr + cr + ar)
+                ref_r = (tr)
                 alt_f = (gf + cf + af)
+                alt_r = (gr + cr + ar)
+                dp4 = tuple([ref_f, ref_r, alt_f, alt_r])
+                
             elif ref == 'G':
-                ref_r = (gr)
+                # REF: G
+                # ALT: A, T, C
                 ref_f = (gf)
+                ref_r = (gr)
+                alt_f = (cf + tf + af)
                 alt_r = (cr + tr + ar)
-                alt_f = (cf + cf + af)
+                dp4 = tuple([ref_f, ref_r, alt_f, alt_r])
+                
             elif ref == 'C':
-                ref_r = (cr)
+                # REF: C
+                # ALT: A, T, G
                 ref_f = (cf)
-                alt_r = (ar + tr + gr)
+                ref_r = (cr)
                 alt_f = (af + tf + gf)
-            return tuple([ref_f, ref_r, alt_f, alt_r])
+                alt_r = (ar + tr + gr)
+                dp4 = tuple([ref_f, ref_r, alt_f, alt_r])
+            return dp4
+            
         else:
             raise ValueError(
                 'Could not define the allele base {all_bases:s}, {chrom:s}, {pos:s}'
                 .format(all_bases=all_bases, chrom=bam_chrom, pos=pos))
+
+if __name__ == '__main__':
+    dp4 = AlignmentReadsStats.compute_dp4(ref="A",
+                                          af=11, ar=1,
+                                          tf=1, tr=0,
+                                          gf=2, gr=9,
+                                          cf=9, cr=1)
+    ma = [_ for _ in range(1, 598)]
+    mis = [_ for _ in range(1,31)]
+    freq = AlignmentReadsStats.mismatch_frequency(mis=mis, m=ma)
+    print dp4
+    print freq
+    
+    base = ['A', 'T', 'T', 'T', 'T', 'G', 'G',  'A', 'A']
+    allele = AlignmentReadsStats.define_allele(base, ref='T')
+    print base
+    print "REF: T"
+    print allele[0]
+    print ",".join([",".join(_[0]) for _ in allele])
+
+    
+    
+    
+    
