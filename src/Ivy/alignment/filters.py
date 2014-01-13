@@ -28,3 +28,33 @@ def positional_bias_filter(m=None, mis=None):
 
 def base_call_bias(m=None, mis=None):
     pass
+
+
+def gtest(f_obs, f_exp=None, ddof=0):
+    import numpy as np
+    from scipy.stats import chisqprob, chisquare
+    f_obs = np.asarray(f_obs, 'f')
+    k = f_obs.shape[0]
+    f_exp = np.array([np.sum(f_obs, axis=0) / float(k)] * k, 'f') \
+            if f_exp is None \
+               else np.asarray(f_exp, 'f')
+    g = 2 * np.add.reduce(f_obs * np.log(f_obs / f_exp))
+    return g, chisqprob(g, k - 1 - ddof)
+
+if __name__ == '__main__':
+    print  gtest([10,2], [2,10])
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
