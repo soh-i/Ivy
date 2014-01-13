@@ -2,9 +2,54 @@ import sys
 from Ivy.commandline.parse_ivy_opts import CommandLineParser
 from Ivy.utils import AttrDict
 import datetime
+import os.path
 
 
-class VCFWriteHeader(object):
+class VCFWriter(object):
+    def __init__(self):
+        raise NotImplementedError
+
+
+class VCFWriterDataLine(VCFWriter):
+    def __init__(self, data):
+        self.data = data
+
+    def chrom(self):
+        pass
+
+    def pos(self):
+        pass
+
+    def ref(self):
+        pass
+
+    def alt(self):
+        pass
+
+    def qual(self):
+        pass
+
+        
+    def dp4(self):
+        pass
+
+    def dp(self):
+        pass
+
+    def info(self):
+        pass
+
+    def format(self):
+        pass
+
+
+        
+class VCFWriterMetaInformationLine(VCFWriter):
+    def __init__(self):
+        pass
+
+        
+class VCFWriteHeader(VCFWriter):
     def __init__(self, __params):
         d = datetime.datetime.today()
         _info = {
@@ -15,9 +60,8 @@ class VCFWriteHeader(object):
         }
         __params._vcf_meta = _info
         self.__spec = __params
-        #AttrDict.show(self.__spec)
-        self.__spec._vcf_meta.filename = self.__spec.fasta
-        self.__spec._vcf_meta.bam = self.__spec.r_bams
+        self.__spec._vcf_meta.filename = os.path.abspath(self.__spec.fasta)
+        self.__spec._vcf_meta.bam = os.path.abspath(self.__spec.r_bams)
         
     def make_vcf_header(self):
         sys.stdout.write(self.__spec_section())
