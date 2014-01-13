@@ -1,18 +1,17 @@
 from setuptools import setup, find_packages
+import sys
 
 __author__ = 'Soh Ishiguro'
 __email__ = 'yukke@g-language.org'
 __version__ = '0.0.1'
 __pkgname__ = 'Ivy'
 
-required_packages = []
+# DO NOT WORK PYTHON 3
+if not sys.version_info[0] == 2:
+    print "Sorry, Python 3 is not support yet"
+    sys.exit()
 
-# python 2.6 does not have argsparse
-try:
-    import argparse
-except ImportError:
-    required_packages.append('argparse')
-
+reqs = open('requirements.txt').read().splitlines()
     
 if __name__ == '__main__':
     setup(
@@ -31,7 +30,7 @@ if __name__ == '__main__':
                 'edit_bench = Ivy.run_editbench:run',
             ],
         },
-        install_requires=['fisher', 'pysam==0.7.5', 'PyVCF==0.6.4', 'matplotlib==1.3.1'],
+        install_requires=reqs,
         test_suite='Ivy.tests',
-        license='not yet',
+        license='GNU General Public License v2.0',
         )
