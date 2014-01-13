@@ -21,64 +21,87 @@ def to_xml(value):
 
     
 class VCFWriter(object):
-    def __init__(self, data):
-        self.data = data
+    def __init__(self):
+        pass
         
-        
-class VCFWriterINFO(VCFWriter):
+class VCFWriterInfoHeader(VCFWriter):
+    '''
+    Args:
+     vcf_info_data(dict): dic = {'id': hoge, 'num': 1, 'type': Integer, 'desc': piyo}
+    
+    Returns:
+     #INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data>"
+    '''
+    
     def __init__(self):
         VCFWriter.__init__(self)
 
-    def _to_xml(value):
+    def _to_xml(self, value):
         return '##INFO=<ID={id:},Number={num:},Type={type:},Description="{desc:}">'.format(
             id=value.get("id"), num=value.get("num"), type=value.get("type"), desc=value.get("desc"))
 
-    def NS(self):
-        #INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">
+    def write_info_header(self):
+        print self._NS()
+        print self._DP()
+        print self._DP4()
+        print self._AF()
+        print self._EF()
+        print self._MAPQ()
+        print self._BACQ()
+        print self._SB()
+        print self._PB()
+        print self._MA()
+        print self._MIS()
+
+    def _NS(self):
         value = {'id': 'NS', 'num': 1, 'type': 'Integer', 'desc': 'Number of Samples With Data'}
-        return _to_xml(value)
+        return self._to_xml(value)
         
-    def DP(self):
-        #INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+    def _DP(self):
         value = {'id': 'DP', 'num': 1, 'type': 'Integer', 'desc': 'Total Depth'}
-        return _to_xml(value)
+        return self._to_xml(value)
+
+    def _DP4(self):
+        value = {'id': 'DP4', 'num': 4, 'type': 'Integer', 'desc': 'ref-forward bases, ref-reverse, alt-forward and alt-reverse bases'}
+        return self._to_xml(value)
         
-    def AF(self):
-        #INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+    def _AF(self):
         value = {'id': 'AF', 'num': 1, 'type': 'Float', 'desc': 'Allele Frequency'}
-        return _to_xml(value)
+        return self._to_xml(value)
 
-    def EF(self):
-        ##INFO=<ID=AGAF,Number=1,Type=String,Description="Editing Frequency">
+    def _EF(self):
         value = {'id': 'EF', 'num': 1, 'type': 'Float', 'desc': 'Editing Frequency'}
-        return _to_xml(value)
+        return self._to_xml(value)
 
-    def MAPQ(self):
+    def _MAPQ(self):
         value = {'id': 'MAPQ', 'num': 1, 'type': 'Integer', 'desc': 'Average Mapping Quality'}
-        return _to_xml(value)
+        return self._to_xml(value)
 
-    def BACQ(self):
-        value = {'id': 'MAPQ', 'num': 1, 'type': 'Integer', 'desc': 'Average Phread-scaled Base Call Quality'}
-        return _to_xml(value)
+    def _BACQ(self):
+        value = {'id': 'BACQ', 'num': 1, 'type': 'Integer', 'desc': 'Average Phread-scaled Base Call Quality'}
+        return self._to_xml(value)
         
-    def SB(self):
+    def _SB(self):
         value = {'id': 'SB', 'num': 1, 'type': 'Float', 'desc': 'Strand Bias of P-value'}
-        return _to_xml(value)
+        return self._to_xml(value)
         
-    def PB(self):
+    def _PB(self):
         value = {'id': 'PB', 'num': 1, 'type': 'Float', 'desc': 'Positional Bias of P-value'}
-        return _to_xml(value)
+        return self._to_xml(value)
         
-    def MIS(self):
+    def _MIS(self):
         value = {'id': 'MIS', 'num': 1, 'type': 'Integer', 'desc': 'Total Mismatch Reads'}
-        return _to_xml(value)
+        return self._to_xml(value)
         
-    def MA(self):
+    def _MA(self):
         value = {'id': 'MA', 'num': 1, 'type': 'Integer', 'desc': 'Total Match Reads'}
-        return _to_xml(value)
+        return self._to_xml(value)
+
+class VCFWriterInfoDataLine(VCFWriterInfoHeader):
+    pass
+
         
-        
-class VCFWriterDataLine(VCFWriterINFO):
+class VCFWriterDataLine(VCFWriterInfoHeader):
     def __init__(self, data):
         self.data = data
 
@@ -125,13 +148,13 @@ class VCFWriteHeader(VCFWriter):
         }
         __params._vcf_meta = _info
         self.__spec = __params
-        self.__spec._vcf_meta.filename = os.path.abspath(self.__spec.fasta)
-        self.__spec._vcf_meta.bam = os.path.abspath(self.__spec.r_bams)
+        self.__spec._vcf_meta.filename = "file://" + os.path.abspath(self.__spec.fasta)
+        self.__spec._vcf_meta.bam = "file://" +  os.path.abspath(self.__spec.r_bams)
         
     def make_vcf_header(self):
         sys.stdout.write(self.__spec_section())
         sys.stdout.write(self.__params_section())
-        sys.stdout.write(self.__header_name())
+        #sys.stdout.write(self.header_column_name())
 
     def merge_filtering_param(self):
         self.__spec.update({k: p.conf[k] for k in p.conf})
@@ -180,7 +203,7 @@ class VCFWriteHeader(VCFWriter):
                             'Description='+ '"'+ desc+ '">\n'])
         return info_h
     
-    def __header_name(self):
-        return "{0}\t{1}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\n".format(
-            "#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT")
+    def header_column_name(self):
+        sys.stdout.write("{0}\t{1}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\n".format(
+            "#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT"))
 
