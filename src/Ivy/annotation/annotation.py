@@ -64,13 +64,18 @@ class GTF(Annotation):
             yield gtf
 
     def strand_info(self, contig=None, start=None, end=None):
+        found = "."
         for gtf in pysam.Tabixfile.fetch(self.tabixfile, contig, start, end,
                                          parser=pysam.asGTF()):
-            return gtf.strand
+            if gtf.strand:
+                found = gtf.strand
+                break
+            else:
+                continue
+        return found
 
 if __name__ == '__main__':
     gtf_cls = GTF("/Users/yukke/Desktop/genes.gtf")
-    print gtf_cls.strand_info("chr21", 48084236, 49094239)
-    
+    print gtf_cls.strand_info("chr21", start=9826910)
         
 
