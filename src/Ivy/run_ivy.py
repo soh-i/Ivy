@@ -1,6 +1,6 @@
 from Ivy.alignment.stream import RNASeqAlignmentStream, DNASeqAlignmentStream
 from Ivy.commandline.parse_ivy_opts import CommandLineParser
-from Ivy.annotation.writer import VCFWriteHeader
+from Ivy.annotation.writer import *
 from Ivy.seq import Fasta, Timer, decode_chr_name_from_file
 from Ivy.version import __version__
 from pprint import pprint as p
@@ -26,6 +26,8 @@ logger = logging.getLogger(__name__)
 parse = CommandLineParser()
 params = parse.ivy_parse_options()
 vcf = VCFWriteHeader(params)
+vcf_info = VCFWriterInfoHeader()
+vcf_data = VCFWriterDataLine()
 
 class mtime(object):
     def __init__(self):
@@ -59,20 +61,26 @@ def _single_run():
     '''
     Working on single thread
     '''
-    
     vcf.make_vcf_header()
+    vcf_info.write_info_header()
+    vcf.header_column_name()
     logger.debug("Beginning Ivy run (v." + __version__ + ")" )
     
     # RNA-seq data
     if params.gtf:
         logger.debug("Loading GTF file: '{0}'".format(params.gtf))
-        
+    
     if params.r_bams:
         logger.debug("Loading RNA-seq bam file: '{0}'".format(params.r_bams))
         rna_pileup_alignment = RNASeqAlignmentStream(params)
         for rna in rna_pileup_alignment.filter_stream():
-            print Printer.to_tab(rna)
-                
+            if params.verbose:
+                Printer.pprint(rna)
+            else:
+                #Printer.to_tab(rna)
+                vcf_data.write_data_line(rna)
+                vcf_data.write_info_line(rna)
+                print ""
     # DNA-Seq data
     if params.d_bams:
         logger.debug("Loading DNA-seq bam file: '{0}'".format(params.d_bams))
@@ -279,7 +287,7 @@ class Printer(object):
          
     @staticmethod
     def to_tab(data, *args, **kwargs):
-        return '{chrom:}\t{pos:}\t{ref:}\t{alt:}\t{dp4:}\t{alf:}\t{t:}'.format(
+        print '{chrom:}\t{pos:}\t{ref:}\t{alt:}\t{dp4:}\t{alf:}\t{t:}'.format(
             chrom=data.get('chrom'),
             pos=data.get('pos'),
             ref=data.get('ref'),
