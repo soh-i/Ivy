@@ -34,6 +34,10 @@ def convert_base(ref=None, alt=None, strand=None):
         else:
             pair.append(alt)
         return pair
+        
+    elif strand == '.':
+        return [ref, alt]
+
     else:
         raise ValueError("Invalid strand data. '-/+' is expected, but '{0}' is given".format(strand))
                                                                                   
