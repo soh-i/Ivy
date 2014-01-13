@@ -313,10 +313,10 @@ class AlignmentStream(FilteredAlignmentReadsGenerator):
                     continue
                  
                 # filter reads with all params
+                
                 if (self.params.basic_filter.rm_duplicated
                     and self.params.basic_filter.rm_deletion
                     and self.params.basic_filter.rm_insertion):
-                    
                     if reads_filter_params_debug:
                         self.params.show(self.params.basic_filter)
                         raise SystemExit("Method: {0:s}".format(
@@ -518,7 +518,7 @@ class RNASeqAlignmentStream(AlignmentStream):
                 continue
             passed_reads = data['reads']
             passed_matches = data['ma']
-            
+                
             ##############################
             ### Basic filters in reads ###
             ##############################
@@ -531,6 +531,7 @@ class RNASeqAlignmentStream(AlignmentStream):
                 
             # --min-rna-baq
             average_baq = alignstat.average_base_quality(passed_reads)
+            baq_in_mismatch = alignstat.average_base_quality(passed_mismatches)
             
             # --min-rna-mapq
             average_mapq = alignstat.average_mapq(passed_reads)
@@ -629,17 +630,27 @@ class RNASeqAlignmentStream(AlignmentStream):
                                          cr=len(C_base_r), cf=len(C_base_f)))
 
             # Considering expressed strand in transcript
-            _strand = self.gtf_cls.strand_info(self.bam_chrom, self.pos, self.pos+1)
-            if _strand is not None:
-                _type = "-to-".join(convert_base([self.ref_base, alt_base], strand=_strand))
+            _strand = self.gtf_cls.strand_info(self.bam_chrom, start=self.pos)
+            
+            #if _strand == "-":
+            #    #print "POS: {0}, orgRef: {1}, orgAlt: {2}".format(self.pos, self.ref_base, alt_base)
+            
+            if _strand is not None or _strand == "Intergenic":
+                #_type = "deprecated"
+                _type = convert_base(ref=self.ref_base, alt=alt_base, strand=_strand)
             else:
                 _type = self.ref_base + "-to-" + alt_base
+
+            ag_freq = alignstat.a_to_g_frequency(a=Abase, g=Gbase)
             
             d = {
                 'chrom': self.bam_chrom,
                 'pos': self.pos,
+                'id': '.',
                 'ref': self.ref_base,
                 'alt': alt_base,
+                'qual': baq_in_mismatch,
+                'filt': '.',
                 'coverage': len(passed_reads),
                 'mismatches': len(passed_mismatches),
                 'matches': len(passed_matches),
@@ -647,29 +658,28 @@ class RNASeqAlignmentStream(AlignmentStream):
                 'positional_bias': positional_bias_p,
                 'strand_bias': strand_bias_p,
                 'type': _type,
-                #'base_call_bias': base_call_bias_p,
-                #'ag_freq': ag_freq,
-                #'types': mutation_type,
+                'base_call_bias': base_call_bias_p,
+                'ag_freq': ag_freq,
+                'types': mutation_type,
                 'dp4': dp4,
-                #'average_baq': average_baq,
-                #'average_mapq': average_mapq,
-                #'qual_in_pos': quals_in_pos,
-                #'raw_quals': [_.alignment.qual[_.qpos] for _ in passed_reads],
-                #'mutation_type': mutation_type,
-                #'A': Abase,
-                #'G': Gbase,
-                #'T': Tbase,
-                #'C': Cbase,
-                #'A_f': A_base_f,
-                #'A_r': A_base_r,
-                #'G_f': G_base_f,
-                #'G_r': G_base_r,
-                #'T_f': T_base_f,
-                #'T_r': T_base_r,
-                #'C_f': C_base_f,
-                #'C_r': C_base_r,
+                'average_baq': average_baq,
+                'average_mapq': average_mapq,
+                'mutation_type': mutation_type,
+                'A': Abase,
+                'G': Gbase,
+                'T': Tbase,
+                'C': Cbase,
+                'A_f': A_base_f,
+                'A_r': A_base_r,
+                'G_f': G_base_f,
+                'G_r': G_base_r,
+                'T_f': T_base_f,
+                'T_r': T_base_r,
+                'C_f': C_base_f,
+                'C_r': C_base_r,
             }
             yield d
+            
             
                         
 class DNASeqAlignmentStream(AlignmentStream):
