@@ -3,14 +3,82 @@ from Ivy.commandline.parse_ivy_opts import CommandLineParser
 from Ivy.utils import AttrDict
 import datetime
 import os.path
+from functools import wraps
 
+def to_xml(value):
+    if not isinstance(value, dict):
+        return False
+        
+    def _xml(function):
+        @wraps(function)
+        
+        def __xml(*args, **kw):
+            result = function(*args, **kw)
+            return '##INFO=<ID={id:},Number={num:},Type={type:},Description="{desc:}">'.format(
+                id=value.get("id"), num=value.get("num"), type=value.get("type"), desc=value.get("desc"))
+        return __xml
+    return _xml
 
+    
 class VCFWriter(object):
+    def __init__(self, data):
+        self.data = data
+        
+        
+class VCFWriterINFO(VCFWriter):
     def __init__(self):
-        raise NotImplementedError
+        VCFWriter.__init__(self)
 
+    def _to_xml(value):
+        return '##INFO=<ID={id:},Number={num:},Type={type:},Description="{desc:}">'.format(
+            id=value.get("id"), num=value.get("num"), type=value.get("type"), desc=value.get("desc"))
 
-class VCFWriterDataLine(VCFWriter):
+    def NS(self):
+        #INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">
+        value = {'id': 'NS', 'num': 1, 'type': 'Integer', 'desc': 'Number of Samples With Data'}
+        return _to_xml(value)
+        
+    def DP(self):
+        #INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+        value = {'id': 'DP', 'num': 1, 'type': 'Integer', 'desc': 'Total Depth'}
+        return _to_xml(value)
+        
+    def AF(self):
+        #INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+        value = {'id': 'AF', 'num': 1, 'type': 'Float', 'desc': 'Allele Frequency'}
+        return _to_xml(value)
+
+    def EF(self):
+        ##INFO=<ID=AGAF,Number=1,Type=String,Description="Editing Frequency">
+        value = {'id': 'EF', 'num': 1, 'type': 'Float', 'desc': 'Editing Frequency'}
+        return _to_xml(value)
+
+    def MAPQ(self):
+        value = {'id': 'MAPQ', 'num': 1, 'type': 'Integer', 'desc': 'Average Mapping Quality'}
+        return _to_xml(value)
+
+    def BACQ(self):
+        value = {'id': 'MAPQ', 'num': 1, 'type': 'Integer', 'desc': 'Average Phread-scaled Base Call Quality'}
+        return _to_xml(value)
+        
+    def SB(self):
+        value = {'id': 'SB', 'num': 1, 'type': 'Float', 'desc': 'Strand Bias of P-value'}
+        return _to_xml(value)
+        
+    def PB(self):
+        value = {'id': 'PB', 'num': 1, 'type': 'Float', 'desc': 'Positional Bias of P-value'}
+        return _to_xml(value)
+        
+    def MIS(self):
+        value = {'id': 'MIS', 'num': 1, 'type': 'Integer', 'desc': 'Total Mismatch Reads'}
+        return _to_xml(value)
+        
+    def MA(self):
+        value = {'id': 'MA', 'num': 1, 'type': 'Integer', 'desc': 'Total Match Reads'}
+        return _to_xml(value)
+        
+        
+class VCFWriterDataLine(VCFWriterINFO):
     def __init__(self, data):
         self.data = data
 
@@ -18,6 +86,9 @@ class VCFWriterDataLine(VCFWriter):
         pass
 
     def pos(self):
+        pass
+
+    def id(self):
         pass
 
     def ref(self):
@@ -29,20 +100,14 @@ class VCFWriterDataLine(VCFWriter):
     def qual(self):
         pass
 
-        
-    def dp4(self):
-        pass
-
-    def dp(self):
+    def filter(self):
         pass
 
     def info(self):
         pass
-
+    
     def format(self):
         pass
-
-
         
 class VCFWriterMetaInformationLine(VCFWriter):
     def __init__(self):
@@ -83,25 +148,25 @@ class VCFWriteHeader(VCFWriter):
         params = ''
         # basic filter group
         for _ in self.__spec.basic_filter._data:
-            params += '##PARAMS=' + ','.join([
+            params += '##IVY_PARAMS=' + ','.join([
                 '<ID={id},Value={val},Class={filt}>\n'.format(
                     id=_, val=self.__spec.basic_filter._data[_], filt='basic_filter')])
 
         # ext filter group
         for _ in self.__spec.ext_filter._data:
-            params += '##PARAMS=' + ','.join([
+            params += '##IVY_PARAMS=' + ','.join([
                 '<ID={id},Value={val},Class={filt}>\n'.format(
                     id=_, val=self.__spec.ext_filter._data[_], filt='ext_filter')])
 
         # stat filter group
         for _ in self.__spec.stat_filter._data:
-            params += '##PARAMS=' + ','.join([
+            params += '##IVY_PARAMS=' + ','.join([
                 '<ID={id},Value={val},Class={filt}>\n'.format(
                     id=_, val=self.__spec.stat_filter._data[_], filt='stat_filter')])
             
         # sample filter group
         for _ in self.__spec.sample_filter._data:
-            params += '##PARAMS=' + ','.join([
+            params += '##IVY_PARAMS=' + ','.join([
                 '<ID={id},Value={val},Class={filt}>\n'.format(
                     id=_, val=self.__spec.sample_filter._data[_], filt='sample_filter')])
         return params
