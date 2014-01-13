@@ -51,19 +51,23 @@ class AlignmentReadsStats(object):
     @staticmethod
     def mismatch_frequency(m=None, mis=None):
         if isinstance(m, list) and isinstance(mis, list):
+            freq = .000
             try:
-                return len(mis) / (len(m) + len(mis))
+                freq = '{0:.3f}'.format(len(mis) / (len(m) + len(mis)))
+                return freq
             except ZeroDivisionError:
-                return .0
+                return freq
             
     @staticmethod
     def a_to_g_frequency(a=None, g=None):
         if isinstance(a, list) and isinstance(g, list):
+            freq = .000
             try:
-                return len(g) / (len(a + g))
+                freq = '{:.3f}'.format((len(g) / (len(a + g))))
+                return freq
             except ZeroDivisionError:
-                return .0
-               
+                return freq
+                
     @staticmethod
     #def define_allele(base, ref=None):
     #    if base and ref:

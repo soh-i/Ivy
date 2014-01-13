@@ -8,8 +8,8 @@ import Ivy.version
 def die(msg=''):
     raise SystemExit(msg)
 
-def convert_base(base=None, strand=None):
-    if len(base) != 2:
+def convert_base(ref=None, alt=None, strand=None):
+    if ref is None or alt is None:
         return False
         
     dna = {'A': 'T',
@@ -18,13 +18,30 @@ def convert_base(base=None, strand=None):
            'C': 'G',
            }
     if strand == '+':
-        return base
+        return [ref, alt]
+        
     elif strand == '-':
-        r = []
-        r.append(dna.get(base[0]))
-        r.append(dna.get(base[1]))
-        return r
+        pair = []
+        _r = dna.get(ref)
+        _a = dna.get(alt)
+        if _r:
+            pair.append(_r)
+        else:
+            pair.append(ref)
+        if _a:
+            pair.append(_a)
+        # expected: 'A,G'
+        else:
+            pair.append(alt)
+        return pair
+        
+    elif strand == '.':
+        return [ref, alt]
 
+    else:
+        raise ValueError("Invalid strand data. '-/+' is expected, but '{0}' is given".format(strand))
+                                                                                  
+        
 class IvyLogger(object):
     def __init__(self):
         self.log_fmt = '[%(asctime)s] [%(levelname)s] [%(message)s]'
@@ -58,6 +75,7 @@ class AttrDict(dict):
     http://stackoverflow.com/a/12187277
     '''
     
+
     def __init__(self, d=None, create=True):
         if d is None:
             d = {}
@@ -125,10 +143,10 @@ if __name__ == '__main__':
     #aa.fasta = "hoge.fa"
     #print aa
 
-    print  convert_base(base=['A', 'G'], strand='-')
-    print  convert_base(base=['A', 'G'], strand='+')
-    print  convert_base(base=['T', 'C'], strand='+')
-    print  convert_base(base=['T', 'C'], strand='-')
+    #print convert_base(ref='A', alt='G', strand='-')
+    print convert_base(ref='A', alt='G,T', strand='--')
+    
+    
     
     
 class ImutableDict(collections.Mapping):
