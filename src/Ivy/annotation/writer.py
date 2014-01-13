@@ -102,35 +102,64 @@ class VCFWriterInfoDataLine(VCFWriterInfoHeader):
 
         
 class VCFWriterDataLine(VCFWriterInfoHeader):
-    def __init__(self, data):
-        self.data = data
-
-    def chrom(self):
+    def __init__(self):
         pass
 
-    def pos(self):
-        pass
+    def write_data_line(self, data):
+        sys.stdout.write('{chrom:}\t{pos:}\t{id_:}\t{ref:}\t{alt:}\t{qual:}\t{filt:}\t'.format(
+            chrom=data.get('chrom'),
+            pos=data.get('pos'),
+            id_=data.get('id'),
+            ref=data.get('ref'),
+            alt=data.get('alt'),
+            qual=data.get('qual'),
+            filt=data.get('filt')))
+        
+    def _to_info(self, id_, val):
+        sys.stdout.write('{id_:}={val:};'.format(id_=id_, val=val))
 
-    def id(self):
-        pass
+    def write_info_line(self, data):
+        self._DP(data)
+        self._DP4(data)
+        self._AF(data)
+        self._EF(data)
+        self._MAPQ(data)
+        self._BACQ(data)
+        self._SB(data)
+        self._PB(data)
+        self._MA(data)
+        self._MIS(data)
+        
+    def _DP(self, data):
+        return self._to_info('DP', data.get('coverage'))
 
-    def ref(self):
-        pass
+    def _DP4(self, data):
+        return self._to_info('DP4', ",".join([str(_) for _ in data.get('dp4')]))
 
-    def alt(self):
-        pass
+    def _AF(self, data):
+        return self._to_info('AF', data.get('allele_freq'))
 
-    def qual(self):
-        pass
+    def _EF(self, data):
+        return self._to_info('EF', data.get('ag_freq'))
 
-    def filter(self):
-        pass
+    def _MAPQ(self, data):
+        return self._to_info('MAPQ', data.get('average_mapq'))
 
-    def info(self):
-        pass
+    def _BACQ(self, data):
+        return self._to_info('BACQ', data.get('average_baq'))
+
+    def _SB(self, data):
+        return self._to_info('SB', data.get('strand_bias'))
+
+    def _PB(self, data):
+        return self._to_info('PB', data.get('positional_bias'))
+
+    def _MIS(self, data):
+        return self._to_info('MIS',  data.get('mismatches'))
+
+    def _MA(self, data):
+        return self._to_info('MA', data.get('matches'))
     
-    def format(self):
-        pass
         
 class VCFWriterMetaInformationLine(VCFWriter):
     def __init__(self):
