@@ -18,6 +18,8 @@ The required dependencies to install the Ivy is `pysam`, `pyVCF`, `fisher`, and 
 
 # Installation
 ```
+pip install numpy
+pip install matplotlib
 python setup.py install
 ```
 
