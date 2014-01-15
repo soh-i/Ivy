@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import  find_packages, setup
 import sys
 
 __author__ = 'Soh Ishiguro'
@@ -17,7 +17,6 @@ if __name__ == '__main__':
     setup(
         version=__version__,
         description='software package for identification of RNA editing sites based on massively parallel sequencing data',
-        long_description='',
         author=__author__,
         author_email=__email__,
         url='https://github.com/soh-i/Ivy',
@@ -32,5 +31,20 @@ if __name__ == '__main__':
         },
         install_requires=reqs,
         test_suite='Ivy.tests',
+        dependency_links = ["samtools.sourceforge.net"],
         license='GNU General Public License v2.0',
-        )
+        keywords = ['bioinformatics',
+                    'RNA editing',
+                    'RNA-Seq',
+                ],
+        classifiers = [
+            'Development Status :: 3 - Alpha',
+            'Intended Audience :: Science/Research',
+            'Programming Language :: Python',
+            'Topic :: Scientific/Engineering :: Bio-Informatics'
+            'License :: OSI Approved :: GNU General Public License v2 (GPLv2)'
+        ],
+        platforms=['Linux','Unix','MacOS'],
+        long_description=open('README.md').read(),
+    )
+    
