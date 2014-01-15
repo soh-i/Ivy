@@ -37,21 +37,22 @@ class VCFWriterInfoHeader(VCFWriter):
         VCFWriter.__init__(self)
 
     def _to_xml(self, value):
-        return '##INFO=<ID={id:},Number={num:},Type={type:},Description="{desc:}">'.format(
+        return '##INFO=<ID={id:},Number={num:},Type={type:},Description="{desc:}">\n'.format(
             id=value.get("id"), num=value.get("num"), type=value.get("type"), desc=value.get("desc"))
 
     def write_info_header(self):
-        print self._NS()
-        print self._DP()
-        print self._DP4()
-        print self._AF()
-        print self._EF()
-        print self._MAPQ()
-        print self._BACQ()
-        print self._SB()
-        print self._PB()
-        print self._MA()
-        print self._MIS()
+        s = self._NS()
+        s += self._DP()
+        s += self._DP4()
+        s += self._AF()
+        s += self._EF()
+        s += self._MAPQ()
+        s += self._BACQ()
+        s += self._SB()
+        s += self._PB()
+        s += self._MA()
+        s += self._MIS()
+        return s
 
     def _NS(self):
         value = {'id': 'NS', 'num': 1, 'type': 'Integer', 'desc': 'Number of Samples With Data'}
@@ -62,7 +63,8 @@ class VCFWriterInfoHeader(VCFWriter):
         return self._to_xml(value)
 
     def _DP4(self):
-        value = {'id': 'DP4', 'num': 4, 'type': 'Integer', 'desc': 'ref-forward bases, ref-reverse, alt-forward and alt-reverse bases'}
+        value = {'id': 'DP4', 'num': 4, 'type': 'Integer',
+                 'desc': 'ref-forward bases, ref-reverse, alt-forward and alt-reverse bases'}
         return self._to_xml(value)
         
     def _AF(self):
@@ -106,7 +108,7 @@ class VCFWriterDataLine(VCFWriterInfoHeader):
         pass
 
     def write_data_line(self, data):
-        sys.stdout.write('{chrom:}\t{pos:}\t{id_:}\t{ref:}\t{alt:}\t{qual:}\t{filt:}\t'.format(
+        return('{chrom:}\t{pos:}\t{id_:}\t{ref:}\t{alt:}\t{qual:}\t{filt:}\t'.format(
             chrom=data.get('chrom'),
             pos=data.get('pos'),
             id_=data.get('id'),
@@ -116,19 +118,20 @@ class VCFWriterDataLine(VCFWriterInfoHeader):
             filt=data.get('filt')))
         
     def _to_info(self, id_, val):
-        sys.stdout.write('{id_:}={val:};'.format(id_=id_, val=val))
+        return('{id_:}={val:};'.format(id_=id_, val=val))
 
     def write_info_line(self, data):
-        self._DP(data)
-        self._DP4(data)
-        self._AF(data)
-        self._EF(data)
-        self._MAPQ(data)
-        self._BACQ(data)
-        self._SB(data)
-        self._PB(data)
-        self._MA(data)
-        self._MIS(data)
+        s =  self._DP(data)
+        s += self._DP4(data)
+        s += self._AF(data)
+        s += self._EF(data)
+        s += self._MAPQ(data)
+        s += self._BACQ(data)
+        s += self._SB(data)
+        s += self._PB(data)
+        s += self._MA(data)
+        s += self._MIS(data)
+        return s
         
     def _DP(self, data):
         return self._to_info('DP', data.get('coverage'))
@@ -181,8 +184,9 @@ class VCFWriteHeader(VCFWriter):
         self.__spec._vcf_meta.bam = "file://" +  os.path.abspath(self.__spec.r_bams)
         
     def make_vcf_header(self):
-        sys.stdout.write(self.__spec_section())
-        sys.stdout.write(self.__params_section())
+        s = self.__spec_section()
+        s += self.__params_section()
+        return s
         #sys.stdout.write(self.header_column_name())
 
     def merge_filtering_param(self):
@@ -233,6 +237,6 @@ class VCFWriteHeader(VCFWriter):
         return info_h
     
     def header_column_name(self):
-        sys.stdout.write("{0}\t{1}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\n".format(
-            "#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT"))
+        return "{0}\t{1}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\n".format(
+            "#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT")
 

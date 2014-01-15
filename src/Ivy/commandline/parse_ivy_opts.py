@@ -365,7 +365,7 @@ class CommandLineParser(object):
         if opt.outname:
             passed_params.outname = opt.outname
         else:
-            default_filename = 'ivy_run.log'
+            default_filename = 'ivy_run.vcf'
             passed_params.outname = default_filename
         
         ###########################

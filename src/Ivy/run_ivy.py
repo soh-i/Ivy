@@ -59,16 +59,20 @@ def run():
     
 def _single_run():
     '''
-    Working on single thread
+    Working on single thread    
     '''
-    vcf.make_vcf_header()
-    vcf_info.write_info_header()
-    vcf.header_column_name()
+    
+    fout = open(params.outname, 'w')
+    fout.write(vcf.make_vcf_header())
+    fout.write(vcf_info.write_info_header())
+    fout.write(vcf.header_column_name())
+    
     logger.debug("Beginning Ivy run (v." + __version__ + ")" )
     
     # RNA-seq data
     if params.gtf:
         logger.debug("Loading GTF file: '{0}'".format(params.gtf))
+
     
     if params.r_bams:
         logger.debug("Loading RNA-seq bam file: '{0}'".format(params.r_bams))
@@ -77,16 +81,16 @@ def _single_run():
             if params.verbose:
                 Printer.pprint(rna)
             else:
-                #Printer.to_tab(rna)
-                vcf_data.write_data_line(rna)
-                vcf_data.write_info_line(rna)
-                print ""
+                fout.write(vcf_data.write_data_line(rna))
+                fout.write(vcf_data.write_info_line(rna))
+                fout.write("\n")
+                    
     # DNA-Seq data
     if params.d_bams:
         logger.debug("Loading DNA-seq bam file: '{0}'".format(params.d_bams))
         dna_pileup_alignment = DNASeqAlignmentStream(params)
         for dna in dna_pileup_alignment.filter_stream():
-            with open(params.outnamt, 'w') as f:
+            with open(params.outname, 'w') as f:
                 f.write('{chrom:}\t{pos:}\t{ref:}\t{alt:}'.format(
                     chrom=dna.get('chrom'),
                     pos=dna.get('pos'),
