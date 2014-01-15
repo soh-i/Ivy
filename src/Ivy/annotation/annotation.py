@@ -1,5 +1,6 @@
 import pysam
 import os.path
+import logging
 
 class Annotation(object):
     def to_array(self):
@@ -51,7 +52,8 @@ class GTF(Annotation):
         
     def _prepare(self):
         if not os.path.isfile(self.ingtf + ".gz.tbi"):
-            print "Indexing GTF file..."
+            #print "Indexing GTF file..."
+            logger.debug("Indexing GTF file: {0}".format(self.ingtf))
             compressed_gtf = pysam.tabix_index(self.ingtf, preset="gff")
         else:
             compressed_gtf = self.ingtf + ".gz"
