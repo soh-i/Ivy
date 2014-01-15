@@ -72,7 +72,7 @@ def _single_run():
     # RNA-seq data
     if params.gtf:
         logger.debug("Loading GTF file: '{0}'".format(params.gtf))
-
+    logger.debug("Output VCF files: '{0}'".format(params.outname))
     
     if params.r_bams:
         logger.debug("Loading RNA-seq bam file: '{0}'".format(params.r_bams))
