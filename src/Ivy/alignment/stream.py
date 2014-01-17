@@ -565,7 +565,7 @@ class RNASeqAlignmentStream(AlignmentStream):
                 print "mapq: {0}".format(average_mapq)
             if average_mapq <= self.params.basic_filter.min_rna_mapq:
                 continue
-                
+
             # --min-mis-frequency
             allele_freq = alignstat.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
             if self.pos == debug_pos:
@@ -579,18 +579,17 @@ class RNASeqAlignmentStream(AlignmentStream):
             T_reads = specific_reads.get('T')
             G_reads = specific_reads.get('G')
             C_reads = specific_reads.get('C')
-            if self.pos == debug_pos:
-                print "A: {0}, T: {1}, G: {2}, C: {3}".format(A_reads, T_reads, C_reads, G_reads)
 
             mutation_type = self.mutation_types(A=A_reads, T=T_reads, G=G_reads, C=C_reads, ref=self.ref_base)
             if self.pos == debug_pos:
                 print "Mut. type: {0}".format(mutation_type)
-                
+            
             if len(mutation_type) == 0:
                 continue
-            if len(mutation_type) >= self.params.basic_filter.num_type:
-                continue
                 
+            if len(mutation_type) > self.params.basic_filter.num_type:
+                continue
+
             basegen = BaseStringGenerator()
             base = basegen.retrieve_base_string_each_base_type(a=A_reads,
                                                                t=T_reads,
@@ -695,9 +694,6 @@ class RNASeqAlignmentStream(AlignmentStream):
                 'C_r': C_base_r,
 
             }
-            if self.pos == debug_pos:
-                print d
-                break
             yield d
             
             
