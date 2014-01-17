@@ -142,9 +142,9 @@ if __name__ == '__main__':
     #aa.region.start = 7423480
     #aa.fasta = "hoge.fa"
     #print aa
-
     #print convert_base(ref='A', alt='G', strand='-')
-    print convert_base(ref='A', alt='G,T', strand='--')
+    
+    print convert_base(ref='T', alt='C,G', strand='-')
     
     
     

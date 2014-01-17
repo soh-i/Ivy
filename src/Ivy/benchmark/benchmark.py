@@ -327,7 +327,7 @@ class VCFReader(object):
             raise SystemExit('No such file or directory: {0}'.format(self.__vcf))
             
         self.__substitutions = Counter()
-        
+
         for rec in _vcf_reader:
             _types = str(rec.REF) + '-to-' + 'or'.join([str(_) for _ in rec.ALT])
             self.__substitutions[_types] += 1

@@ -62,15 +62,26 @@ class GTF(Annotation):
     def fetch_gtf(self, contig=None, start=None, end=None):
         for gtf in pysam.Tabixfile.fetch(self.tabixfile, contig, start, end,
                                          parser=pysam.asGTF()):
-                                         
             yield gtf
 
     def strand_info(self, contig=None, start=None, end=None):
+        """
+        Args:
+         contig(str)='', start(int)='', end=''
+        
+        Returns:
+         strand information [+-], or [.] is 404
+        """
+        
+        debug = False
         found = "."
         for gtf in pysam.Tabixfile.fetch(self.tabixfile, contig, start, end,
                                          parser=pysam.asGTF()):
             if gtf.strand:
                 found = gtf.strand
+                if debug:
+                    print gtf.gene
+                    print "start: %s, end: %s" % (gtf.start, gtf.end)
                 break
             else:
                 continue
@@ -78,6 +89,4 @@ class GTF(Annotation):
 
 if __name__ == '__main__':
     gtf_cls = GTF("/Users/yukke/Desktop/genes.gtf")
-    print gtf_cls.strand_info("chr21", start=9826910)
-        
-
+    print gtf_cls.strand_info("chr21", start=34964201)
