@@ -73,7 +73,7 @@ class GTF(Annotation):
          strand information [+-], or [.] is 404
         """
         
-        debug = True
+        debug = False
         found = "."
         for gtf in pysam.Tabixfile.fetch(self.tabixfile, contig, start, end,
                                          parser=pysam.asGTF()):
