@@ -518,6 +518,27 @@ class RNASeqAlignmentStream(AlignmentStream):
                 continue
             passed_reads = data['reads']
             passed_matches = data['ma']
+
+            debug_pos = False
+            
+            if self.pos == debug_pos:
+                specific_reads = self.retrieve_reads_each_base_type(passed_reads)
+                A_reads = specific_reads.get('A')
+                T_reads = specific_reads.get('T')
+                G_reads = specific_reads.get('G')
+                C_reads = specific_reads.get('C')
+                base = basegen.retrieve_base_string_each_base_type(a=A_reads,
+                                                                   t=T_reads,
+                                                                   g=G_reads,
+                                                                   c=C_reads)
+                Abase = base.get('A')
+                Tbase = base.get('T')
+                Gbase = base.get('G')
+                Cbase = base.get('C')
+                print "A: ", Abase
+                print "T: ", Tbase
+                print "G: ", Gbase
+                print "C: ", Cbase
                 
             ##############################
             ### Basic filters in reads ###
@@ -529,17 +550,26 @@ class RNASeqAlignmentStream(AlignmentStream):
             if coverage <= self.params.basic_filter.min_rna_cov:
                 continue
                 
-            # --min-rna-baq
+            # --min-rna-baq                
             average_baq = alignstat.average_base_quality(passed_reads)
             baq_in_mismatch = alignstat.average_base_quality(passed_mismatches)
+            if baq_in_mismatch <= self.params.basic_filter.min_rna_baq:
+                continue
+                
+            if self.pos == debug_pos:
+                print "base qual: {0}, baq in mis: {1}".format(average_baq, baq_in_mismatch)
             
             # --min-rna-mapq
             average_mapq = alignstat.average_mapq(passed_reads)
+            if self.pos == debug_pos:
+                print "mapq: {0}".format(average_mapq)
             if average_mapq <= self.params.basic_filter.min_rna_mapq:
                 continue
-
+                
             # --min-mis-frequency
             allele_freq = alignstat.mismatch_frequency(m=passed_matches, mis=passed_mismatches)
+            if self.pos == debug_pos:
+                print "Allele freq. {0}".format(allele_freq)
             if allele_freq <= self.params.basic_filter.min_mut_freq:
                 continue
                 
@@ -549,10 +579,16 @@ class RNASeqAlignmentStream(AlignmentStream):
             T_reads = specific_reads.get('T')
             G_reads = specific_reads.get('G')
             C_reads = specific_reads.get('C')
+            if self.pos == debug_pos:
+                print "A: {0}, T: {1}, G: {2}, C: {3}".format(A_reads, T_reads, C_reads, G_reads)
+
             mutation_type = self.mutation_types(A=A_reads, T=T_reads, G=G_reads, C=C_reads, ref=self.ref_base)
+            if self.pos == debug_pos:
+                print "Mut. type: {0}".format(mutation_type)
+                
             if len(mutation_type) == 0:
                 continue
-            if len(mutation_type) > self.params.basic_filter.num_type:
+            if len(mutation_type) >= self.params.basic_filter.num_type:
                 continue
                 
             basegen = BaseStringGenerator()
@@ -568,7 +604,7 @@ class RNASeqAlignmentStream(AlignmentStream):
             _all_base = Abase + Gbase + Cbase + Tbase
             _alt = alignstat.define_allele(_all_base, ref=self.ref_base)
             alt_base = ",".join([",".join(_[0]) for _ in _alt])
-                    
+            
             # Specific base string by read strand(forward/reverse)
             G_base_r = basegen.retrieve_base_string_with_strand(G_reads, strand=0)
             G_base_f = basegen.retrieve_base_string_with_strand(G_reads, strand=1)
@@ -581,29 +617,10 @@ class RNASeqAlignmentStream(AlignmentStream):
                     
             C_base_r = basegen.retrieve_base_string_with_strand(C_reads, strand=0)
             C_base_f = basegen.retrieve_base_string_with_strand(C_reads, strand=1)
-                    
-            # Faital error if diff. in len(N) != (len(Nr)+len(Nf))
-            # TODO: Wrapp *Error class in error.py
-            #if len(Abase) != len(A_base_r + A_base_f):
-            #    raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
-            #        all=len(Abase), f=len(A_base_f), r=len(A_base_r), pos=pos))
-            #            
-            #if len(Tbase) != len(T_base_r + T_base_f):
-            #    raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in {pos:2}".format(
-            #        all=len(Tbase), f=len(T_base_f), r=len(T_base_r), pos=pos))
-            #            
-            #if len(Gbase) != len(G_base_r + G_base_f):
-            #    raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
-            #        all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
-            # 
-            #if len(Cbase) != len(C_base_r + C_base_f):
-            #    raise ValueError, ("All: {all:0}, Forward: {f:1}, Reverse: {r:1} in '{pos:2}".format(
-            #        all=len(Gbase), f=len(G_base_f), r=len(G_base_r), pos=pos))
 
             ###########################
             ### Statistical filsher ###
             ###########################
-            # All position is passed through in default,
             # and False means p<sig_level location
             strand_bias_p = .0
             if self.params.stat_filter.strand_bias:
@@ -628,20 +645,19 @@ class RNASeqAlignmentStream(AlignmentStream):
                                          tr=len(T_base_r), tf=len(T_base_f),
                                          gr=len(G_base_r), gf=len(G_base_f),
                                          cr=len(C_base_r), cf=len(C_base_f)))
+            ag_freq = alignstat.a_to_g_frequency(a=Abase, g=Gbase)
 
             # Considering expressed strand in transcript
             _strand = self.gtf_cls.strand_info(self.bam_chrom, start=self.pos)
-            
-            #if _strand == "-":
-            #    #print "POS: {0}, orgRef: {1}, orgAlt: {2}".format(self.pos, self.ref_base, alt_base)
-            
             if _strand is not None or _strand == "Intergenic":
-                #_type = "deprecated"
+                #print "[Original] %s-%s, ref: %s, alt: %s, strand: %s" % (self.bam_chrom, self.pos, self.ref_base, alt_base, _strand),
                 _type = convert_base(ref=self.ref_base, alt=alt_base, strand=_strand)
+                _ref = _type[0]
+                _alt = _type[1]
+                alt_base = _alt
+                #print "[Updated] ref: %s, alt: %s, strand: %s" % (_ref, _alt, _strand)
             else:
                 _type = self.ref_base + "-to-" + alt_base
-
-            ag_freq = alignstat.a_to_g_frequency(a=Abase, g=Gbase)
             
             d = {
                 'chrom': self.bam_chrom,
@@ -677,7 +693,11 @@ class RNASeqAlignmentStream(AlignmentStream):
                 'T_r': T_base_r,
                 'C_f': C_base_f,
                 'C_r': C_base_r,
+
             }
+            if self.pos == debug_pos:
+                print d
+                break
             yield d
             
             
