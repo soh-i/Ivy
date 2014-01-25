@@ -15,11 +15,23 @@ def header_column_name():
     return "{0}\t{1}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\n".format(
         "#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT")
     
-    
-class VCFInfoHeader(object):
+class VCFHeaderBuilder(object):
+    def __init__(self, params):
+        self.params = params
+        
+    def build(self):
+        meta = _VCFMetaHeader(self.params)
+        info = _VCFInfoHeader()
+        header = meta.build()
+        header += info.build()
+        header += header_column_name()
+        return header
+        
+   
+class _VCFInfoHeader(object):
     '''
     Args:
-     vcf_info_data(dict): dic = {'id': hoge, 'num': 1, 'type': Integer, 'desc': piyo}
+     build(dict): dic = {'id': hoge, 'num': 1, 'type': Integer, 'desc': piyo}
     
     Returns:
      #INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data>"
@@ -87,7 +99,7 @@ class VCFInfoHeader(object):
         value = {'id': 'MA', 'num': 1, 'type': 'Integer', 'desc': 'Total Match Reads'}
         return to_xml("INFO", value)
 
-class VCFMetaHeader(object):
+class _VCFMetaHeader(object):
     def __init__(self, __params):
         self.__spec = __params
 
@@ -145,19 +157,6 @@ class VCFMetaHeader(object):
                 '<ID={id},Value={val},Class={filt}>\n'.format(
                     id=_, val=self.__spec.sample_filter._data[_], filt='sample_filter')])
         return params
-    
-        
-class VCFHeaderBuilder(object):
-    def __init__(self, params):
-        self.params = params
-        
-    def build(self):
-        meta = VCFMetaHeader(self.params)
-        info = VCFInfoHeader()
-        header = meta.build()
-        header += info.build()
-        header += header_column_name()
-        return header
 
         
 class VCFWriterDataLine(VCFInfoHeader):
