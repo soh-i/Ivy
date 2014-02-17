@@ -1,12 +1,13 @@
 Ivy: software package for detection of RNA editing sites based on high-throughput sequencing data.
 ====
 
-Ivy is a software package that faster and accurately detects RNA editing events in higher eukaryotes (such as human, mouse, and melanogaster) RNA-seq data.
+#### __Ivy is currently under development...__
+
 
 Ivy includes 2 command line tools:
 
-* `ivy` is detection tool for RNA editing site.
-* `edit_bench` is benchmark tool to test the detection accuracy.
+* `ivy` is detection tool for RNA editing events.
+* `edit_bench` is benchmarking tool to test the detection accuracy.
 
 
 # System requirements
