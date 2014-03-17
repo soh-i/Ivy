@@ -68,10 +68,9 @@ class Test_VCFMetaHeader(unittest.TestCase):
         # Todo: write test case
         
 class TestVCFHeaderBuilder(unittest.TestCase):
-    @unittest.skip('Not yet')
     def setUp(self):
         params = ""
-        builder = VCFHeaderBuilder(params)
+        #builder = VCFHeaderBuilder(params)
 
     @unittest.skip('Not yet')
     def test_build():
@@ -106,10 +105,6 @@ class TestVCFWriterDataLine(unittest.TestCase):
         _id, val = "test_id", 921
         exp = '{id_:}={val:};'.format(id_=_id, val=val)
         self.assertEqual(self.w_data_line._to_info(_id, val), exp)
-
-    @unittest.skip("Not yet")
-    def test_write_info_line(self):
-        pass
 
     def test_DP(self):
         self.assertIsInstance(self.mock_vcf['coverage'], int)
@@ -150,10 +145,31 @@ class TestVCFWriterDataLine(unittest.TestCase):
     def test_MA(self):
         self.assertIsInstance(self.mock_vcf['matches'], int)
         self.assertRegexpMatches(self.w_data_line._MA(self.mock_vcf), r'^MA=\d+;$')
+
+    def test_write_info_line(self):
+        # raises AssertionError, e.g. DP=25; != coverage=25;
+        
+        s =  self.w_data_line._DP(self.mock_vcf)
+        s += self.w_data_line._DP4(self.mock_vcf)
+        s += self.w_data_line._AF(self.mock_vcf)
+        s += self.w_data_line._EF(self.mock_vcf)
+        s += self.w_data_line._MAPQ(self.mock_vcf)
+        s += self.w_data_line._BACQ(self.mock_vcf)
+        s += self.w_data_line._SB(self.mock_vcf)
+        s += self.w_data_line._PB(self.mock_vcf)
+        s += self.w_data_line._MA(self.mock_vcf)
+        s += self.w_data_line._MIS(self.mock_vcf)
+        
+        exp = str()
+        for content in self.mock_vcf.items():
+            if isinstance(content[1], list):
+                # to string
+                exp += self.w_data_line._to_info(content[0], ",".join(str(_) for _ in content[1]))
+            elif isinstance(content[1], str) or isinstance(content[1], int) or isinstance(content[1], float):
+                exp += self.w_data_line._to_info(content[0], content[1])
+        self.assertNotEqual(s, exp)
         
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
-
-
     
