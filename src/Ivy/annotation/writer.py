@@ -159,7 +159,7 @@ class _VCFMetaHeader(object):
         return params
 
         
-class VCFWriterDataLine(VCFInfoHeader):
+class VCFWriterDataLine(_VCFInfoHeader):
     def __init__(self):
         pass
 
