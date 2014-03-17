@@ -86,9 +86,13 @@ class Test_VCFInfoHeader(unittest.TestCase):
 class TestVCFWriterDataLine(unittest.TestCase):
     def setUp(self):
         from Ivy.annotation.writer import VCFWriterDataLine
+        
         self.mock_data = {'pos': 1102, 'chrom': 'chr12', 'id_': 'ID',
                           'ref': 'A', 'alt': 'G', 'qual': 43, 'filt': False}
-        self.mock_vcf = {'coverage': 25, 'dp4': [5,5,5,10]}
+        self.mock_vcf = {'coverage': 25, 'dp4': [5, 5, 5, 10], 'allele_freq': 0.92,
+                         'ag_freq': 0.38, 'average_baq': 21, 'average_mapq': 43,
+                         'strand_bias': 0.002, 'positional_bias': 0.0299,
+                         'mismatches': 82, 'matches': 23}
         
         self.w_data_line = VCFWriterDataLine()
     
@@ -107,11 +111,49 @@ class TestVCFWriterDataLine(unittest.TestCase):
     def test_write_info_line(self):
         pass
 
-    def test_each_columns(self):
+    def test_DP(self):
+        self.assertIsInstance(self.mock_vcf['coverage'], int)
         self.assertRegexpMatches(self.w_data_line._DP(self.mock_vcf), r'^DP=\d+;$')
+
+    def test_DP4(self):
+        self.assertIsInstance(self.mock_vcf['dp4'], list)
+        self.assertRegexpMatches(self.w_data_line._DP4(self.mock_vcf), r'^DP4=\d+,\d+,\d+,\d+;$')
+
+    def test_AF(self):
+        self.assertIsInstance(self.mock_vcf['allele_freq'], float)
+        self.assertRegexpMatches(self.w_data_line._AF(self.mock_vcf), r'^AF=\d+\.\d+;$')
+
+    def test_EF(self):
+        self.assertIsInstance(self.mock_vcf['ag_freq'], float)
+        self.assertRegexpMatches(self.w_data_line._EF(self.mock_vcf), r'^EF=\d+\.\d+;$')
+     
+    def test_MAPQ(self):
+        self.assertIsInstance(self.mock_vcf['average_mapq'], int)
+        self.assertRegexpMatches(self.w_data_line._MAPQ(self.mock_vcf), r'^MAPQ=\d+;$')
+     
+    def test_BACQ(self):
+        self.assertIsInstance(self.mock_vcf['average_baq'], int)
+        self.assertRegexpMatches(self.w_data_line._BACQ(self.mock_vcf), r'^BACQ=\d+;$')
+
+    def test_SB(self):
+        self.assertIsInstance(self.mock_vcf['strand_bias'], float)
+        self.assertRegexpMatches(self.w_data_line._SB(self.mock_vcf), r'^SB=\d+\.\d+;$')
+     
+    def test_PB(self):
+        self.assertIsInstance(self.mock_vcf['positional_bias'], float)
+        self.assertRegexpMatches(self.w_data_line._PB(self.mock_vcf), r'^PB=\d+\.\d+;$')
+
+    def test_MIS(self):
+        self.assertIsInstance(self.mock_vcf['mismatches'], int)
+        self.assertRegexpMatches(self.w_data_line._MIS(self.mock_vcf), r'^MIS=\d+;$')
         
+    def test_MA(self):
+        self.assertIsInstance(self.mock_vcf['matches'], int)
+        self.assertRegexpMatches(self.w_data_line._MA(self.mock_vcf), r'^MA=\d+;$')
+        
+
 if __name__ == '__main__':
-    unittest.main(verbosity=9)
+    unittest.main(verbosity=2)
 
 
     
