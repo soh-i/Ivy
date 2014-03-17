@@ -88,6 +88,8 @@ class TestVCFWriterDataLine(unittest.TestCase):
         from Ivy.annotation.writer import VCFWriterDataLine
         self.mock_data = {'pos': 1102, 'chrom': 'chr12', 'id_': 'ID',
                           'ref': 'A', 'alt': 'G', 'qual': 43, 'filt': False}
+        self.mock_vcf = {'coverage': 25, 'dp4': [5,5,5,10]}
+        
         self.w_data_line = VCFWriterDataLine()
     
     def test_write_data_line(self):
@@ -105,12 +107,8 @@ class TestVCFWriterDataLine(unittest.TestCase):
     def test_write_info_line(self):
         pass
 
-    @unittest.skip("Not yet")
     def test_each_columns(self):
-        pass
-        
-
-
+        self.assertRegexpMatches(self.w_data_line._DP(self.mock_vcf), r'^DP=\d+;$')
         
 if __name__ == '__main__':
     unittest.main(verbosity=9)
