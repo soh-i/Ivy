@@ -7,13 +7,16 @@ import multiprocessing
 import pysam
 import pprint
 import time
-from Ivy.utils import IvyLogger
+try:
+    from Ivy.utils import IvyLogger
+except ImportError:
+    pass
 
 class Timer(object):
     def __enter__(self):
         self.start = time.time()
         return self
-        
+
     def __exit__(self, *args):
         self.end = time.time()
         self.interval = self.end - self.start
@@ -24,7 +27,7 @@ class Fasta(object):
         if os.path.isfile(fa):
             self.filename = fa
         else:
-            raise RuntimeError("{:s} is not found".format(fa))
+            raise RuntimeError("Fasta: \'{:s}\' is not found".format(fa))
     
     def fasta_header(self):
         header = []
