@@ -1,4 +1,4 @@
-language: "python"
+language: python
 python: 
   - "2.7"
 virtualenv:
@@ -6,7 +6,7 @@ virtualenv:
 env:
   - PIP_USE_MIRRORS: true
 install:
-  - "pip install -r requirements.txt"
+  - pip install -r requirements.txt
 before_install:
-  - "pip freeze"
+  - pip freeze
 
