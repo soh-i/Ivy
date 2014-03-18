@@ -2,12 +2,6 @@ import pysam
 import os.path
 
 
-class dbSNP(object):
-    def __init__(self):
-        self.raw_file = ''
-        self.version = ''
-
-        
 class GTF(object):
     def __init__(self, ingtf):
         self.ingtf = ingtf
