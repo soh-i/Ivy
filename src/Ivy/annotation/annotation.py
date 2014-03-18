@@ -1,6 +1,6 @@
 import pysam
 import os.path
-import logging
+
 
 class dbSNP(object):
     def __init__(self):
@@ -39,7 +39,10 @@ class GTF(object):
     def gene_in_region(self, contig=None, start=None, end=None):
         for gtf in pysam.Tabixfile.fetch(self.tabixfile, contig, start, end,
                                          parser=pysam.asGTF()):
-            yield gtf.asDict()['gene_name']
+            try:
+                yield gtf.asDict()['gene_name']
+            except KeyError:
+                print 'key \'{0}\' is not found in {1}'.format(t, self.ingtf)
 
     def subset_of_feature_in_region(self, contig=None, start=None, end=None, types=None):
         '''
@@ -75,15 +78,11 @@ class GTF(object):
          strand information [+-], or [.] is 404
         """
         
-        debug = False
         found = "."
         for gtf in pysam.Tabixfile.fetch(self.tabixfile, contig, start, end,
                                          parser=pysam.asGTF()):
             if gtf.strand:
                 found = gtf.strand
-                if debug:
-                    print gtf.gene
-                    print "start: %s, end: %s" % (gtf.start, gtf.end)
                 break
             else:
                 continue
