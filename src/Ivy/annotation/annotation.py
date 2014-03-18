@@ -2,27 +2,12 @@ import pysam
 import os.path
 import logging
 
-class AnnotateVCF(object):
-    def __init__(self, vcf=None, gtf=None):
-        self.__vcf = vcf
-        self.nuc = {'A': 'T',
-                    'T': 'A',
-                    'C': 'G',
-                    'G': 'C',
-                    }
-        
-    def vcf_to_array(self):
-        recs = []
-        with open(self.__vcf, 'r') as f:
-            for line in f:
-                if not line.startswith("#"):
-                    data = line.split("\t")
-                    chrom = data[0]
-                    pos = data[1]
-                    recs.append([chrom, pos])
-        return recs
-                    
+class dbSNP(object):
+    def __init__(self):
+        self.raw_file = ''
+        self.version = ''
 
+        
 class GTF(object):
     def __init__(self, ingtf):
         self.ingtf = ingtf
