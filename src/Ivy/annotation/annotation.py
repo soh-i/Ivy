@@ -2,7 +2,6 @@ import pysam
 import os.path
 import logging
 
-
 class AnnotateVCF(object):
     def __init__(self, vcf=None, gtf=None):
         self.__vcf = vcf
@@ -31,14 +30,23 @@ class GTF(object):
         
     def _prepare(self):
         if not os.path.isfile(self.ingtf + ".gz.tbi"):
-            #print "Indexing GTF file..."
-            logger.debug("Indexing GTF file: {0}".format(self.ingtf))
+            print "Generate indexed GTF (tabix) file: '{0}'...".format(self.ingtf)
             compressed_gtf = pysam.tabix_index(self.ingtf, preset="gff")
         else:
             compressed_gtf = self.ingtf + ".gz"
         self.tabixfile = pysam.Tabixfile(compressed_gtf)
 
     def fetch_gtf(self, contig=None, start=None, end=None):
+        '''
+        Returns:
+         pysam.tabix object
+        
+        Example:
+         # return dict of each GTF line
+         for _ in tabix.fetch_gtf(contig="chr2L", end=9839):
+             print _.asDict()
+        '''
+        
         for gtf in pysam.Tabixfile.fetch(self.tabixfile, contig, start, end,
                                          parser=pysam.asGTF()):
             yield gtf
@@ -67,5 +75,7 @@ class GTF(object):
         return found
 
 if __name__ == '__main__':
-    gtf_cls = GTF("/Users/yukke/Desktop/genes.gtf")
-    print gtf_cls.strand_info("chr21", start=34964201)
+    tabix = GTF("genes.gtf")
+    for _ in tabix.fetch_gtf(contig="chr2L", end=9839):
+        print _.asDict()
+        
