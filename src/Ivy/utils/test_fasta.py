@@ -46,23 +46,18 @@ class TestFastaUtils(unittest.TestCase):
     def setUp(self):
         pass
 
-    @unittest.skip("Not yet")
     def test_decode_chr_name_from_file(self):
         pass
 
-    @unittest.skip("Not yet")
     def test_as_single(self):
         pass
 
-    @unittest.skip("Not yet")
     def test_fetch_seq(self):
         pass
 
-    @unittest.skip("Not yet")
     def test_run(self):
         pass
 
-    @unittest.skip("Not yet")
     def test_get_fa_list(self):
         pass
 
