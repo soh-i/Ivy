@@ -218,8 +218,4 @@ class VCFWriterDataLine(_VCFInfoHeader):
 
     def _MA(self, data):
         return self._to_info('MA', data.get('matches'))
-    
-        
-
-
         
