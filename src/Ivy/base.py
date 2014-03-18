@@ -40,13 +40,24 @@ def convert_base(ref=None, alt=None, strand=None):
 
     else:
         raise ValueError("Invalid strand data. '-/+' is expected, but '{0}' is given".format(strand))
-                                                                                  
+
+        
+class Timer(object):
+    def __enter__(self):
+        self.start = time.time()
+        return self
+
+    def __exit__(self, *args):
+        self.end = time.time()
+        self.interval = self.end - self.start
+
         
 class IvyLogger(object):
     def __init__(self):
         self.log_fmt = '[%(asctime)s] [%(levelname)s] [%(message)s]'
         logging.basicConfig(level=logging.DEBUG, format=self.log_fmt) #, filename=str(os.getpid()) + "_ivy.log")
 
+        
 class Utils(object):
     '''
     Utility class, for example, 
