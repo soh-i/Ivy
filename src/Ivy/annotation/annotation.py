@@ -2,19 +2,10 @@ import pysam
 import os.path
 import logging
 
-class Annotation(object):
-    def to_array(self):
-        pass
 
-    def to_file(self):
-        pass
-        
-
-class AnnotateVCF(Annotation):
+class AnnotateVCF(object):
     def __init__(self, vcf=None, gtf=None):
         self.__vcf = vcf
-        #self.__gtf = gtf
-
         self.nuc = {'A': 'T',
                     'T': 'A',
                     'C': 'G',
@@ -33,19 +24,7 @@ class AnnotateVCF(Annotation):
         return recs
                     
 
-    #def gtf_to_array(self):
-    #    with open(self.__gtf, 'w') as f:
-    #        for line in f:
-    #            data = split.line("\t")
-                
-    def compare(self):
-        pass
-
-    def write_gtf(self):
-        pass
-
-
-class GTF(Annotation):
+class GTF(object):
     def __init__(self, ingtf):
         self.ingtf = ingtf
         self._prepare()
