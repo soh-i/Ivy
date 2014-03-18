@@ -7,8 +7,8 @@ import os
 import sys
 
 from Ivy.version import __version__
-from Ivy.utils import die
-from Ivy.utils import AttrDict, IvyLogger
+from Ivy.base import die
+from Ivy.base import AttrDict, IvyLogger
 import logging
 
 __program__ = 'opt_parse'

@@ -1,6 +1,6 @@
 import sys
 from Ivy.commandline.parse_ivy_opts import CommandLineParser
-from Ivy.utils import AttrDict
+from Ivy.base import AttrDict
 from Ivy.version import __version__
 import datetime
 import os.path

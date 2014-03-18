@@ -9,7 +9,7 @@ class TestUtilsFunc(unittest.TestCase):
         pass
         
     def test_to_xml(self):
-        from Ivy.annotation.writer import to_xml
+        from Ivy.utils.vcf import to_xml
         xml_class = "VCF_INFO"
         xml_value = {'id': 'NS', 'num': 1, 'type': 'Integer', 'desc': 'Number of Samples With Data'}
         bad_value = [9212, "hoge", 0.192, list()]
@@ -24,13 +24,13 @@ class TestUtilsFunc(unittest.TestCase):
                          '##VCF_INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">\n')
         
     def test_header_column_name(self):
-        from Ivy.annotation.writer import header_column_name
+        from Ivy.utils.vcf import header_column_name
         self.assertEqual(header_column_name(), '#CHROM\tPOS\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\n')
 
 
 class Test_VCFMetaHeader(unittest.TestCase):
     def setUp(self):
-        from Ivy.annotation.writer import _VCFMetaHeader
+        from Ivy.utils.vcf import _VCFMetaHeader
         from Ivy.version import __version__
         from Ivy.commandline.parse_ivy_opts import CommandLineParser
         
@@ -84,7 +84,7 @@ class Test_VCFInfoHeader(unittest.TestCase):
         
 class TestVCFWriterDataLine(unittest.TestCase):
     def setUp(self):
-        from Ivy.annotation.writer import VCFWriterDataLine
+        from Ivy.utils.vcf import VCFWriterDataLine
         
         self.mock_data = {'pos': 1102, 'chrom': 'chr12', 'id_': 'ID',
                           'ref': 'A', 'alt': 'G', 'qual': 43, 'filt': False}
