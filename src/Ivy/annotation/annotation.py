@@ -51,6 +51,36 @@ class GTF(object):
                                          parser=pysam.asGTF()):
             yield gtf
 
+    def gene_in_region(self, contig=None, start=None, end=None):
+        for gtf in pysam.Tabixfile.fetch(self.tabixfile, contig, start, end,
+                                         parser=pysam.asGTF()):
+            yield gtf.asDict()['gene_name']
+
+    def subset_of_feature_in_region(self, contig=None, start=None, end=None, types=None):
+        '''
+        Example:
+         # return dict of rna and tss id
+         for rna_tss in tabix.subset_of_feature_in_region(contig="chr2L", end=9839,
+                                                    types=["transcript_id", 'tss_id']):
+             print rna_tss
+        '''
+        for gtf in pysam.Tabixfile.fetch(self.tabixfile, contig, start, end,
+                                         parser=pysam.asGTF()):
+            if isinstance(types, str):
+                try:
+                    yield gtf.asDict()[types]
+                except KeyError:
+                    print 'key \'{0}\' is not found in {1}'.format(t, self.ingtf)
+                    
+            elif isinstance(types, list):
+                tmp = dict()
+                for t in types:
+                    try:
+                        tmp.update({t: gtf.asDict()[t]})
+                    except KeyError:
+                        print 'key \'{0}\' is not found in {1}'.format(t, self.ingtf)
+                yield tmp
+
     def strand_info(self, contig=None, start=None, end=None):
         """
         Args:
@@ -74,8 +104,12 @@ class GTF(object):
                 continue
         return found
 
+        
 if __name__ == '__main__':
     tabix = GTF("genes.gtf")
-    for _ in tabix.fetch_gtf(contig="chr2L", end=9839):
-        print _.asDict()
+    for _ in tabix.subset_of_feature_in_region(contig="chr2L", end=9839, types=["transcript_id", 'tss_id']):
+        print _
+        #print _.asDict()
+        #print  dir(_)
+        #print _.asDict()
         
