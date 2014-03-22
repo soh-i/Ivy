@@ -1,33 +1,63 @@
-import os.path
-import ConfigParser
-from Ivy.base.Utils import find_app_root
-
-class Setting(object):
-    def __init__(self):
-        APP_ROOT = Utils.find_app_root()
-        FILE = 'conf.yml'
-        self.path_to_conf = os.path.join(APP_ROOT, FILE)
-        
-    def load(self):
-        '''
-        Return:
-         ConfigParser object
-        '''
-        
-        if os.path.isfile(self.path_to_conf):
-            config = ConfigParser()
-            self.config = config.read(self.path_to_conf)
-        else:
-            raise ValueError("{0} is not found".format(self.path_to_conf))
+# Setting of `ivy`
+IVY_SETTINGS =  {
+    'BASIC_OPT': {
+        'FASTA': None,
+        'RNA_BAM': None,
+        'DNA_BAM': None,
+        'OUT_NAME': 'ivy.vcf',
+        'REGIONS': 'All',
+        'GTF': None,
+        'IS_SINGLE': False,
+        'ONE_BASED': False,
+        'N_THREADS': 1,
+        'DRY_RUN': False,
+        'VERBOSE': False,
+    },
     
-    def get_path(self):
-        return self.path_to_conf
+    'SAMPLE_OPT': {
+        'STRAND': False,
+        'KO_STRAIN': False,
+        'REPLICATE': False,
+    },
 
-    def show_all(self):
-        #self.load()
-        pass
+    'FILTERS': {
+        
+        'BASIC_FILT': {
+            'MIN_MUT_FREQ': 0.1,
+            'MIN_RNA_COV': 10,
+            'MIN_DNA_COV': 10,
+            'RM_DUPLICATED': True,
+            'RM_DELETION': True,
+            'RM_INSERTION': True,
+            'MIN_RNA_MAPQ': 30,
+            'MIN_DNA_MAPQ': 28,
+            'MIN_RNA_BAPQ': 28,
+            'NUM_TYPE': 1,
+        },
+        
+        'STAT_FILT': {
+            'SIG_LEVEL' :0.05,
+            'BAQ_BIAS' :False,
+            'POS_BIAS' :False,
+            'STRAND_BIAS' :False,
+        },
+        
+        'EXT_FILT': {
+            'BLAT': False,
+            'SNP': False,
+            'SS_NUM': False,
+            'TRIM_N': False,
+            'MASK_REPEAT': False,
+        }
+    }
+}
 
-if __name__ == '__main__':
-    setting = Setting()
-    setting.load()
-    
+# Setting of `edit_bench`
+EDIT_BENCH_SETTINGS = {
+    'VCF': None,
+    'CSV': None,
+    'SOURCE': None,
+    'SP': None,
+    'PLOT': False,
+    'OUT': 'edit_bench.log',
+}
