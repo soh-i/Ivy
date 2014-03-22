@@ -4,7 +4,7 @@ import os.path
 import re
 import csv
 import sys
-from Ivy.utils import Utils
+from Ivy.base import Utils
 from urllib2 import (
     Request,
     urlopen,
@@ -39,6 +39,8 @@ class DarnedDataGeneratorValueError(Exception):
     '''
     
     def __init__(self, *sp):
+        raise DeprecationWarning
+        
         self.sp = sp[0]
         if sp[1]:
             self.sps = "/".join([_ for _ in sp[1]])
@@ -62,6 +64,8 @@ class DarnedDataGeneratorParseError(Exception):
     '''
     
     def __init__(self, line, data, filename):
+        raise DeprecationWarning
+        
         self.line = line
         self.data = data
         self.filename = filename
@@ -97,7 +101,7 @@ class DarnedDataGenerator(object):
                 self.species = species
                 break;
         else:
-            raise DarnedDataGeneratorValueError(species, __species)
+            raise ValueError(species)
 
         if self.species is not None:
             self.filename = ''.join([self.species, '.txt'])
