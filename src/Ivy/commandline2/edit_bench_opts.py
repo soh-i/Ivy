@@ -30,30 +30,33 @@ def parse_bench_opts():
                        help='CSV file(s), for ***debug mode***.')
     parser.add_argument('--source',
                         required=False,
-                        default=EDIT_BENCH_SETTINGS['SOURCE'],
+                        default=EDIT_BENCH_SETTINGS['APP']['SOURCE'],
                         dest='source',
                         action='store',
                         metavar='',
-                        help='To use specific sample/tissue/cell line. [default: {0}]'.format(EDIT_BENCH_SETTINGS['SOURCE']))
+                        help='To use specific sample/tissue/cell line. [default: {0}]'.format(
+                            EDIT_BENCH_SETTINGS['APP']['SOURCE']))
     parser.add_argument('--sp',
                         required=True,
-                        default=EDIT_BENCH_SETTINGS['SP'],
+                        default=EDIT_BENCH_SETTINGS['APP']['SP'],
                         dest='sp',
                         metavar='species',
                         action='store',
                         help='Species + genome version. (eg. human_hg19)')
     parser.add_argument('--plot',
                         required=False,
-                        default=EDIT_BENCH_SETTINGS['PLOT'],
+                        default=EDIT_BENCH_SETTINGS['APP']['PLOT'],
                         action='store_true',
-                        help='Make a precision-recall plot. [default: {0}]'.format(EDIT_BENCH_SETTINGS['PLOT']))
+                        help='Make a precision-recall plot. [default: {0}]'.format(
+                            EDIT_BENCH_SETTINGS['APP']['PLOT']))
     parser.add_argument('--out',
                         dest='out',
-                        default=EDIT_BENCH_SETTINGS['OUT'],
+                        default=EDIT_BENCH_SETTINGS['APP']['OUT'],
                         required=False,
                         action='store',
                         metavar='out',
-                        help='Output file name. [default: \'{0}]\''.format(EDIT_BENCH_SETTINGS['OUT']))
+                        help='Output file name. [default: {0}]'.format(
+                            EDIT_BENCH_SETTINGS['APP']['OUT']))
     parser.add_argument('--version',
                         action='version',
                         help='Show program version number and exit.',
