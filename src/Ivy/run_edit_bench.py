@@ -5,12 +5,9 @@ from Ivy.commandline2.settings import EDIT_BENCH_SETTINGS
 from Ivy.benchmark.plot import BenchmarkPlot
 from Ivy.benchmark.benchmark import (
     DarnedDataGenerator,
-    DarnedDataGeneratorValueError,
-    DarnedDataGeneratorParseError,
     DarnedReader,
     VCFReader,
     Benchmark,
-    BenchmarkIOException,
     __CSVReader,
 )
 import Ivy.utils
@@ -33,7 +30,6 @@ class App(object):
                                      mode='vcf', plt=True, labs=args.vcf_file)
             else:
                 result = _call_bench(args.vcf_file, sp=args.sp, source=args.source, mode='vcf')
-                
         # Input format as CSV
         elif args.csv_file and args.sp:
             if args.plotp:
@@ -42,7 +38,6 @@ class App(object):
             else:
                 # Make p-r plot
                 result = _call_bench(args.csv_file, sp=args.sp, source=args.source, mode='csv')
-
         # Output filename
         if args.out:
             _write_result(filename=args.out, content=result, is_file=True)
@@ -55,11 +50,8 @@ class App(object):
         
         Args:
         species(string): must be given species name
-        
-        Raises:
-        DarnedDataGeneratorValueError: Invalid species name was given
-        DarnedDataGeneratorParseError: Faild to parse csv from Darned row data file
         '''
+        
         try:
             gen = DarnedDataGenerator(species)
         except ValueError as e:
