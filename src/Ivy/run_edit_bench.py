@@ -1,6 +1,7 @@
 import os.path
 import sys
-from Ivy.commandline.parse_benchmarking_opts import parse_bench_opts
+from Ivy.commandline2.edit_bench_opts import parse_bench_opts
+from Ivy.commandline2.settings import EDIT_BENCH_SETTINGS
 from Ivy.benchmark.plot import BenchmarkPlot
 from Ivy.benchmark.benchmark import (
     DarnedDataGenerator,
@@ -14,40 +15,41 @@ from Ivy.benchmark.benchmark import (
 )
 import Ivy.utils
 
-__program__ = 'ivy_benchmark'
+__program__ = 'edit_bench'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
-__license__ = ''
+__license__ = 'GPL v2'
 __status__ = 'development'
 
-def run():
-    '''
-    Run benchmarking test when call this function
-    '''
-    args = parse_bench_opts()
-    _prepare_required_data(args.sp)
+class App(object):
+    def __init__(self):
+        args = parse_bench_opts()
+        __prepare_required_data(args.sp)
 
-    # Input format is vcf
-    if args.vcf_file and args.sp:
-        if args.plot:
-            result = _call_bench(args.vcf_file, sp=args.sp, source=args.source,
-                                 mode='vcf', plt=True, labs=args.vcf_file)
-        else:
-            result = _call_bench(args.vcf_file, sp=args.sp, source=args.source, mode='vcf')
-    # Input format is csv
-    elif args.csv_file and args.sp:
-        if args.plot:
-            result = _call_bench(args.csv_file, sp=args.sp, source=args.source,
-                                 mode='csv', plt=True, labs=args.csv_file)
-        else:
-            result = _call_bench(args.csv_file, sp=args.sp, source=args.source, mode='csv')
-        
-    # Output
-    if args.out:
-        _write_result(filename=args.out, content=result, is_file=True)
-    elif not args.out:
-        _write_result(content=result, is_file=False)
+    def run(self):
+        # Input format as VCF
+        if args.vcf_file and args.sp:
+            if args.plot:
+                result = _call_bench(args.vcf_file, sp=args.sp, source=args.source,
+                                     mode='vcf', plt=True, labs=args.vcf_file)
+            else:
+                result = _call_bench(args.vcf_file, sp=args.sp, source=args.source, mode='vcf')
+                
+        # Input format as CSV
+        elif args.csv_file and args.sp:
+            if args.plotp:
+                result = _call_bench(args.csv_file, sp=args.sp, source=args.source,
+                                     mode='csv', plt=True, labs=args.csv_file)
+            else:
+                # Make p-r plot
+                result = _call_bench(args.csv_file, sp=args.sp, source=args.source, mode='csv')
+
+        # Output filename
+        if args.out:
+            _write_result(filename=args.out, content=result, is_file=True)
+        elif not args.out:
+            _write_result(content=result, is_file=False)
     
-def _prepare_required_data(species):
+def __prepare_required_data(species):
     '''
     prepares and generates the required data files to test benchmaring
     
@@ -60,7 +62,7 @@ def _prepare_required_data(species):
     '''
     try:
         gen = DarnedDataGenerator(species)
-    except DarnedDataGeneratorValueError as e:
+    except ValueError as e:
         raise SystemExit('[{cls}]: given \'{sp}\' is not valid name, {sps} is only valid name'.format(
             cls=e.__class__.__name__, sp=e.sp, sps=e.sps))
         
@@ -177,3 +179,7 @@ def __plot(p, r, labs):
         return True
     else:
         raise TypeError("[Error] Input data type must be \'list\' to plot data")
+
+if __name__ == '__main__':
+    run()
+    
