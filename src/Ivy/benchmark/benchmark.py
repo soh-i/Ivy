@@ -4,6 +4,7 @@ import os.path
 import re
 import csv
 import sys
+from Ivy.commandline2.settings import EDIT_BENCH_SETTINGS
 from Ivy.base import Utils
 from urllib2 import (
     Request,
@@ -17,61 +18,6 @@ __program__ = 'benchmark'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
-
-class DarnedDataGeneratorValueError(Exception):
-    '''
-    Exception class for invalid species name
-    
-    Args:
-     sp(string): species name
-     sps(list): list of all valid species names
-    
-    Attributes:
-     sp(string): species name
-     sps(string): all species names
-
-    Examples:
-     >>> try:
-     ...     gen = DarnedDataGenerator(species=args.sp)
-     ... except DarnedDataGeneratorValueError as e:
-     ...     print e.sp
-     ...     print e
-    '''
-    
-    def __init__(self, *sp):
-        raise DeprecationWarning
-        
-        self.sp = sp[0]
-        if sp[1]:
-            self.sps = "/".join([_ for _ in sp[1]])
-
-    def __str__(self):
-        return repr('{sp:s} is not valid species name'.format(sp=self.sp))
-
-
-class DarnedDataGeneratorParseError(Exception):
-    '''
-    Exception class for parsing Darned text file to csv
-    
-    Args:
-     int: error line number
-     string: data
-
-    Attributes:
-     line(int): error line in Darned file
-     data(string): correspond entory
-     filename(string): opend filename
-    '''
-    
-    def __init__(self, line, data, filename):
-        raise DeprecationWarning
-        
-        self.line = line
-        self.data = data
-        self.filename = filename
-    
-    def __str__(self):
-        return repr('Parsing error at line No.{0}'.format(self.line))
 
                     
 class DarnedDataGenerator(object):
@@ -89,13 +35,15 @@ class DarnedDataGenerator(object):
     '''
     
     def __init__(self, species=None):
-        __species = {
-            'human_hg19': 'http://darned.ucc.ie/static/downloads/hg19.txt',
-            'human_hg18': 'http://darned.ucc.ie/static/downloads/hg18.txt',
-            'mice_mm9': 'http://darned.ucc.ie/static/downloads/mm9.txt',
-            'mice_mm10': 'http://darned.ucc.ie/static/downloads/mm10.txt',
-            'fly_dm3': 'http://darned.ucc.ie/static/downloads/dm3.txt',
-        }
+        #__species = {
+        #    'human_hg19': 'http://darned.ucc.ie/static/downloads/hg19.txt',
+        #    'human_hg18': 'http://darned.ucc.ie/static/downloads/hg18.txt',
+        #    'mice_mm9': 'http://darned.ucc.ie/static/downloads/mm9.txt',
+        #    'mice_mm10': 'http://darned.ucc.ie/static/downloads/mm10.txt',
+        #    'fly_dm3': 'http://darned.ucc.ie/static/downloads/dm3.txt',
+        #}
+        
+        __species = EDIT_BENCH_SETTINGS['DARNED_DATA']
         for k in __species:
             if k == species:
                 self.species = species
@@ -158,7 +106,7 @@ class DarnedDataGenerator(object):
         Returns:
          bool
         Raises:
-         ValueError: when parsing error
+         ValueError: when parsing error in the N-line
         Exmples:
          >>> path_to_data = hg19.txt
          >>> darned_to_csv(path_to_data)
@@ -192,7 +140,7 @@ class DarnedDataGenerator(object):
                         out.write('NA'+",")
                     out.write(",".join(row[9:]) + "\n")
         except:
-            raise DarnedDataGeneratorParseError(line_n, row, self.filename)
+            raise ValueError('Parsing error at line No.{0}'.format(line_n))
         finally:
             out.close()
 
@@ -270,35 +218,19 @@ class DarnedReader(object):
                 return darned_list
                 
         elif not self.__sp:
-            raise DarnedDataGeneratorValueError(self.__sp)
+            raise ValueError('{sp:s} is not valid species name'.format(sp=self.sp))
             
     def sp(self):
-        '''
-        Returns:
-         tuple: species and genome version
-        '''
         (sp, ver) = self.__sp.split("_")
         return sp, ver
 
     def path(self):
-        '''
-        Returns:
-         string: absolute path to Darned database file
-        '''
         return os.path.abspath(self.__darned_path)
         
     def db_name(self):
-        '''
-        Returns:
-         string: Darned db name
-        '''
         return os.path.basename(self.__darned_path)
                  
     def size(self):
-        '''
-        Returns:
-         int: number of the Darned entories
-        '''
         return self.__db_size
 
         
@@ -341,47 +273,21 @@ class VCFReader(object):
         return _vcf_recs
         
     def size(self):
-        '''
-        Returns:
-         int: number of entory of the parsed vcf records
-        '''
         return self.__size
 
     def name(self):
-        '''
-        Returns:
-         string: filename of vcf
-        '''
         return os.path.basename(self.__vcf)
 
     def editing_types(self):
-        '''
-        Returns:
-         collection object: All type of the base substitutions
-        '''
         return self.__substitutions
         
     def ag_count(self):
-        '''
-        Returns:
-         int: A-to-G editing alone
-        '''
         return self.__substitutions.get('A-to-G')
 
     def target_count(self, types):
-        '''
-        Args:
-         types(string): specify type of base substitution
-        Returns:
-         int: base substitution count
-        '''
         return self.__substitutions.get(types)
         
     def other_mutations_count(self):
-        '''
-        Returns:
-         collection object: substitution count except A-to-G editing
-        '''
         i = 0
         for k in self.__substitutions:
             if not k == 'A-to-G':
@@ -438,14 +344,8 @@ class __CSVReader(object):
 
     def name(self):
         return os.path.basename(self.__filename)
-
-class BenchmarkIOException(Exception):
-    def __init__(self, data):
-        self.data = data
-    
-    def __str__(self):
-        return repr('Answer data set has no entory')
         
+
 class Benchmark(object):
     '''
     Benchmark calculates precision, recall and F-measure from given data set,
@@ -473,12 +373,10 @@ class Benchmark(object):
         self.answer = set([":".join(_.split(":")[:2]) for _ in answer])
         self.predict = set([":".join(_.split(":")[:2]) for _ in predict])
         
-
         if len(self.answer) == 0:
-            raise BenchmarkIOException(self.answer)
+            raise ValueError('Answer data set has no entory')
         elif len(self.predict) == 0:
-            raise BenchmarkIOException(self.predict)
-        
+            raise ValueError('Answer data set has no entory')
         self.intersect = self.answer.intersection(self.predict)
 
     def __str__(self):
