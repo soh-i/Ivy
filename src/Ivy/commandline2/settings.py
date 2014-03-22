@@ -1,3 +1,4 @@
+
 # Setting of `ivy`
 IVY_SETTINGS =  {
     'BASIC_OPT': {
@@ -56,7 +57,7 @@ IVY_SETTINGS =  {
 EDIT_BENCH_SETTINGS = {
     'VCF': None,
     'CSV': None,
-    'SOURCE': None,
+    'SOURCE': 'All',
     'SP': None,
     'PLOT': False,
     'OUT': 'edit_bench.log',
