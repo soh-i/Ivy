@@ -17,9 +17,11 @@ __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = 'GPL v2'
 __status__ = 'development'
 
+
 class App(object):
     def __init__(self):
         args = parse_bench_opts()
+        self.species = args.sp
         __prepare_required_data(args.sp)
 
     def run(self):
@@ -45,13 +47,6 @@ class App(object):
             _write_result(content=result, is_file=False)
     
     def __prepare_required_data(self, species):
-        '''
-        prepares and generates the required data files to test benchmaring
-        
-        Args:
-        species(string): must be given species name
-        '''
-        
         try:
             gen = DarnedDataGenerator(species)
         except ValueError as e:
@@ -73,24 +68,6 @@ class App(object):
                 raise SystemExit('[{cls}]: {e}'.format(cls=e.__class__.__name__, e=e))
 
     def _call_bench(self, files, sp=None, source=None, mode=None, plt=False, labs=[]):
-        '''
-        Wrapper of benchmark class
-        
-        Args:
-        files(string): vcf/csv file name
-        sp(string): species name
-        source(string): exploring specified sample/tissues
-        mode(string): select input file fomrat
-        plt(dict): plot data or not
-        
-        Raises:
-        ValueError: invalid file format as mode args
-        SystemExit: fetal error when create benchmarking instance
-        
-        Returns:
-        content(string): all of the benchmarking results
-        '''
-        
         precisions, recalls, f_measures = [], [], []
         content = str()
         ans = DarnedReader(sp=sp, source=source)
@@ -155,20 +132,11 @@ class App(object):
                 f.write(header)
                 f.write(data['content'])
             
-    def __plot(self, p, r, labs):
-        '''
-        Plot benchmarking result
-        
-        Args:
-        p(float): precison
-        r(float): recall
-        labs(list): labels of plot
-        '''
-        if isinstance(p, list) and isinstance(r, list) and isinstance(labs, list):
+    def __plot(self, precision, recall, labs):
+        if isinstance(precision, list) and isinstance(recall, list) and isinstance(labs, list):
             names = [os.path.basename(_).split('.')[0] for _ in labs]
-            #bplt = BenchmarkPlot('plot_' + ','.join(names), "human")
-            bplt = BenchmarkPlot('plot_' + "test", "human")
-            bplt.plot_accuracy(lab=names, recall=r, precision=p)
+            bplt = BenchmarkPlot('plot_' + ','.join(names), self.species)
+            bplt.plot_accuracy(lab=names, recall=recall, precision=precison)
             return True
         else:
             raise TypeError("[Error] Input data type must be \'list\' to plot data")
