@@ -1,6 +1,10 @@
 import os.path
-from Ivy.base import Utils
-from Ivy.commandline2.settings import IVY_SETTINGS, EDIT_BENCH_SETTINGS
+import pprint
+from Ivy.settings import (
+    IVY_SETTINGS,
+    EDIT_BENCH_SETTINGS
+)
+
 
 class Setting(object):
     def __init__(self):
@@ -12,12 +16,21 @@ class Setting(object):
             return self.ivy
         elif cls == 'EDIT_BENCH_SETTINGS':
             return self.edit_bench
+
+    def pprint(self, cls):
+        pp = pprint.PrettyPrinter(indent=1)
+        if cls == 'IVY_SETTINGS':
+            return pp.pprint(self.ivy)
+        elif cls == 'EDIT_BENCH_SETTINGS':
+            return pp.pprint(self.edit_bench)
+        else:
+            raise KeyError("Do NOT match given your key named '{0}'".format(cls))
+            
+        
+        
+        
         
 if __name__ == '__main__':
     setting = Setting()
     conf =  setting.load('IVY_SETTINGS')
-    print conf
-    
-    
-
-    
+    setting.pprint('EDIT_BENCH_SETTINGS')
