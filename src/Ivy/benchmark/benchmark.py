@@ -35,7 +35,7 @@ class DarnedDataGenerator(object):
     '''
     
     def __init__(self, species=None):
-        __species = EDIT_BENCH_SETTINGS['DARNED_DATA']
+        __species = EDIT_BENCH_SETTINGS['DATA']
         for k in __species:
             if k == species:
                 self.species = species

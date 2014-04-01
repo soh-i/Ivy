@@ -61,14 +61,14 @@ EDIT_BENCH_SETTINGS = {
         'SP': None,
         'PLOT': False,
         'OUT': 'edit_bench.log',
-        
+    },
+    
     'DATA': {
         'human_hg19': 'http://darned.ucc.ie/static/downloads/hg19.txt',
         'human_hg18': 'http://darned.ucc.ie/static/downloads/hg18.txt',
         'mice_mm9': 'http://darned.ucc.ie/static/downloads/mm9.txt',
         'mice_mm10': 'http://darned.ucc.ie/static/downloads/mm10.txt',
         'fly_dm3': 'http://darned.ucc.ie/static/downloads/dm3.txt',
-        }
     }
 }
 
