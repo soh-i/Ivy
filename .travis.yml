@@ -5,7 +5,6 @@ install:
   - "pip install -r requirements.txt"
 script:
   - "python setup.py install"
-  - "python setup.py test"
 notifications:
   email: false
 
