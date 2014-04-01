@@ -20,7 +20,7 @@ def deps():
     else:
         sys.exit('Not found \'requirements.txt\' file!')
 
-        
+
 if __name__ == '__main__':
     setup(
         version=__version__,
