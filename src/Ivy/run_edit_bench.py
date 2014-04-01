@@ -141,6 +141,8 @@ class App(object):
         else:
             raise TypeError("[Error] Input data type must be \'list\' to plot data")
 
+            
 if __name__ == '__main__':
-    run()
+    app = App()
+    app.run()
     
