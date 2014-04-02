@@ -1,72 +1,4 @@
-import os.path
-import os
-import pprint
-import collections
-import logging
-import Ivy.version
-
-def die(msg=''):
-    raise SystemExit(msg)
-
-def convert_base(ref=None, alt=None, strand=None):
-    if ref is None or alt is None:
-        return False
-        
-    dna = {'A': 'T',
-           'T': 'A',
-           'G': 'C',
-           'C': 'G',
-           }
-    if strand == '+':
-        return [ref, alt]
-        
-    elif strand == '-':
-        pair = []
-        _r = dna.get(ref)
-        _a = dna.get(alt)
-        if _r:
-            pair.append(_r)
-        else:
-            pair.append(ref)
-        if _a:
-            pair.append(_a)
-        # expected: 'A,G'
-        else:
-            pair.append(alt)
-        return pair
-        
-    elif strand == '.':
-        return [ref, alt]
-
-    else:
-        raise ValueError("Invalid strand data. '-/+' is expected, but '{0}' is given".format(strand))
-                                                                                  
-        
-class IvyLogger(object):
-    def __init__(self):
-        self.log_fmt = '[%(asctime)s] [%(levelname)s] [%(message)s]'
-        logging.basicConfig(level=logging.DEBUG, format=self.log_fmt) #, filename=str(os.getpid()) + "_ivy.log")
-
-class Utils(object):
-    '''
-    Utility class, for example, 
-    >>> Utils.find_app_root()
-    >>> /Users/yukke/dev/Ivy
-    '''
-    
-    @staticmethod
-    def find_app_root():
-        '''Absolute path to your project root from setup.py location'''
-        root = os.path.dirname(__file__)
-        while not os.path.exists(os.path.join(root, 'setup.py')):
-            root = os.path.abspath(os.path.join(root, os.path.pardir))
-        return root
-
-    @staticmethod
-    def end_url_basename(p):
-        """Returns the final component of a pathname"""
-        i = p.rfind('/') + 1
-        return p[i:]
+import collection
 
 
 class AttrDict(dict):
@@ -75,7 +7,6 @@ class AttrDict(dict):
     http://stackoverflow.com/a/12187277
     '''
     
-
     def __init__(self, d=None, create=True):
         if d is None:
             d = {}
@@ -134,20 +65,6 @@ class AttrDict(dict):
         else:
             return other
 
-
-if __name__ == '__main__':
-    #dic = {"fasta": "reference.fasta", "region": { "start": 993, "end": 9199} }
-    #dic = {}
-    #aa = AttrDict(dic)
-    #aa.region.start = 7423480
-    #aa.fasta = "hoge.fa"
-    #print aa
-    #print convert_base(ref='A', alt='G', strand='-')
-    
-    print convert_base(ref='T', alt='C,G', strand='-')
-    
-    
-    
     
 class ImutableDict(collections.Mapping):
     '''

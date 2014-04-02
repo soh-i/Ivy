@@ -1,6 +1,5 @@
 import sys
-from Ivy.commandline.parse_ivy_opts import CommandLineParser
-from Ivy.utils import AttrDict
+from Ivy.parse_ivy_opts import CommandLineParser
 from Ivy.version import __version__
 import datetime
 import os.path
@@ -159,7 +158,7 @@ class _VCFMetaHeader(object):
         return params
 
         
-class VCFWriterDataLine(VCFInfoHeader):
+class VCFWriterDataLine(_VCFInfoHeader):
     def __init__(self):
         pass
 
@@ -218,8 +217,4 @@ class VCFWriterDataLine(VCFInfoHeader):
 
     def _MA(self, data):
         return self._to_info('MA', data.get('matches'))
-    
-        
-
-
         

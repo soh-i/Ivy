@@ -1,5 +1,8 @@
 Ivy: software package for detection of RNA editing sites based on high-throughput sequencing data.
 ====
+[![Build Status](https://travis-ci.org/soh-i/Ivy.png?branch=vcf_test)](https://travis-ci.org/soh-i/Ivy)
+
+
 
 #### __Ivy is currently under development...__
 
