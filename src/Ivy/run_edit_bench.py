@@ -1,16 +1,16 @@
 import os.path
 import sys
 from Ivy.commandline2.edit_bench_opts import parse_bench_opts
-from Ivy.commandline2.settings import EDIT_BENCH_SETTINGS
-from Ivy.benchmark.plot import BenchmarkPlot
-from Ivy.benchmark.benchmark import (
+from Ivy.settings import EDIT_BENCH_SETTINGS
+from Ivy.edit_bench.plot import BenchmarkPlot
+from Ivy.edit_bench.benchmark import (
     DarnedDataGenerator,
     DarnedReader,
     VCFReader,
     Benchmark,
     __CSVReader,
 )
-import Ivy.utils
+
 
 __program__ = 'edit_bench'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
