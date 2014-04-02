@@ -4,7 +4,7 @@ import os.path
 import re
 import csv
 import sys
-from Ivy.commandline2.settings import EDIT_BENCH_SETTINGS
+from Ivy.settings import EDIT_BENCH_SETTINGS
 from Ivy.base import Utils
 from urllib2 import (
     Request,

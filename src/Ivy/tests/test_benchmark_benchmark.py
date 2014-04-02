@@ -1,5 +1,5 @@
 import unittest
-from Ivy.benchmark.benchmark import *
+from Ivy.edit_bench.benchmark import *
 
 
 class TestDarnedDataGenerator(unittest.TestCase):

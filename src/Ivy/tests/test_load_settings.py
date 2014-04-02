@@ -1,5 +1,5 @@
 import unittest
-from Ivy.commandline2.load_settings import Setting
+from Ivy.load_settings import Setting
 
 
 class TestSettings(unittest.TestCase):
