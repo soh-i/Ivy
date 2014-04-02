@@ -1,6 +1,6 @@
 import os.path
 import sys
-from Ivy.commandline2.edit_bench_opts import parse_bench_opts
+from Ivy.edit_bench_opts import parse_bench_opts
 from Ivy.settings import EDIT_BENCH_SETTINGS
 from Ivy.edit_bench.plot import BenchmarkPlot
 from Ivy.edit_bench.benchmark import (

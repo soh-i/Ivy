@@ -5,7 +5,7 @@ import re
 import csv
 import sys
 from Ivy.settings import EDIT_BENCH_SETTINGS
-from Ivy.base import Utils
+from Ivy.helper import find_app_root
 from urllib2 import (
     Request,
     urlopen,
@@ -46,7 +46,7 @@ class DarnedDataGenerator(object):
         if self.species is not None:
             self.filename = ''.join([self.species, '.txt'])
             self.url = __species[self.species]
-            self.saved_abs_path = Utils.find_app_root() + '/data/'
+            self.saved_abs_path = find_app_root() + '/data/'
             name, _ = os.path.splitext(self.filename)
             self.out_name = self.saved_abs_path + 'darned_' + name + '.csv'
             
@@ -161,7 +161,7 @@ class DarnedReader(object):
         else:
             self.__source = source.upper()
             
-        self.__darned_path = Utils.find_app_root()+ '/data/darned_'+ self.__sp+ '.csv'
+        self.__darned_path = find_app_root()+ '/data/darned_'+ self.__sp+ '.csv'
         try:
             self.db = self.__generate_darned_set()
         except DarnedDataGeneratorValueError as e:
