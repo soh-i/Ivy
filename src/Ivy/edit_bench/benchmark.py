@@ -4,7 +4,7 @@ import os.path
 import re
 import csv
 import sys
-from Ivy.settings import EDIT_BENCH_SETTINGS
+from Ivy.analysis_settings import EDIT_BENCH_SETTINGS
 from Ivy.helper import find_app_root
 from urllib2 import (
     Request,

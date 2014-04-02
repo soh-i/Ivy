@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 import os.path
 import sys
 from Ivy.version import __version__
-from Ivy.settings import EDIT_BENCH_SETTINGS
+from Ivy.analysis_settings import EDIT_BENCH_SETTINGS
 
 __program__ = 'ivy_benchmark'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'

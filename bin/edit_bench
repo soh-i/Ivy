@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-import pkg_resources
-from Ivy.run_editbench import run
+from run_edit_bench import App
 
 if __name__ == '__main__':
-    run()
+    app = App()
+    app.run()
     

@@ -4,10 +4,7 @@ import pprint
 import collections
 import logging
 import Ivy.version
-from Ivy.settings import (
-    IVY_SETTINGS,
-    EDIT_BENCH_SETTINGS
-)
+from Ivy.analysis_settings import IVY_SETTINGS, EDIT_BENCH_SETTINGS
 
 
 class Setting(object):

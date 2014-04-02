@@ -1,7 +1,7 @@
 import os.path
 import sys
-from Ivy.edit_bench_opts import parse_bench_opts
-from Ivy.settings import EDIT_BENCH_SETTINGS
+from Ivy.cli.edit_bench_cli_opts import parse_bench_opts
+from Ivy.analysis_settings import EDIT_BENCH_SETTINGS
 from Ivy.edit_bench.plot import BenchmarkPlot
 from Ivy.edit_bench.benchmark import (
     DarnedDataGenerator,
@@ -20,7 +20,7 @@ __status__ = 'development'
 
 class App(object):
     def __init__(self):
-        args = parse_bench_opts()
+        self.args = parse_bench_opts()
         self.species = args.sp
         __prepare_required_data(args.sp)
 
