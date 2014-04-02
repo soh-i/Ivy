@@ -2,6 +2,11 @@ try:
     import unittest2 as unittest
 except ImportError:
     import unittest
+    
+import datetime
+from Ivy.io.vcf import to_xml, header_column_name, _VCFMetaHeader, VCFWriterDataLine
+from Ivy.version import __version__
+from Ivy.parse_ivy_opts import CommandLineParser
 
 
 class TestUtilsFunc(unittest.TestCase):
@@ -9,7 +14,6 @@ class TestUtilsFunc(unittest.TestCase):
         pass
         
     def test_to_xml(self):
-        from Ivy.utils.vcf import to_xml
         xml_class = "VCF_INFO"
         xml_value = {'id': 'NS', 'num': 1, 'type': 'Integer', 'desc': 'Number of Samples With Data'}
         bad_value = [9212, "hoge", 0.192, list()]
@@ -24,16 +28,11 @@ class TestUtilsFunc(unittest.TestCase):
                          '##VCF_INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">\n')
         
     def test_header_column_name(self):
-        from Ivy.utils.vcf import header_column_name
         self.assertEqual(header_column_name(), '#CHROM\tPOS\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\n')
 
 
 class Test_VCFMetaHeader(unittest.TestCase):
     def setUp(self):
-        from Ivy.utils.vcf import _VCFMetaHeader
-        from Ivy.version import __version__
-        from Ivy.commandline.parse_ivy_opts import CommandLineParser
-        
         self.version = __version__
         self.meta_header = _VCFMetaHeader(dict())
 
@@ -42,7 +41,7 @@ class Test_VCFMetaHeader(unittest.TestCase):
         self.assertEqual(self.meta_header.build(), "")
 
     def test__add_date_spec(self):
-        import datetime
+
         d = datetime.datetime.today()
         test_date_info = {'fileformat': 'VCFv4.1',
                           'source': 'Ivy_' + self.version,
@@ -84,8 +83,6 @@ class Test_VCFInfoHeader(unittest.TestCase):
         
 class TestVCFWriterDataLine(unittest.TestCase):
     def setUp(self):
-        from Ivy.utils.vcf import VCFWriterDataLine
-        
         self.mock_data = {'pos': 1102, 'chrom': 'chr12', 'id_': 'ID',
                           'ref': 'A', 'alt': 'G', 'qual': 43, 'filt': False}
         self.mock_vcf = {'coverage': 25, 'dp4': [5, 5, 5, 10], 'allele_freq': 0.92,

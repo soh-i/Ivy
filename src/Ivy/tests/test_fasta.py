@@ -2,8 +2,8 @@ try:
     import unittest2 as unittest
 except ImportError:
     import unittest
-from Ivy.utils.fasta import Fasta
-from Ivy.base import Utils
+from Ivy.io.fasta import Fasta
+from Ivy.helper import find_app_root
 import os
 import os.path
 import pysam
@@ -12,7 +12,7 @@ import pysam
 class TestFasta(unittest.TestCase):
     def setUp(self):
         path = 'sample/hg19_mock.fasta'
-        self.mock_fasta = os.path.join(Utils.find_app_root(), path)
+        self.mock_fasta = os.path.join(find_app_root(), path)
         self.fasta_inst = Fasta(self.mock_fasta)
 
     def test_fasta_header(self):

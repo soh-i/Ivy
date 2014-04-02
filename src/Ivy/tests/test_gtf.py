@@ -3,16 +3,16 @@ try:
 except ImportError:
     import unittest
 
-from Ivy.utils.gtf import GTF
-from Ivy.base import Utils
+from Ivy.io.gtf import GTF
+from Ivy.helper import find_app_root
 import os.path
 import pysam
 
 
 class TestGTF(unittest.TestCase):
     def setUp(self):
-        self.path_to_sample = os.path.join(Utils.find_app_root(), 'sample')
-        self.path_to_mock_data = os.path.join(Utils.find_app_root(), 'sample/genes.gtf')
+        self.path_to_sample = os.path.join(find_app_root(), 'sample')
+        self.path_to_mock_data = os.path.join(find_app_root(), 'sample/genes.gtf')
         self.gtf = GTF(self.path_to_mock_data)
         
     def test__prepare(self):
