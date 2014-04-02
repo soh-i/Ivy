@@ -25,9 +25,6 @@ class Setting(object):
             return pp.pprint(self.edit_bench)
         else:
             raise KeyError("Do NOT match given your key named '{0}'".format(cls))
-            
-        
-        
         
         
 if __name__ == '__main__':
