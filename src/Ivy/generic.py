@@ -7,7 +7,6 @@ class AttrDict(dict):
     http://stackoverflow.com/a/12187277
     '''
     
-
     def __init__(self, d=None, create=True):
         if d is None:
             d = {}
