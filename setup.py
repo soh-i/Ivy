@@ -33,8 +33,8 @@ if __name__ == '__main__':
         package_dir={'': 'src'},
         entry_points = {
             'console_scripts': [
-                'ivy = Ivy.run_ivy:run',
-                'edit_bench = Ivy.run_editbench:run',
+                #'ivy = Ivy.run_ivy:run',
+                'edit_bench = run_edit_bench:run',
             ],
         },
         install_requires=deps(),

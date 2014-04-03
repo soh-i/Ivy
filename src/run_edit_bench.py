@@ -18,6 +18,10 @@ __license__ = 'GPL v2'
 __status__ = 'development'
 
 
+def run():
+    app = AppEditBench()
+    app.run()
+
 class AppEditBench(object):
     def __init__(self):
         self.args = parse_bench_opts()
@@ -144,8 +148,4 @@ class AppEditBench(object):
         else:
             raise TypeError("[Error] Input data type must be \'list\' to plot data")
 
-            
-if __name__ == '__main__':
-    app = AppEditBench()
-    app.run()
-    
+
