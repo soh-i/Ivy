@@ -287,7 +287,7 @@ class VCFReader(object):
         return i
         
     
-class __CSVReader(object):
+class CSVReader(object):
     '''
     CSVReader class provides to generate array of CSV file
     
