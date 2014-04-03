@@ -9,10 +9,17 @@ __author__ = 'Soh Ishiguro <yukke@g-language.org>'
 __license__ = ''
 __status__ = 'development'
 
+# Do not call SystemExit, instead of throwing exception
+class ArgumentParserError(Exception): pass
+    
+class ThrowingArgumentParser(ArgumentParser):
+    def error(self, message):
+        raise ArgumentParserError(message)
 
+        
 def parse_bench_opts():
     desc = "Benchmarking test for detected RNA editing sites based on HTSeq data to evaluate detection params."
-    parser = ArgumentParser(description=desc,
+    parser = ThrowingArgumentParser(description=desc,
                             prog=__program__,
                             )
     group = parser.add_mutually_exclusive_group(required=True)
@@ -40,8 +47,8 @@ def parse_bench_opts():
                         required=True,
                         default=EDIT_BENCH_SETTINGS['APP']['SP'],
                         dest='sp',
-                        metavar='species',
                         action='store',
+                        metavar='species',
                         help='Species + genome version. (eg. human_hg19)')
     parser.add_argument('--plot',
                         required=False,
@@ -62,7 +69,3 @@ def parse_bench_opts():
                         help='Show program version number and exit.',
                         version=__version__)
     return parser.parse_args()
-
-if __name__ == '__main__':
-    parse_bench_opts()
-    
