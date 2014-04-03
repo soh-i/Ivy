@@ -1,5 +1,6 @@
 import os.path
 import sys
+import datetime
 from Ivy.cli.edit_bench_cli_opts import parse_bench_opts
 from Ivy.analysis_settings import EDIT_BENCH_SETTINGS
 from Ivy.edit_bench.plot import BenchmarkPlot
@@ -8,9 +9,8 @@ from Ivy.edit_bench.benchmark import (
     DarnedReader,
     VCFReader,
     Benchmark,
-    __CSVReader,
+    CSVReader,
 )
-
 
 __program__ = 'edit_bench'
 __author__ = 'Soh Ishiguro <yukke@g-language.org>'
@@ -18,33 +18,34 @@ __license__ = 'GPL v2'
 __status__ = 'development'
 
 
-class App(object):
+class AppEditBench(object):
     def __init__(self):
         self.args = parse_bench_opts()
-        self.species = args.sp
-        __prepare_required_data(args.sp)
+        self.__prepare_required_data(self.args.sp)
 
     def run(self):
         # Input format as VCF
-        if args.vcf_file and args.sp:
-            if args.plot:
-                result = _call_bench(args.vcf_file, sp=args.sp, source=args.source,
-                                     mode='vcf', plt=True, labs=args.vcf_file)
+        if self.args.vcf_file and self.args.sp:
+            if self.args.plot:
+                result = self._call_bench(self.args.vcf_file, sp=self.args.sp, source=self.args.source,
+                                          mode='vcf', plt=True, labs=self.args.vcf_file)
             else:
-                result = _call_bench(args.vcf_file, sp=args.sp, source=args.source, mode='vcf')
+                result = self._call_bench(self.args.vcf_file, sp=self.args.sp, source=self.args.source,
+                                          mode='vcf')
         # Input format as CSV
-        elif args.csv_file and args.sp:
-            if args.plotp:
-                result = _call_bench(args.csv_file, sp=args.sp, source=args.source,
-                                     mode='csv', plt=True, labs=args.csv_file)
+        elif self.args.csv_file and self.args.sp:
+            if self.args.plot:
+                result = self._call_bench(self.args.csv_file, sp=self.args.sp, source=self.args.source,
+                                     mode='csv', plt=True, labs=self.args.csv_file)
             else:
                 # Make p-r plot
-                result = _call_bench(args.csv_file, sp=args.sp, source=args.source, mode='csv')
+                result = self._call_bench(self.args.csv_file, sp=self.args.sp, source=self.args.source,
+                                     mode='csv')
         # Output filename
-        if args.out:
-            _write_result(filename=args.out, content=result, is_file=True)
-        elif not args.out:
-            _write_result(content=result, is_file=False)
+        if self.args.out:
+            self._write_result(filename=self.args.out, content=result, is_file=True)
+        elif not self.args.out:
+            self._write_result(content=result, is_file=False)
     
     def __prepare_required_data(self, species):
         try:
@@ -76,9 +77,9 @@ class App(object):
             if mode == 'vcf':
                 pred = VCFReader(f)
             elif mode == 'csv':
-                pred = __CSVReader(f)
+                pred = CSVReader(f)
             else:
-                raise ValueError("Valid input filename is csv or vcf alone")
+                raise ValueError("Valid input filename is ONLY csv or vcf")
             
             try:
                 bench = Benchmark(answer=ans.db, predict=pred.db)
@@ -108,7 +109,7 @@ class App(object):
         # plot data
         if len(precisions) > 0 and len(recalls) > 0:
             try:
-                __plot(precisions, recalls, labs)
+                self.__plot(precisions, recalls, labs)
             except TypeError as e:
                 raise SystemExit(e)
                 
@@ -135,14 +136,16 @@ class App(object):
     def __plot(self, precision, recall, labs):
         if isinstance(precision, list) and isinstance(recall, list) and isinstance(labs, list):
             names = [os.path.basename(_).split('.')[0] for _ in labs]
-            bplt = BenchmarkPlot('plot_' + ','.join(names), self.species)
-            bplt.plot_accuracy(lab=names, recall=recall, precision=precison)
+            d = datetime.datetime.today()
+            time = str(d.now()).split(" ")[1]
+            bplt = BenchmarkPlot('plot_' + time,  self.args.sp)
+            bplt.plot_accuracy(lab=names, recall=recall, precision=precision)
             return True
         else:
             raise TypeError("[Error] Input data type must be \'list\' to plot data")
 
             
 if __name__ == '__main__':
-    app = App()
+    app = AppEditBench()
     app.run()
     
