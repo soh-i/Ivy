@@ -1,7 +1,6 @@
 import pysam
 import os.path
 
-
 class GTF(object):
     def __init__(self, ingtf):
         self.ingtf = ingtf
@@ -46,6 +45,7 @@ class GTF(object):
                                                     types=["transcript_id", 'tss_id']):
              print rna_tss
         '''
+        
         for gtf in pysam.Tabixfile.fetch(self.tabixfile, contig, start, end,
                                          parser=pysam.asGTF()):
             if isinstance(types, str):
@@ -81,13 +81,4 @@ class GTF(object):
             else:
                 continue
         return found
-
-        
-if __name__ == '__main__':
-    tabix = GTF("genes.gtf")
-    for _ in tabix.subset_of_feature_in_region(contig="chr2L", end=9839, types=["transcript_id", 'tss_id']):
-        print _
-        #print _.asDict()
-        #print  dir(_)
-        #print _.asDict()
         

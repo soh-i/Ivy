@@ -7,12 +7,8 @@ import multiprocessing
 import pysam
 import pprint
 import time
-try:
-    from Ivy.utils import IvyLogger
-except ImportError:
-    pass
 
-    
+
 class Fasta(object):
     def __init__(self, fa=''):
         if os.path.isfile(fa):
@@ -223,42 +219,3 @@ def get_fa_list(path):
             fa.append(_)
     return fa
 
-    
-if __name__ == '__main__':
-    path = './block_fasta/'
-    print get_fa_list(path)
-    print decode_chr_name_from_file(get_fa_list(path))
-    
-    #fasta_file = "../../../data/hg19.fa"
-    #cpus = 4
-    # 
-    ## create directory
-    #if not os.path.isdir(path):
-    #    os.mkdir(path)
-    #fas = get_fa_list(path)
-    # 
-    ## Run as single thread
-    ##fa = Fasta(fa=fasta_file)
-    ##with Timer() as t:
-    ##    as_single(fasta_file)
-    ##
-    # 
-    ## Parallel
-    #if len(fas) != cpus:
-    #    print "Remove old blocks and generates new blocks"
-    #    shutil.rmtree(path)
-    #    fa = Fasta(fa=fasta_file)
-    #    fa.split_by_blocks(n=cpus)
-    #    
-    #    
-    #    with Timer() as t:
-    #        run(cpus, get_fa_list(path))
-    #    
-    #elif len(get_fa_list(path)) == cpus:
-    #    print "Used existing block"
-    #    print get_fa_list(path)
-    #    
-    #    with Timer() as t:
-    #        run(cpus, get_fa_list(path))
-    # 
-    #        
